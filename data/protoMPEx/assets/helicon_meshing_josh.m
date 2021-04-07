@@ -7,7 +7,7 @@ close all
 % plasma_file = 'assets/Beers_Helicon_3D_100kW_LowDensity_Plasma.txt';
 % plasma_file = 'assets/Beers_Helicon_3D_100kW_HighDensity_Plasma.txt';
 % plasma_file = 'assets/Beers_Helicon_3D_100kW_LowDensityHighTe_Plasma.txt';
-plasma_file = 'assets/Beers_Helicon_3D_100kW_HighDensityHighTe_Plasma.txt';
+plasma_file = 'Beers_Helicon_3D_100kW_HighDensityHighTe_Plasma.txt';
 
 %plasma_file = 'assets/Beers_Helicon_3D_ModelPaperDensity_Plasma.txt';
 % plasma_file='assets/Beers_Helicon_3D_HigherDensity_SheathEdge.txt';
@@ -21,7 +21,7 @@ plasma_file = 'assets/Beers_Helicon_3D_100kW_HighDensityHighTe_Plasma.txt';
 % surface_file = 'assets/Beers_Helicon_3D_100kW_LowDensity_HeliconData_LayerMiddle9.xlsx';
 % surface_file = 'assets/Beers_Helicon_3D_100kW_LowDensity_HeliconData_LayerMiddle7_MagCase.xlsx';
 % surface_file = 'assets/Beers_Helicon_3D_100kW_HighDensity_HeliconData_LayerMiddle6.xlsx';
-surface_file = 'assets/Beers_Helicon_3D_100kW_HighDensity_HeliconData_LayerMiddle11_MagCase.xlsx';
+surface_file = 'Beers_Helicon_3D_100kW_HighDensity_HeliconData_LayerMiddle11_MagCase.xlsx';
 %surface_file='assets/Beers_Helicon_3D_HigherDensity_SheathCenter_Mag13.xlsx';
  
  %Flat voltage under antenna files
@@ -37,7 +37,7 @@ nP = 1e6;
 
 radius = 0.06256;
 model = createpde;
-importGeometry(model,'assets/helicon_6p256cm.stl');% Import STL file
+importGeometry(model,'helicon_6p256cm.stl');% Import STL file
 figure(2)
 pdegplot(model,'FaceLabels','on') %Plot stl 
 
@@ -408,7 +408,7 @@ set(gca,'fontsize',15)
 
 %%
 
-file = 'assets/ftridynBackground.nc';
+file = 'ftridynBackground.nc';
 ncid = netcdf.open(file,'NC_NOWRITE');
 [dimname, nE] = netcdf.inqDim(ncid,0);
 [dimname, nA] = netcdf.inqDim(ncid,1);
