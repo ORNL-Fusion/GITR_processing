@@ -1,3 +1,6 @@
+import sys
+sys.path.insert(0, '../../../python/')
+
 import shutil
 import gitr
 import solps
