@@ -2,12 +2,14 @@ import tkinter
 import matplotlib.pyplot as plt
 import matplotlib
 from sys import platform
+"""
 if platform == "linux" or platform == "linux2":
     # linux
     matplotlib.use('TkAgg')
 elif platform == "darwin":
     # OS X
     matplotlib.use('TkAgg')
+"""
 import numpy as np
 import numpy.matlib as ml
 import gitr

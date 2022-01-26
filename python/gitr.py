@@ -5,7 +5,7 @@ from distutils.dir_util import copy_tree
 import sys
 from sys import platform
 import tkinter
-import matplotlib.pyplot as plt
+"""
 import matplotlib
 if platform == "linux" or platform == "linux2":
     # linux
@@ -13,6 +13,8 @@ if platform == "linux" or platform == "linux2":
 elif platform == "darwin":
     # OS X
     matplotlib.use('TkAgg')
+"""
+import matplotlib.pyplot as plt
 # sys.path.append('/home/tqd/code/netcdf4-python')
 import netCDF4
 import numpy as np
