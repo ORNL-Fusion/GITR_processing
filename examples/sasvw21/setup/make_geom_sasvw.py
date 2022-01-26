@@ -32,7 +32,7 @@ def make_gitr_geometry_from_solps_sasvw(gitr_geometry_filename='gitrGeometry.cfg
 
     import matplotlib.pyplot as plt
     plt.plot(r,z)
-    plt.savefig('trash.png')
+    plt.savefig('trash.pdf')
 
     """
     r_west = solps_mesh[:, [0, 2]].transpose()[0, manual_indices]
