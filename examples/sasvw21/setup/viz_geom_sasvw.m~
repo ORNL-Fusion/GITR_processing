@@ -1,7 +1,7 @@
 close all
 d = dlmread('assets/vvfile')';
 
-% order indices
+%order indices
 indices = [1:5,7,6,8:110,112:117]
 r = d(1,indices);
 z = d(2,indices);
@@ -23,7 +23,7 @@ a = [1:length(r)]'; b = num2str(a); c = cellstr(b);
 dx = 0.01; dy = 0.01; % displacement so the text does not overlay the data points
 text(r+dx, z+dy, c);
 
-% define "In-Direction"
+
 
 %%
 % fileID = fopen('WESTgeom.txt','w');
