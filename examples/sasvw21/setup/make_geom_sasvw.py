@@ -5,44 +5,36 @@ import gitr as g
 import numpy as np
 
 def make_gitr_geometry_from_solps_sasvw(gitr_geometry_filename='gitrGeometry.cfg', \
-                                  solps_geom = 'assets/SAS-V6e_v002.ogr'):
+                                  solps_geomfile = 'assets/vvfile'):
     # This program uses the solps geometry .ogr file to create a 2d geometry for GITR
     # in which the solps plasma profiles properly match the divertor target geometry.
     #
     # This geometry is then written to a config (cfg) file for use in GITR simulation. 
 
     #get geometry from solps
-    solps_mesh = np.loadtxt(solps_geom)
-    print(solps_mesh)
+    solps_geom = np.loadtxt(solps_geomfile)
+
+    #order line segments as determined visually using viz_geom_sasvw.m
+    manual_indices = np.array(range(0,5))
+    manual_indices = np.append(manual_indices, 6)
+    manual_indices = np.append(manual_indices, 5)
+    manual_indices = np.append(manual_indices, range(7,110))
+    manual_indices = np.append(manual_indices, range(111,117))
+
+    r = solps_geom.transpose()[0,manual_indices]
+    z = solps_geom.transpose()[1,manual_indices]
+    r1 = r[:-1]
+    r2 = r[1:]
+    z1 = z[:-1]
+    z2 = z[1:]
+
+    print(len(r), len(r1), len(r2))
+
+    import matplotlib.pyplot as plt
+    plt.plot(r,z)
+    plt.savefig('trash.png')
 
     """
-    r = solps_mesh[:, [0,2]].transpose()
-    z = solps_mesh[:, [1,3]].transpose()
-
-    #order line segments
-    manual_indices = np.array(range(3, 5))
-    manual_indices = np.append(manual_indices, 77)
-    manual_indices = np.append(manual_indices, range(5, 22))
-    manual_indices = np.append(manual_indices, 78)
-    manual_indices = np.append(manual_indices, range(22, 24))
-    manual_indices = np.append(manual_indices, range(79, 90))
-    manual_indices = np.append(manual_indices, 91)
-    manual_indices = np.append(manual_indices, range(24, 50))
-    manual_indices = np.append(manual_indices, 90)
-    manual_indices = np.append(manual_indices, range(50, 62))
-    manual_indices = np.append(manual_indices, 0)
-    manual_indices = np.append(manual_indices, 62)
-    manual_indices = np.append(manual_indices, 1)
-    manual_indices = np.append(manual_indices, range(63, 77))
-    manual_indices = np.append(manual_indices, 2)
-    manual_indices = np.append(manual_indices, range(92, 102))
-    manual_indices = np.append(manual_indices, range(112, 114))
-    manual_indices = np.append(manual_indices, range(102, 108))
-    manual_indices = np.append(manual_indices, 110)
-    manual_indices = np.append(manual_indices, range(108, 110))
-    manual_indices = np.append(manual_indices, 111)
-    manual_indices = np.append(manual_indices, 3)
-
     r_west = solps_mesh[:, [0, 2]].transpose()[0, manual_indices]
     z_west = solps_mesh[:, [1, 3]].transpose()[0, manual_indices]
 
