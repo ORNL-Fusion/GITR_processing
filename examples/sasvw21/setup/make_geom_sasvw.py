@@ -31,7 +31,7 @@ def make_gitr_geometry_from_solps_sasvw(gitr_geometry_filename='gitrGeometry.cfg
     print(len(r), len(r1), len(r2))
 
     import matplotlib.pyplot as plt
-    plt.plot(r,z)
+    plt.plot(r,z,linewidth=0.05)
     plt.savefig('trash.pdf')
 
     """
