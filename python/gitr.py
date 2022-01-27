@@ -1083,7 +1083,7 @@ def make_gitr_geometry_from_solps(gitr_geometry_filename='gitr_geometry.cfg',
     inDir[154:161] = -1;
     inDir[164:166] = -1;
 
-    lines = gitr_lines_from_points(r_final, z_final)
+    lines = gitr_lines_from_points_iter(r_final, z_final)
 
     x1 = lines[:, 0]
     z1 = lines[:, 1]
@@ -1207,8 +1207,8 @@ def make_gitr_geometry_from_solps_west(gitr_geometry_filename='gitrGeometry.cfg'
             inDir[34:37] = inDir[58:61] = inDir[74] = inDir[77:] = -1
 
     #populate lines and check that vectors point inward
-    lines = gitr_lines_from_points_west(r_final, z_final)
-    lines_to_vectors_west(lines, inDir, 'vectors_west.pdf')
+    lines = gitr_lines_from_points(r_final, z_final)
+    lines_to_vectors(lines, inDir, 'vectors_west.pdf')
 
 
     Z = np.zeros(len(r_final)+1)
@@ -1320,8 +1320,8 @@ def make_gitr_geometry_from_solps_west(gitr_geometry_filename='gitr_geometry.cfg
             inDir[34:37] = inDir[58:61] = inDir[74] = inDir[77:] = -1
 
     #populate lines and check that vectors point inward
-    lines = gitr_lines_from_points_west(r_final, z_final)
-    lines_to_vectors_west(lines, inDir, 'vectors_west.png')
+    lines = gitr_lines_from_points(r_final, z_final)
+    lines_to_vectors(lines, inDir, 'vectors_west.png')
 
 
     Z = np.zeros(len(r_final)+1)
@@ -1365,7 +1365,7 @@ def replace_line_segment_west(x_priority, y_priority, x_base, y_base):
 
     return x_final, y_final
 
-def gitr_lines_from_points_west(r,z):
+def gitr_lines_from_points(r,z):
 
     nPoints = len(r)-1;
     lines = np.zeros([nPoints, 7]);
@@ -1393,7 +1393,7 @@ def gitr_lines_from_points_west(r,z):
 
     return lines
 
-def lines_to_vectors_west(lines, inDir, filename):
+def lines_to_vectors(lines, inDir, filename, plt):
 
     x1 = lines[:, 0]
     z1 = lines[:, 1]
@@ -1402,8 +1402,6 @@ def lines_to_vectors_west(lines, inDir, filename):
     slope = lines[:, 4]
     intercept = lines[:, 5]
     line_length = lines[:, 6]
-
-    plt.title('WEST Inner Surface Definition')
 
     for i in range(0,len(x1)):
         if slope[i]==0: 
@@ -1415,8 +1413,8 @@ def lines_to_vectors_west(lines, inDir, filename):
         zPerp = -inDir[i]*np.sign(perpSlope)*np.sqrt(1-rPerp*rPerp);
         plt.quiver([x1[i] + (x2[i]-x1[i])/2], [z1[i] + (z2[i]-z1[i])/2], [rPerp/10], [zPerp/10], width=0.0015, scale=5, headwidth=4)
 
-    plt.axis('scaled')
-    #plt.savefig(filename)
+    plt.title(filename)
+    plt.savefig('plots/'+filename+'.pdf')
 
 def removeQuotes(infile='this.cfg',outfile='that.cfg'):
     with open(infile, 'r') as f, open(outfile, 'w') as fo:
@@ -1527,7 +1525,7 @@ def replace_line_segment(x_priority, y_priority, x_base, y_base):
 
     return x_final, y_final
 
-def gitr_lines_from_points(r,z):
+def gitr_lines_from_points_iter(r,z):
 
     nPoints = len(r);
     lines = np.zeros([nPoints, 7]);
