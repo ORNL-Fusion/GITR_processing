@@ -10,7 +10,7 @@ def make_gitr_geometry_from_solps_sasvw(gitr_geometry_filename='gitrGeometry.cfg
     # This program uses the solps geometry .ogr file to create a 2d geometry for GITR
     # in which the solps plasma profiles properly match the divertor target geometry.
     #
-    # This geometry is then written to a config (cfg) file for use in GITR simulation. 
+    # This geometry is then written to a config (cfg) file for use in GITR simulation.
 
     #get geometry from solps
     solps_geom = np.loadtxt(solps_geomfile)
