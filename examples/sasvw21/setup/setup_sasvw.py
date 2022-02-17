@@ -1,16 +1,17 @@
 import sys
 sys.path.insert(0, '../../../python/')
+sys.path.append('.')
 
 import shutil
-import gitr
 import solps
 import gitrParticleSource
+import make_geom_sasvw
 
-make_gitr_geometry_from_solps_sasvw(gitr_geometry_filename = 'gitrGeometry.cfg', \
-                                   solps_geomfile = 'assets/vvfile')
+make_geom_sasvw.make_gitr_geometry_from_solps_sasvw(gitr_geometry_filename = 'gitrGeometry.cfg', \
+                                   solps_geomfile = 'assets/geom-SAS/vvfile')
 
 shutil.move('gitrGeometry.cfg', '../input/gitrGeometry.cfg')
-
+"""
 solps.process_solps_output_for_gitr(dakota_filename = 'assets/dakota', \
                                    nR = 500, nZ = 1000, plot_variables=0, \
                                    b2fstate_filename = 'assets/b2fstate')
@@ -39,3 +40,4 @@ gitrParticleSource.particleSource2d_west(nParticles = int(1e3), \
                                     coordsFile = 'assets/right_target_coordinates.txt')
 
 shutil.move('particleSource.nc', '../input/particleSource.nc')
+"""
