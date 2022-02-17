@@ -1,1 +1,5 @@
 examples/rpi_input_deck/input/
+.DS_Store
+examples/.DS_Store
+examples/sasvw21/.DS_Store
+examples/sasvw21/setup/.DS_Store
