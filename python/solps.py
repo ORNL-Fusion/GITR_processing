@@ -1,4 +1,4 @@
-import tkinter
+#import tkinter
 import matplotlib.pyplot as plt
 import matplotlib
 from sys import platform
@@ -12,6 +12,7 @@ elif platform == "darwin":
 """
 import numpy as np
 import numpy.matlib as ml
+import solps
 import gitr
 import scipy.interpolate as scii
 from scipy.interpolate import griddata
@@ -20,11 +21,10 @@ import math
 import os
 import io
 import libconf
-import solps
 
 def readEquilibrium(filename='/Users/Alyssa/Dev/WEST/baserun/west_54034_10p2s_mag.X4.equ', \
-    solps_mesh_extra = '/Users/Alyssa/Dev/WEST/baserun/mesh.extra', \
-    solps_geom = '/Users/Alyssa/Dev/WEST/baserun/b2fgmtry'):
+    solps_geom = '/Users/Alyssa/Dev/WEST/baserun/b2fgmtry', \
+    solps_mesh_extra = None, r_wall = None, z_wall = None):
 
     rr=0
     zz=0
@@ -67,17 +67,17 @@ def readEquilibrium(filename='/Users/Alyssa/Dev/WEST/baserun/west_54034_10p2s_ma
                                 r = np.concatenate([r, ll])
                             rr=1;
 
-
-    #get geometry to plot on top of magnetic fields / fluxes
-    solps_mesh = np.loadtxt(solps_mesh_extra)
-    r_geom = solps_mesh[:, [0,2]].transpose()
-    z_geom = solps_mesh[:, [1,3]].transpose()
+    if solps_mesh_extra!=None:
+        #get geometry to plot on top of magnetic fields / fluxes
+        solps_mesh = np.loadtxt(solps_mesh_extra)
+        r_wall = solps_mesh[:, [0,2]].transpose()
+        z_wall = solps_mesh[:, [1,3]].transpose()
     r_left_target,z_left_target,r_right_target,z_right_target = solps.get_target_coordinates(solps_geom)
 
     print ('Equ data dimensions %i by %i ' %(jm,km)	)
     psi = np.reshape(psi,[len(z),len(r)])
     plt.pcolor(r, z, psi)
-    plt.plot(r_geom, z_geom, 'k-')
+    plt.plot(r_wall, z_wall, 'k-')
     plt.plot(r_left_target, z_left_target, 'g-')
     plt.plot(r_right_target, z_right_target, 'r-')
     plt.xlabel('r [m]')
@@ -87,11 +87,11 @@ def readEquilibrium(filename='/Users/Alyssa/Dev/WEST/baserun/west_54034_10p2s_ma
     plt.axis([r.min(), r.max(), z.min(), z.max()])
     plt.colorbar(label='Flux [Wb/rad')
     print( 'Saving psi function as psi.png ')
-    plt.savefig('psi.png')
+    plt.savefig('plots/psi.pdf')
     plt.close()
 
     plt.contour(r,z,psi,100)
-    plt.plot(r_geom, z_geom, 'k-')
+    plt.plot(r_wall, z_wall, 'k-')
     plt.plot(r_left_target, z_left_target, 'g-')
     plt.plot(r_right_target, z_right_target, 'r-')
     plt.xlabel('r [m]')
@@ -101,7 +101,8 @@ def readEquilibrium(filename='/Users/Alyssa/Dev/WEST/baserun/west_54034_10p2s_ma
     plt.axis([r.min(), r.max(), z.min(), z.max()])
     plt.colorbar(label='Flux [Wb/rad]')
     print ('Saving psi contour as psiContour.png ')
-    plt.savefig('psiContour.pdf')
+    plt.savefig('plots/psiContour.pdf')
+    plt.close()
 
     print('Take gradients of magnetic flux to produce magnetic field')
     [gradz,gradr] = np.gradient(np.array(psi),z[1]-z[0],r[1]-r[0])
@@ -109,9 +110,8 @@ def readEquilibrium(filename='/Users/Alyssa/Dev/WEST/baserun/west_54034_10p2s_ma
     br = -gradz/r
     bz =gradr/r
 
-    plt.close()
     plt.pcolor(r,z,br)
-    plt.plot(r_geom, z_geom, 'k-')
+    plt.plot(r_wall, z_wall, 'k-')
     plt.plot(r_left_target, z_left_target, 'g-')
     plt.plot(r_right_target, z_right_target, 'r-')
     plt.xlabel('r [m]')
@@ -119,19 +119,19 @@ def readEquilibrium(filename='/Users/Alyssa/Dev/WEST/baserun/west_54034_10p2s_ma
     plt.title('Br')
     plt.colorbar(label='B field [T]')
     print ('Saving br profile as br.png ')
-    plt.savefig('br.png')
+    plt.savefig('plots/br.pdf')
     plt.close()
 
     plt.pcolor(r,z,bz)
-    plt.plot(r_geom, z_geom, 'k-')
+    plt.plot(r_wall, z_wall, 'k-')
     plt.plot(r_left_target, z_left_target, 'g-')
     plt.plot(r_right_target, z_right_target, 'r-')
     plt.xlabel('r [m]')
     plt.ylabel('z [m]')
     plt.title('Bz')
     plt.colorbar(label='B field [T]')
-    print ('Saving br profile as br.png ')
-    plt.savefig('bz.png')
+    print ('Saving bz profile as bz.png ')
+    plt.savefig('plots/bz.pdf')
 
     Bp = np.sqrt(np.multiply(br,br) + np.multiply(bz,bz))
     bt = ml.repmat(btf*rtf/r,len(z),1)
@@ -139,7 +139,7 @@ def readEquilibrium(filename='/Users/Alyssa/Dev/WEST/baserun/west_54034_10p2s_ma
 
     plt.close()
     plt.pcolor(r,z,bt)
-    plt.plot(r_geom, z_geom, 'k-')
+    plt.plot(r_wall, z_wall, 'k-')
     plt.plot(r_left_target, z_left_target, 'g-')
     plt.plot(r_right_target, z_right_target, 'r-')
     plt.xlabel('r [m]')
@@ -147,7 +147,7 @@ def readEquilibrium(filename='/Users/Alyssa/Dev/WEST/baserun/west_54034_10p2s_ma
     plt.title('Bt')
     plt.colorbar(label='B field [T]')
     print( 'Saving bt profile as bt.png ')
-    plt.savefig('bt.png')
+    plt.savefig('plots/bt.pdf')
     plt.close()
 
     rootgrp = netCDF4.Dataset("bField.nc", "w", format="NETCDF4")
@@ -356,15 +356,15 @@ def process_solps_output_for_gitr(dakota_filename = '/Users/Alyssa/Dev/solps-ite
         plt.close()
         plt.pcolor(rdak, zdak, ni_total)
         plt.colorbar()
-        plt.savefig('niTotal.png')
+        plt.savefig('plots/niTotal.pdf')
         plt.close()
         plt.pcolor(rdak, zdak, aveMass)
         plt.colorbar()
-        plt.savefig('aveMass.png')
+        plt.savefig('plots/aveMass.pdf')
         plt.close()
         plt.pcolor(rdak, zdak, aveCharge)
         plt.colorbar()
-        plt.savefig('aveCharge.png')
+        plt.savefig('plots/aveCharge.pdf')
 
     br = get_dakota_variable(5+5*nIonSpecies,dak,rdak,zdak,nR,nZ,'br',plot_variables)
     bphi = get_dakota_variable(5+5*nIonSpecies+1,dak,rdak,zdak,nR,nZ,'bphi',plot_variables)

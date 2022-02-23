@@ -4,7 +4,7 @@ show_plots = True
 from distutils.dir_util import copy_tree
 import sys
 from sys import platform
-import tkinter
+#import tkinter
 """
 import matplotlib
 if platform == "linux" or platform == "linux2":
