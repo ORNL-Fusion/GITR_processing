@@ -1,0 +1,1 @@
+~/Dev/solps-iter-data/build/xsolps-iter-data -task=get_gitr -rmin=1.0 -rmax=2.4 -numr=500 -zmin=-1.4 -zmax=1.4 -numz=1000 -solps_geometry=assets/b2fgmtry -solps_state=assets/b2fstate -left_target=assets/rightTargOutput -right_target=assets/leftTargOutput -result=assets/result -dakota_result=assets/dakota

@@ -552,7 +552,7 @@ def find_strike_points(solps_geometry_filename='/Users/tyounkin/Dissertation/ITE
     plt.close()
     plt.scatter(x_region_3,y_region_3)
     plt.scatter(x_region_3,y_region_3)
-    plt.savefig('region34.png')
+    plt.savefig('plots/region34.png')
     plt.close()
 
     i_a,i_b = intersection(x_region_3,y_region_3,x_region_4,y_region_4)
@@ -736,7 +736,7 @@ def get_solps_species(solps_state_filename='/Users/tyounkin/Dissertation/ITER/mq
     array = np.array((species_index,zn,am,zamin))
     array = np.transpose(array)
     print(array)
-    np.savetxt('speciesList.txt',array,header='SpeciesIndex   Z   Mass   Charge', delimiter=' ') 
+    np.savetxt('plots/speciesList.txt',array,header='SpeciesIndex   Z   Mass   Charge', delimiter=' ') 
     #print('nIonSpecies', nIonSpecies)
     #species_file = open("speciesList.txt", "w")
     #species_file.write('SpeciesIndex   Z   Mass   Charge\n')
@@ -785,7 +785,7 @@ def make_solps_targ_coord_file(gitr_geom_filename='/Users/Alyssa/Dev/GITR/west/h
     x_outer_strikepoint, y_outer_strikepoint, topcut = find_strike_points(solps_geom)
     topcut = topcut - 1; #Because the target coordinates already strip off the ghost cell
 
-    r_left_target,z_left_target,r_right_target,z_right_target = get_target_coordinates(solps_geom)
+    r_right_target,z_right_target,r_left_target,z_left_target = get_target_coordinates(solps_geom)
     print('r strikepoint and target coords',x_outer_strikepoint, r_right_target)
     print('r strikepoint length',len(r_right_target))
 
@@ -810,13 +810,13 @@ def make_solps_targ_coord_file(gitr_geom_filename='/Users/Alyssa/Dev/GITR/west/h
     #print('strikepoint rzind',rz_ind)
     #print('strikepoint rz',r,z)
     plt.close()
-    plt.plot(r,z)
-    plt.scatter(r,z)
-    plt.scatter(r_right_target,z_right_target)
+    plt.plot(r_right_target,z_right_target)
+    plt.scatter(r_right_target,z_right_target,label='Coordinate Points',s=10)
+    plt.scatter(r,z,label='Midpoints',s=10)
     #plt.scatter(x_outer_strikepoint,y_outer_strikepoint)
     #plt.axis([5.5,5.6,-4.42, -4.36])
-    plt.savefig('rz_targ.png')
-    plt.show()
+    plt.legend()
+    plt.savefig('plots/rz_targ.png')
 
     with io.open(gitr_geom_filename) as f:
         config = libconf.load(f)

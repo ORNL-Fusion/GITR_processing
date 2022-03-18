@@ -93,6 +93,7 @@ def make_gitr_geometry_from_solps_sasvw(gitr_geometry_filename='gitrGeometry.cfg
     #gitr.remove_endline_after_comma(infile=gitr_geometry_filename+"0", outfile=gitr_geometry_filename+"00")
     #gitr.remove_endline_after_comma2(infile=gitr_geometry_filename+"00", outfile=gitr_geometry_filename)
 
+    print('r_min:', min(r_final), '\nr_max:', max(r_final), '\nz_min:', min(z_final), '\nz_max:', max(z_final))
     print('created gitrGeometry.cfg')
     return r_final, z_final
 
