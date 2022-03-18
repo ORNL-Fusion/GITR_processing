@@ -14,8 +14,8 @@ for j = [1:122]
 end
 indices = [indices,122:160];
 
-r = solps_geom(1,:)%,indices);
-z = solps_geom(2,:)%,indices);
+r = solps_geom(1,indices);
+z = solps_geom(2,indices);
 r1 = r(1:end-1);
 r2 = r(2:end);
 z1 = z(1:end-1);
