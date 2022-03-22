@@ -6,7 +6,7 @@ import solps
 import numpy as np
 import matplotlib.pyplot as plt
 
-def make_gitr_geometry_from_solps_sasvw(gitr_geometry_filename='gitrGeometry.cfg', \
+def V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
                                   solps_geomfile = 'assets/geom-SASV/SAS-V6e_v002.ogr', \
                                   solps_rz = 'assets/geom-SASV/solps_rz.txt', \
                                   solps_targfile = 'assets/b2fgmtry'):
@@ -98,4 +98,4 @@ def make_gitr_geometry_from_solps_sasvw(gitr_geometry_filename='gitrGeometry.cfg
     return r_final, z_final
 
 if __name__ == "__main__":
-    make_gitr_geometry_from_solps_sasvw()
+    V6e_v002()
