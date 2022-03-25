@@ -759,7 +759,7 @@ def read_target_file(filename = '/Users/Alyssa/Dev/solps-iter-data/build/rightTa
     target = np.loadtxt(filename)
     target_shape = target.shape
     nSpecies = int((target_shape[1] - 5)/2)
-    print('nSpecies',nSpecies)
+    print('rightTargOutput nSpecies',nSpecies)
     r = target[:, 0]
     z = target[:, 1]
     ti = target[:,2]
