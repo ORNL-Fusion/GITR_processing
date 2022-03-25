@@ -79,11 +79,11 @@ def V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
     Z = np.zeros(len(r_final))
     surfaces = np.zeros(len(r_final))
 
-    targ_indices = np.array(range(30,45))
-    plt.plot(r_final[targ_indices], z_final[targ_indices], 'purple', label='W')
+    W_indices = np.array(range(30,45))
+    plt.plot(r_final[W_indices], z_final[W_indices], 'purple', label='W')
     plt.legend()
-    Z[targ_indices] = 74;
-    surfaces[targ_indices] = 1;
+    Z[W_indices] = 74;
+    surfaces[W_indices] = 1;
 
     #populate geometry input file to GITR
     gitr.lines_to_gitr_geometry(gitr_geometry_filename, lines, Z, surfaces, inDir)
@@ -95,7 +95,7 @@ def V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
 
     print('r_min:', min(r_final), '\nr_max:', max(r_final), '\nz_min:', min(z_final), '\nz_max:', max(z_final))
     print('created gitrGeometry.cfg')
-    return r_final, z_final
+    return r_final, z_final, r_final[W_indices], z_final[W_indices]
 
 if __name__ == "__main__":
     V6e_v002()

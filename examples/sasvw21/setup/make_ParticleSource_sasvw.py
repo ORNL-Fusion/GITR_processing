@@ -10,29 +10,187 @@ import gitr
 import solps
 import Particles
 
-def simple(nP = int(1e3), \
-            geom = 'gitrGeometry.cfg', \
+def simple2D(nP = int(1e3), \
+            geom = '../input/gitrGeometry.cfg', \
             targFile = 'assets/rightTargOutput', \
-            coordsFile = 'assets/right_target_coordinates.txt'):
+            coordsFile = 'assets/right_target_coordinates.txt', \
+            r_W = None, z_W = None):
     
-    PartDist = Particles.ParticleDistribution(nP, ListAttr=['x','y','z','vx','vy','vz'])
+    #import r1,r2,z1,z2 coordinates
+    x1, x2, z1, z2, length, Z, slope, inDir = gitr.plot2dGeom(geom)
+    coords = np.loadtxt(coordsFile, dtype='float',skiprows=1,delimiter=' ')
+    gitr_inds = [int(i) for i in coords[0:-1,3]]
+    r1 = x1[gitr_inds] #coords[:,4]
+    r2 = x2[gitr_inds] #coords[:,5]
+    z1 = z1[gitr_inds] #coords[:,6]
+    z2 = z2[gitr_inds] #coords[:,7]
+    area = np.pi*(r1+r2)*np.sqrt(np.power(r1-r2,2) + np.power(z1 - z2,2))
     
-    #get r,z,t distributions for sputtered W
-    r = PartDist.Generate(nP, 'Uniform')
-    z = PartDist.Generate(nP, 'Uniform')
-    t = PartDist.Generate(nP, 'Uniform')
+    #set r,z for W segments
+    r_coord = np.append(r1,r2[-1])
+    z_coord = np.append(z1,z2[-1])
     
-    #convert r,z,t to x,y,z
+    #get indices of rcoord and r_targ that are W
+    W_ind = np.empty(len(r_W),dtype=int)
+    for i in range(len(r_W)):
+        W_ind[i] = np.where(r_coord == r_W[i])[0]
+
+    #define angle between material wall and major radius, x
+    Alpha = Beta = np.zeros(len(gitr_inds))
+    Alpha = np.abs(np.arctan((z2-z1) / (r2-r1)))
+    Beta = np.pi/2 - Alpha
+    Alpha = np.rad2deg(Alpha[W_ind[:-1]])
+    Beta = np.rad2deg(Beta[W_ind[:-1]])
     
-    #get IEADs for sputtered W
-    E = PartDist.Generate(nP, 'Thomson')
-    PolAng = PartDist.Generate(nP, 'SinCos')
-    AziAng = PartDist.Generate(nP, 'Uniform')
+    #use PyGITR to set up x,y,z,E,theta,psi distributions
+    PartDist = Particles.ParticleDistribution(nP, ListAttr=['vx','vy','vz'])
     
-    #convert IEADs to vx,vy,vz
+    #########################################
+    #get x,y,z distributions for sputtered W
+    #########################################
     
+    r_mid, z_mid, ti, ni, flux, te, ne = solps.read_target_file(targFile)
+    r_mid = r_mid[W_ind[:-1]]
+    z_mid = z_mid[W_ind[:-1]]
+
+    #calcualte erosion flux
+    ion_flux = np.abs(flux[:,1:][W_ind[:-1]]) #only bother with W surfaces
+    spyld = 0.1 #assume sputtering yield of 0.1 for everything because we're lazy
+    sputt_flux = spyld*ion_flux #multiply incoming ion flux by Y_s to get sputtered W flux
+    sputt_flux_total = np.sum(sputt_flux,axis=1) #add together sputtered flux from 8 ion species
+    pps = 0.1*np.multiply(sputt_flux_total,area[W_ind[:-1]]) #multiply by area to get the outgoing particles per second
+    pps_weights = nP*pps/np.sum(pps)
+
+    #confirm nP stays constant
+    for i in range(len(pps_weights)): pps_weights[i] = round(pps_weights[i])
+    nP_diff = int(nP-np.sum(pps_weights))
+
+    if nP_diff > 0:
+        for i in range(abs(nP_diff)):
+            rand_index = np.random.choice(len(pps_weights))
+            pps_weights[rand_index] += 1
+    elif nP_diff < 0:
+        for i in range(abs(nP_diff)):
+            rand_index = np.random.choice(len(pps_weights))
+            pps_weights[rand_index] -= 1
+    pps_weights = pps_weights.astype(int)
+    print('nP(r_mid):', pps_weights)
+    nP_diff = nP-np.sum(pps_weights)
     
-def old(nP = int(1e3), \
+    #populate x,y,z with r_mid,0,z_mid
+    x = np.zeros(nP)
+    y = np.zeros(nP)
+    z = np.zeros(nP)
+    a = np.zeros(nP)
+    b = np.zeros(nP)
+    counter = 0
+    for i in range(len(pps_weights)):
+        x[counter:counter+pps_weights[i]] = r_mid[i]
+        z[counter:counter+pps_weights[i]] = z_mid[i]
+        a[counter:counter+pps_weights[i]] = Alpha[i]
+        b[counter:counter+pps_weights[i]] = Beta[i]
+        counter += pps_weights[i]
+    
+    #########################################
+    #get vx,vy,vz from IEADs
+    #########################################
+    
+    vx = np.zeros(1)
+    vy = np.zeros(1)
+    vz = np.zeros(1)
+    
+    for i in range(len(pps_weights)):
+    
+        weight = int(pps_weights[i])
+        
+        #get IEADs for sputtered W
+        E = PartDist.Generate(weight, 'Thomson')
+        PolAng = PartDist.Generate(weight, 'SinCos', x=np.linspace(0,np.pi/2,weight))
+        AziAng = PartDist.Generate(weight, 'Uniform', x=np.linspace(0,2*np.pi,weight))
+        
+        #convert IEADs to vx,vy,vz unit vectors in particle frame of ref
+        PartDist.SetAttr('vx', np.multiply(np.cos(PolAng), np.cos(AziAng)))
+        PartDist.SetAttr('vy', np.multiply(np.cos(PolAng), np.sin(AziAng)))
+        PartDist.SetAttr('vz', np.sin(PolAng))
+        
+        vx_prime = PartDist.Particles['vx']
+        vy_prime = PartDist.Particles['vy']
+        vz_prime = PartDist.Particles['vz']
+        
+        #rotate vx,vy,vz from particle frame to lab frame
+        PartDist.RotateAngle('v',-90-b[i],0)
+        vx_lab = PartDist.Particles['vx']
+        vy_lab = PartDist.Particles['vy']
+        vz_lab = PartDist.Particles['vz']
+        
+        plt.close()
+        plt.scatter(vx_lab,vz_lab)
+        plt.axis('Scaled')
+        plt.xlabel('vx')
+        plt.ylabel('vz')
+        plt.title('SinCos Polar Angle in the Lab Frame')
+    
+        #convert unit vectors to vx,vy,vz
+        W_kg = 183.84 * 1.6605e-27 #mass of W in kg
+        vtot = np.sqrt(E*1.6022e-19/W_kg) #convert eV to m/s
+        
+        vx = np.append(vx, vtot*vx_lab)
+        vy = np.append(vy, vtot*vy_lab)
+        vz = np.append(vz, vtot*vz_lab)
+    
+    vx = np.delete(vx,0)
+    vy = np.delete(vy,0)
+    vz = np.delete(vz,0)
+    
+    #plot particle framed v_dist relations
+    plt.close()
+    plt.scatter(vx_prime,vy_prime)
+    plt.axis('Scaled')
+    plt.xlabel('vx')
+    plt.ylabel('vy')
+    plt.title('Uniform Azimuthal Angle in the Particle Frame')
+    plt.savefig('plots/vxvy_prime')
+    
+    plt.close()
+    plt.scatter(vx_prime,vz_prime)
+    plt.axis('Scaled')
+    plt.xlabel('vx')
+    plt.ylabel('vz')
+    plt.title('SinCos Polar Angle in the Particle Frame')
+    plt.savefig('plots/vxvz_prime')
+    
+    plt.close()
+    plt.scatter(vx_lab,vz_lab)
+    plt.axis('Scaled')
+    plt.xlabel('vx')
+    plt.ylabel('vz')
+    plt.title('SinCos Polar Angle in the Lab Frame')
+    plt.savefig('plots/vxvz_lab')
+    
+
+    #########################################
+    #make NetCDF Particle Source file
+    #########################################
+
+    rootgrp = netCDF4.Dataset("particleSource.nc", "w", format="NETCDF4")
+    npp = rootgrp.createDimension("nP", nP)
+    xxx = rootgrp.createVariable("x","f8",("nP"))
+    yyy = rootgrp.createVariable("y","f8",("nP"))
+    zzz = rootgrp.createVariable("z","f8",("nP"))
+    vxx = rootgrp.createVariable("vx","f8",("nP"))
+    vyy = rootgrp.createVariable("vy","f8",("nP"))
+    vzz = rootgrp.createVariable("vz","f8",("nP"))
+    xxx[:] = x
+    yyy[:] = y
+    zzz[:] = z
+    vxx[:] = vx
+    vyy[:] = vy
+    vzz[:] = vz
+    rootgrp.close()
+
+
+
+def old_stuff_stolen_from_west_ex(nP = int(1e3), \
             geom = 'gitrGeometry.cfg', \
             targFile = 'assets/rightTargOutput', \
             coordsFile = 'assets/right_target_coordinates.txt'):
@@ -179,4 +337,4 @@ def old(nP = int(1e3), \
     rootgrp.close()
     
 if __name__ == "__main__":
-    simple()
+    simple2D()
