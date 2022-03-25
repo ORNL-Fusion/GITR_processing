@@ -348,8 +348,8 @@ def process_solps_output_for_gitr(dakota_filename = '/Users/Alyssa/Dev/solps-ite
     aveMass[off_grid_inds] = 0
     aveCharge = np.divide(aveCharge, ni_total)
     aveCharge[off_grid_inds] = 0
-    ni_total[off_grid_inds] = 0
     v_parallel_total = np.divide(v_parallel_total, ni_total)
+    ni_total[off_grid_inds] = 0
     v_parallel_total[off_grid_inds] = 0
 
     if plot_variables:
@@ -497,7 +497,7 @@ def get_dakota_variable(index,dak,rdak,zdak,nR,nZ,title='title',plot_variables=0
         plt.close()
         plt.pcolor(rdak, zdak, np.reshape(variable, (nZ, nR)))
         plt.colorbar(orientation='vertical')
-        plt.savefig(title+'.png')
+        plt.savefig('plots/'+title+'.png')
         plt.close()
         variable[off_grid_inds] = -1;
 
