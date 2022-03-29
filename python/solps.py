@@ -307,7 +307,7 @@ def process_solps_output_for_gitr(dakota_filename = 'assets/dakota', \
     nIonSpecies, am, zamin, zn = get_solps_species(b2fstate_filename)
 
     dak = np.loadtxt(dakota_filename)
-    dak = np.reshape(dak, (nR * nZ, -1))
+    #dak = np.reshape(dak, (nR * nZ, -1))
     print('dak shape', dak.shape)
 
     rdak = np.unique(dak[:, 0])
