@@ -301,9 +301,9 @@ def getBfield(rTarg,zTarg, \
     plt.savefig('bangle.png')
     return rSep,bAngle,bMag
 
-def process_solps_output_for_gitr(dakota_filename = '/Users/Alyssa/Dev/solps-iter-data/build/dakota', \
+def process_solps_output_for_gitr(dakota_filename = 'assets/dakota', \
                                   nR = 500, nZ = 1000, plot_variables=0, \
-                                  b2fstate_filename = '/Users/Alyssa/Dev/WEST/helium/b2fstate'):
+                                  b2fstate_filename = 'assets/b2fstate'):
     nIonSpecies, am, zamin, zn = get_solps_species(b2fstate_filename)
 
     dak = np.loadtxt(dakota_filename)
@@ -327,6 +327,7 @@ def process_solps_output_for_gitr(dakota_filename = '/Users/Alyssa/Dev/solps-ite
 
     ni = np.zeros((nIonSpecies, nZ, nR))
     v_parallel = np.zeros((nIonSpecies, nZ, nR))
+    print('nIonSpecies',nIonSpecies)
 
     for i in range(nIonSpecies):
         ni[i,:,:] = get_dakota_variable(5+i,dak,rdak,zdak,nR,nZ,'ni'+str(i),plot_variables)
