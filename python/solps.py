@@ -330,6 +330,8 @@ def process_solps_output_for_gitr(dakota_filename = 'assets/dakota', \
     print('nIonSpecies',nIonSpecies)
 
     for i in range(nIonSpecies):
+        print('i',i)
+        print('v_parallel index', 5+4*nIonSpecies+i)
         ni[i,:,:] = get_dakota_variable(5+i,dak,rdak,zdak,nR,nZ,'ni'+str(i),plot_variables)
         v_parallel[i,:,:] = get_dakota_variable(5+4*nIonSpecies+i,dak,rdak,zdak,nR,nZ,'v_parallel'+str(i),plot_variables)
 
