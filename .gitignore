@@ -4,6 +4,7 @@ examples/sasvw21/input/profiles.nc
 examples/sasvw21/input/
 examples/sasvw21/setup/assets/dakota
 examples/sasvw21/setup/assets/dakota?
+examples/sasvw21/setup/plots/
 .DS_Store
 examples/.DS_Store
 examples/sasvw21/.DS_Store
