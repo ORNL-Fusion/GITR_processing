@@ -9,3 +9,6 @@ examples/sasvw21/setup/plots/
 examples/.DS_Store
 examples/sasvw21/.DS_Store
 examples/sasvw21/setup/.DS_Store
+.*.DS_Store
+.*.pdf
+.*.png
