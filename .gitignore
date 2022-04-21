@@ -12,3 +12,5 @@ examples/sasvw21/setup/.DS_Store
 .*.DS_Store
 .*.pdf
 .*.png
+.*.swp
+.*.pyc
