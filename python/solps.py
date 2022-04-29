@@ -80,6 +80,7 @@ def readEquilibrium(filename='/Users/Alyssa/Dev/WEST/baserun/west_54034_10p2s_ma
     plt.plot(r_wall, z_wall, 'k-')
     plt.plot(r_left_target, z_left_target, 'g-')
     plt.plot(r_right_target, z_right_target, 'r-')
+    plt.axis('Scaled')
     plt.xlabel('r [m]')
     plt.ylabel('z [m]')
     plt.title('Magnetic Flux')
@@ -94,6 +95,7 @@ def readEquilibrium(filename='/Users/Alyssa/Dev/WEST/baserun/west_54034_10p2s_ma
     plt.plot(r_wall, z_wall, 'k-')
     plt.plot(r_left_target, z_left_target, 'g-')
     plt.plot(r_right_target, z_right_target, 'r-')
+    plt.axis('Scaled')
     plt.xlabel('r [m]')
     plt.ylabel('z [m]')
     plt.title('Magnetic Flux Contours')
@@ -114,6 +116,7 @@ def readEquilibrium(filename='/Users/Alyssa/Dev/WEST/baserun/west_54034_10p2s_ma
     plt.plot(r_wall, z_wall, 'k-')
     plt.plot(r_left_target, z_left_target, 'g-')
     plt.plot(r_right_target, z_right_target, 'r-')
+    plt.axis('Scaled')
     plt.xlabel('r [m]')
     plt.ylabel('z [m]')
     plt.title('Br')
@@ -126,6 +129,7 @@ def readEquilibrium(filename='/Users/Alyssa/Dev/WEST/baserun/west_54034_10p2s_ma
     plt.plot(r_wall, z_wall, 'k-')
     plt.plot(r_left_target, z_left_target, 'g-')
     plt.plot(r_right_target, z_right_target, 'r-')
+    plt.axis('Scaled')
     plt.xlabel('r [m]')
     plt.ylabel('z [m]')
     plt.title('Bz')
@@ -142,6 +146,7 @@ def readEquilibrium(filename='/Users/Alyssa/Dev/WEST/baserun/west_54034_10p2s_ma
     plt.plot(r_wall, z_wall, 'k-')
     plt.plot(r_left_target, z_left_target, 'g-')
     plt.plot(r_right_target, z_right_target, 'r-')
+    plt.axis('Scaled')
     plt.xlabel('r [m]')
     plt.ylabel('z [m]')
     plt.title('Bt')
@@ -303,7 +308,8 @@ def getBfield(rTarg,zTarg, \
 
 def process_solps_output_for_gitr(dakota_filename = 'assets/dakota', \
                                   nR = 500, nZ = 1000, plot_variables=0, \
-                                  b2fstate_filename = 'assets/b2fstate'):
+                                  b2fstate_filename = 'assets/b2fstate', \
+                                  r_wall=0,z_wall=0):
     nIonSpecies, am, zamin, zn = get_solps_species(b2fstate_filename)
 
     dak = np.loadtxt(dakota_filename)
@@ -315,7 +321,7 @@ def process_solps_output_for_gitr(dakota_filename = 'assets/dakota', \
     zdak = np.unique(dak[:, 1])
     zdak = np.linspace(zdak[0],zdak[-1],len(zdak))
 
-    te = get_dakota_variable(2,dak,rdak,zdak,nR,nZ,'te',plot_variables)
+    te = get_dakota_variable(2,dak,rdak,zdak,nR,nZ,'Electron Temperature',plot_variables,colorlabel='Te [eV]',rwall=r_wall,zwall=z_wall)
     off_grid_inds = np.where(te < -0.5)
     te[off_grid_inds] = 0.0;
 
@@ -489,15 +495,20 @@ def project_parallel_variable_xyz(v_parallel_total,br,bphi,bz,rdak,zdak,nR,nZ,ti
 
     return vr,vt,vz
 
-def get_dakota_variable(index,dak,rdak,zdak,nR,nZ,title='title',plot_variables=0):
+def get_dakota_variable(index,dak,rdak,zdak,nR,nZ,title='title',plot_variables=0,colorlabel='unit',rwall=0,zwall=0):
     variable = np.reshape(dak[:, index], (nZ, nR))
 
     if plot_variables:
         off_grid_inds = np.where(variable == -1)
         variable[off_grid_inds] = float("nan");
         plt.close()
+        plt.plot(rwall,zwall,'-k')
         plt.pcolor(rdak, zdak, np.reshape(variable, (nZ, nR)))
-        plt.colorbar(orientation='vertical')
+        plt.colorbar(orientation='vertical',label=colorlabel)
+        plt.axis('Scaled')
+        plt.xlabel('r [m]')
+        plt.ylabel('z [m]')
+        plt.title(title)
         plt.savefig('plots/'+title+'.png')
         plt.close()
         variable[off_grid_inds] = -1;

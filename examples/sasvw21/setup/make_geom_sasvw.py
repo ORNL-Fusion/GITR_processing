@@ -8,8 +8,9 @@ import matplotlib.pyplot as plt
 
 def V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
                                   solps_geomfile = 'assets/geom-SASV/SAS-V6e_v002.ogr', \
+                                  solps_targfile = 'assets/b2fgmtry', \
                                   solps_rz = 'assets/geom-SASV/solps_rz.txt', \
-                                  solps_targfile = 'assets/b2fgmtry'):
+                                  gitr_rz = 'assets/geom-SASV/gitr_rz.txt'):
 
     # This program uses the solps geometry .ogr file to create a 2d geometry for GITR
     # in which the solps plasma profiles properly match the divertor target geometry.
@@ -92,6 +93,12 @@ def V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
 
     #gitr.remove_endline_after_comma(infile=gitr_geometry_filename+"0", outfile=gitr_geometry_filename+"00")
     #gitr.remove_endline_after_comma2(infile=gitr_geometry_filename+"00", outfile=gitr_geometry_filename)
+
+    #save (r_final, z_final) to a file for easy visualization in outputs
+    with open(gitr_rz, 'w') as f:
+        for i in range(0,len(r_final)):
+            f.write(str(r_final[i]) +' '+ str(z_final[i]) +'\n')
+
 
     print('r_min:', min(r_final), '\nr_max:', max(r_final), '\nz_min:', min(z_final), '\nz_max:', max(z_final))
     print('created gitrGeometry.cfg')

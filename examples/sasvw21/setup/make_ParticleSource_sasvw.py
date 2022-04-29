@@ -142,9 +142,17 @@ def simple2D(nP = int(1e3), \
     vy = np.delete(vy,0)
     vz = np.delete(vz,0)
     
+    #plot Thomson E dist
+    plt.close()
+    plt.hist(E,bins=100)
+    plt.xlabel('Energy Bins [eV]')
+    plt.ylabel('Histogram')
+    plt.title('Thomson Energy Distribution')
+    plt.savefig('plots/thomson')
+    
     #plot particle framed v_dist relations
     plt.close()
-    plt.scatter(vx_prime,vy_prime)
+    plt.scatter(vx_prime,vy_prime,s=0.3)
     plt.axis('Scaled')
     plt.xlabel('vx')
     plt.ylabel('vy')
@@ -152,7 +160,7 @@ def simple2D(nP = int(1e3), \
     plt.savefig('plots/vxvy_prime')
     
     plt.close()
-    plt.scatter(vx_prime,vz_prime)
+    plt.scatter(vx_prime,vz_prime,s=0.3)
     plt.axis('Scaled')
     plt.xlabel('vx')
     plt.ylabel('vz')
@@ -160,11 +168,11 @@ def simple2D(nP = int(1e3), \
     plt.savefig('plots/vxvz_prime')
     
     plt.close()
-    plt.scatter(vx_lab,vz_lab)
+    plt.scatter(vx_lab,vz_lab,s=0.3)
     plt.axis('Scaled')
     plt.xlabel('vx')
     plt.ylabel('vz')
-    plt.title('SinCos Polar Angle in the Lab Frame')
+    plt.title('SinCos Polar Angle Distribution')
     plt.savefig('plots/vxvz_lab')
     
 

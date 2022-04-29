@@ -2,7 +2,7 @@ clearvars -except Data
 clear all
 close all
 clc
-load('Mask.mat')
+%load('Mask.mat')
 
 OxyPercent=0.0;
 
