@@ -479,15 +479,15 @@ def project_parallel_variable_xyz(v_parallel_total,br,bphi,bz,rdak,zdak,nR,nZ,ti
         plt.close()
         plt.pcolor(rdak, zdak, vr)
         plt.colorbar()
-        plt.savefig(title+'_r.png')
+        plt.savefig('plots/'+title+'_r.png')
         plt.close()
         plt.pcolor(rdak, zdak, vt)
         plt.colorbar()
-        plt.savefig(title+'_t.png')
+        plt.savefig('plots/'+title+'_t.png')
         plt.close()
         plt.pcolor(rdak, zdak, vz)
         plt.colorbar()
-        plt.savefig(title+'_z.png')
+        plt.savefig('plots/'+title+'_z.png')
 
         vr[off_grid_inds] = -1
         vt[off_grid_inds] = -1

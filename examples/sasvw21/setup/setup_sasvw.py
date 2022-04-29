@@ -9,11 +9,12 @@ import make_ParticleSource_sasvw
 
 r,z, rW,zW = make_geom_sasvw.V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
                                     solps_geomfile = 'assets/geom-SASV/SAS-V6e_v002.ogr', \
+                                    solps_targfile = 'assets/b2fgmtry', \
                                     solps_rz = 'assets/geom-SASV/solps_rz.txt', \
-                                    solps_targfile = 'assets/b2fgmtry')
+                                    gitr_rz = 'assets/geom-SASV/gitr_rz.txt')
 
 shutil.move('gitrGeometry.cfg', '../input/gitrGeometry.cfg')
-"""
+
 solps.readEquilibrium(filename = 'assets/vertex_sasvw.eq', \
                                     solps_geom = 'assets/b2fgmtry', \
                                     solps_mesh_extra = None, \
@@ -40,4 +41,3 @@ make_ParticleSource_sasvw.simple2D(nP = int(1e5), \
                                     r_W = rW, z_W = zW)
 
 shutil.move('particleSource.nc', '../input/particleSource.nc')
-"""
