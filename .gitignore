@@ -3,6 +3,7 @@ examples/sasvw21/setup/assets/dakota
 examples/sasvw21/setup/plots/
 examples/sasvw21/input/*.nc
 examples/sasvw21/output/*.nc
+python/__pycache__/
 *.DS_Store
 *.pdf
 *.png
