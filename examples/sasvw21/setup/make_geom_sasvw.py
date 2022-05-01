@@ -81,15 +81,21 @@ def V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
     surfaces = np.zeros(len(r_final))
 
     W_indices = np.array(range(30,45))
-    plt.plot(r_final[W_indices], z_final[W_indices], 'purple', label='W')
+    plt.close()
+    plt.plot(r_right_target, z_right_target, '-k', label='Target', linewidth=0.5)
+    plt.plot(r_final[W_indices], z_final[W_indices], 'purple', label='W', linewidth=0.6)
+    plt.scatter(r_final[W_indices], z_final[W_indices], color='purple', s=8)
     plt.legend()
+    plt.xlabel('r [mm]')
+    plt.ylabel('z [mm]')
+    plt.title('W Part of Outer Divertor')
+    plt.savefig('plots/W wall ID')
     Z[W_indices] = 74;
     surfaces[W_indices] = 1;
 
     #populate geometry input file to GITR
-    gitr.lines_to_gitr_geometry(gitr_geometry_filename, lines, Z, surfaces, inDir)
-
-    #gitr.removeQuotes(infile=gitr_geometry_filename, outfile=gitr_geometry_filename+"0")
+    gitr.lines_to_gitr_geometry(gitr_geometry_filename+'0', lines, Z, surfaces, inDir)
+    gitr.removeQuotes(gitr_geometry_filename+'0', gitr_geometry_filename)
 
     #gitr.remove_endline_after_comma(infile=gitr_geometry_filename+"0", outfile=gitr_geometry_filename+"00")
     #gitr.remove_endline_after_comma2(infile=gitr_geometry_filename+"00", outfile=gitr_geometry_filename)

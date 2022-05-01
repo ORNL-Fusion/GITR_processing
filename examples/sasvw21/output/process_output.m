@@ -90,10 +90,11 @@ file = strcat(pwd,'/surface.nc');
 grossDep0 = ncread(file,'grossDeposition');
 grossEro0 = ncread(file,'grossErosion');
 
-subset = find(Zsurface);
-x = [transpose(x1(subset)),transpose(x2(subset)),transpose(x3(subset))];
-y = [transpose(y1(subset)),transpose(y2(subset)),transpose(y3(subset))];
-z = [transpose(z1(subset)),transpose(z2(subset)),transpose(z3(subset))];
+% subset = find(Zsurface);
+% x = [transpose(x1(subset)),transpose(x2(subset)),transpose(x3(subset))];
+% y = [transpose(y1(subset)),transpose(y2(subset)),transpose(y3(subset))];
+% z = [transpose(z1(subset)),transpose(z2(subset)),transpose(z3(subset))];
+
 
 
 

@@ -3,6 +3,7 @@ sys.path.insert(0, '../../../python/')
 sys.path.append('.')
 
 import shutil
+import os
 import solps
 import make_geom_sasvw
 import make_ParticleSource_sasvw
@@ -13,6 +14,7 @@ r,z, rW,zW = make_geom_sasvw.V6e_v002(gitr_geometry_filename='gitrGeometry.cfg',
                                     solps_rz = 'assets/geom-SASV/solps_rz.txt', \
                                     gitr_rz = 'assets/geom-SASV/gitr_rz.txt')
 
+os.remove('gitrGeometry.cfg0')
 shutil.move('gitrGeometry.cfg', '../input/gitrGeometry.cfg')
 
 solps.readEquilibrium(filename = 'assets/vertex_sasvw.eq', \
