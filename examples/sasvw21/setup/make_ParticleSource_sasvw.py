@@ -36,7 +36,6 @@ def simple2D(nP = int(1e3), \
         W_ind[i] = np.where(r_coord == r_W[i])[0]
 
     #define angle between material wall and major radius, x
-    Alpha = Beta = np.zeros(len(gitr_inds))
     Alpha = np.abs(np.arctan((z2-z1) / (r2-r1)))
     Beta = np.pi/2 - Alpha
     Alpha = np.rad2deg(Alpha[W_ind[:-1]])
@@ -44,7 +43,8 @@ def simple2D(nP = int(1e3), \
     
     #use PyGITR to set up x,y,z,E,theta,psi distributions
     PartDist = Particles.ParticleDistribution(nP, ListAttr=['vx','vy','vz'])
-    
+
+
     #########################################
     #get x,y,z distributions for sputtered W
     #########################################
@@ -76,21 +76,25 @@ def simple2D(nP = int(1e3), \
     pps_weights = pps_weights.astype(int)
     print('nP(r_mid):', pps_weights)
     nP_diff = nP-np.sum(pps_weights)
+    print('nP_diff should be 0: ', nP_diff)
     
-    #populate x,y,z with r_mid,0,z_mid
-    x = np.zeros(nP)
-    y = np.zeros(nP)
-    z = np.zeros(nP)
+    #populate a,b with Alpha,Beta
     a = np.zeros(nP)
     b = np.zeros(nP)
-    counter = 0
+    counter=0
     for i in range(len(pps_weights)):
-        x[counter:counter+pps_weights[i]] = r_mid[i]
-        z[counter:counter+pps_weights[i]] = z_mid[i]
         a[counter:counter+pps_weights[i]] = Alpha[i]
         b[counter:counter+pps_weights[i]] = Beta[i]
         counter += pps_weights[i]
-    
+
+    #define adjustment into the sheath because particles can't start exactly on the wall
+    adj = 1e-7
+
+    #populate x,y,z with r_mid,0,z_mid
+    x,y,z = uniform(nP,pps_weights,adj,b, r_coord[W_ind],z_coord[W_ind])
+    #x,y,z = midpoints(nP,pps_weights,adj,b, r_mid,z_mid)
+
+
     #########################################
     #get vx,vy,vz from IEADs
     #########################################
@@ -195,6 +199,43 @@ def simple2D(nP = int(1e3), \
     vyy[:] = vy
     vzz[:] = vz
     rootgrp.close()
+
+
+def midpoints(nP,pps_weights,adj,b, r_mid,z_mid):
+    x = np.zeros(nP)
+    y = np.zeros(nP)
+    z = np.zeros(nP)
+    counter = 0
+    for i in range(len(pps_weights)):
+        x[counter:counter+pps_weights[i]] = r_mid[i] - adj*np.cos(b[i])
+        z[counter:counter+pps_weights[i]] = z_mid[i] - adj*np.sin(b[i])
+        counter += pps_weights[i]
+
+    return x,y,z
+
+
+def uniform(nP,pps_weights,adj,b, r_coord,z_coord):
+    r1 = r_coord[:-1]
+    z1 = z_coord[:-1]
+    r2 = r_coord[1:]
+    z2 = z_coord[1:]
+    
+    x = np.zeros(nP)
+    y = np.zeros(nP)
+    z = np.zeros(nP)
+    counter = 0
+    for i in range(len(pps_weights)):
+        dr = (r2[i]-r1[i])/pps_weights[i]
+        dz = (z2[i]-z1[i])/pps_weights[i]
+        r_segment = np.linspace(r1[i]+dr/2, r2[i]-dr/2, pps_weights[i])
+        z_segment = np.linspace(z1[i]+dz/2, z2[i]-dz/2, pps_weights[i])
+
+        x[counter:counter+pps_weights[i]] = r_segment - adj*np.cos(b[i])
+        z[counter:counter+pps_weights[i]] = z_segment - adj*np.sin(b[i])
+        counter += pps_weights[i]
+
+    return x,y,z
+
 
 
 
