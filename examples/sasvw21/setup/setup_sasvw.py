@@ -25,7 +25,7 @@ solps.readEquilibrium(filename = 'assets/vertex_sasvw.eq', \
 shutil.move('bField.nc', '../input/bField.nc')
 
 solps.process_solps_output_for_gitr(dakota_filename = 'assets/dakota', \
-                                   nR = 500, nZ = 1000, plot_variables=1, \
+                                   nR = 500, nZ = 1000, plot_variables=0, \
                                    b2fstate_filename = 'assets/b2fstate', \
                                    r_wall = r, z_wall = z)
 
