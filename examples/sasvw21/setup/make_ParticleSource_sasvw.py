@@ -24,6 +24,7 @@ def simple2D(nP = int(1e3), \
     r2 = x2[gitr_inds] #coords[:,5]
     z1 = z1[gitr_inds] #coords[:,6]
     z2 = z2[gitr_inds] #coords[:,7]
+    slope = slope[gitr_inds] #coords[:,7]
     area = np.pi*(r1+r2)*np.sqrt(np.power(r1-r2,2) + np.power(z1 - z2,2))
     
     #set r,z for W segments
@@ -36,6 +37,7 @@ def simple2D(nP = int(1e3), \
         W_ind[i] = np.where(r_coord == r_W[i])[0]
 
     #define angle between material wall and major radius, x
+    slope = slope[W_ind[:-1]]
     Alpha = np.abs(np.arctan((z2-z1) / (r2-r1)))
     Beta = np.pi/2 - Alpha
     Alpha = np.rad2deg(Alpha[W_ind[:-1]])
@@ -91,8 +93,9 @@ def simple2D(nP = int(1e3), \
     adj = 1e-7
 
     #populate x,y,z with r_mid,0,z_mid
-    x,y,z = uniform(nP,pps_weights,adj,b, r_coord[W_ind],z_coord[W_ind])
-    #x,y,z = midpoints(nP,pps_weights,adj,b, r_mid,z_mid)
+    #x,y,z = random(nP,pps_weights,adj,slope,b, r_coord[W_ind],z_coord[W_ind])
+    x,y,z = uniform(nP,pps_weights,adj,slope,b, r_coord[W_ind],z_coord[W_ind])
+    #x,y,z = midpoints(nP,pps_weights,adj,slope,b, r_mid,z_mid)
 
 
     #########################################
@@ -122,7 +125,12 @@ def simple2D(nP = int(1e3), \
         vz_prime = PartDist.Particles['vz']
         
         #rotate vx,vy,vz from particle frame to lab frame
-        PartDist.RotateAngle('v',-90-b[i],0)
+        if slope[i]>0:
+            PartDist.RotateAngle('v',-b[i],0)
+        elif slope[i]<0:
+            PartDist.RotateAngle('v',-90-b[i],0)
+        else:
+            print('GITR Error: invalid slope')
         vx_lab = PartDist.Particles['vx']
         vy_lab = PartDist.Particles['vy']
         vz_lab = PartDist.Particles['vz']
@@ -201,20 +209,20 @@ def simple2D(nP = int(1e3), \
     rootgrp.close()
 
 
-def midpoints(nP,pps_weights,adj,b, r_mid,z_mid):
+def midpoints(nP,pps_weights,adj,slope,b, r_mid,z_mid):
     x = np.zeros(nP)
     y = np.zeros(nP)
     z = np.zeros(nP)
     counter = 0
     for i in range(len(pps_weights)):
         x[counter:counter+pps_weights[i]] = r_mid[i] - adj*np.cos(b[i])
-        z[counter:counter+pps_weights[i]] = z_mid[i] - adj*np.sin(b[i])
+        z[counter:counter+pps_weights[i]] = z_mid[i] + np.sign(slope[i]) * adj*np.sin(b[i])
         counter += pps_weights[i]
 
     return x,y,z
 
 
-def uniform(nP,pps_weights,adj,b, r_coord,z_coord):
+def uniform(nP,pps_weights,adj,slope,b, r_coord,z_coord):
     r1 = r_coord[:-1]
     z1 = z_coord[:-1]
     r2 = r_coord[1:]
@@ -231,10 +239,31 @@ def uniform(nP,pps_weights,adj,b, r_coord,z_coord):
         z_segment = np.linspace(z1[i]+dz/2, z2[i]-dz/2, pps_weights[i])
 
         x[counter:counter+pps_weights[i]] = r_segment - adj*np.cos(b[i])
-        z[counter:counter+pps_weights[i]] = z_segment - adj*np.sin(b[i])
+        z[counter:counter+pps_weights[i]] = z_segment + np.sign(slope[i]) * adj*np.sin(b[i])
         counter += pps_weights[i]
 
     return x,y,z
+
+
+def random(nP,pps_weights,adj,slope,b, r_coord,z_coord):
+    r1 = r_coord[:-1]
+    z1 = z_coord[:-1]
+    r2 = r_coord[1:]
+    z2 = z_coord[1:]
+    
+    x = np.zeros(nP)
+    y = np.zeros(nP)
+    z = np.zeros(nP)
+    counter = 0
+    for i in range(len(pps_weights)):
+        for j in range(pps_weights[i]):
+            chi = np.random
+            x[counter+j] = r1+chi*(r2[i]-r1[i]) - adj*np.cos(b[i])
+            z[counter+j] = z1+chi*(z2[i]-z1[i]) + np.sign(slope[i]) * adj*np.sin(b[i])
+        counter += pps_weights[i]
+
+    return x,y,z
+    
 
 
 
