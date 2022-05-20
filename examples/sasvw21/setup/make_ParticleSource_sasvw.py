@@ -91,6 +91,12 @@ def simple2D(nP = int(1e3), \
     #x,y,z = random(nP,pps_weights,adj,slope,Beta, r1[W_ind],z1[W_ind])
     #x,y,z = uniform(nP,pps_weights,adj,slope,Beta, r1[W_ind],z1[W_ind])
     x,y,z = midpoints(nP,pps_weights,adj,slope,Beta, r_mid,z_mid)
+    
+    plt.close()
+    plt.plot(r_W,z_W,'-k')
+    plt.scatter(x,z)
+    plt.axis('Scaled')
+    plt.savefig('plots/test')
 
 
     #########################################
