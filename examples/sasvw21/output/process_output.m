@@ -7,6 +7,27 @@ T = zeros(length(R));
 Z = geom(2,:);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% startPosition
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+file = strcat(pwd,'/../input/particleSource.nc');
+x0 = ncread(file,'x');
+y0 = ncread(file,'y');
+z0 = ncread(file,'z');
+
+figure(1)
+plot(R,Z)
+hold on
+scatter(x0,z0)
+
+axis equal
+xlim([1.46 1.52])
+ylim([1.16 1.25])
+xlabel('r [m]')
+ylabel('z [m]')
+title('Start Positions')
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% endPosition
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -31,7 +52,7 @@ vtot = sqrt(vx0.^2 +vy0.^2 + vz0.^2);
 %figure(2)
 %histogram(E)
 
-figure(1)
+figure(4)
 plot(R,Z)
 hold on
 scatter(x0(hasHit), z0(hasHit), 'g')
@@ -65,7 +86,7 @@ nP = sizeArray(2);
 hit = find(weight(end,:) < 1);
 
 %r = sqrt(x.^2 + y.^2);
-figure(2)
+figure(6)
 plot(R,Z)
 hold on
 
