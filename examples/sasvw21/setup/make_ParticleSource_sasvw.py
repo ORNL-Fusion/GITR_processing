@@ -26,7 +26,7 @@ def simple2D(nP = int(1e3), \
     z2 = z2[gitr_inds] #coords[:,7]
     slope = slope[gitr_inds] #coords[:,7]
     area = np.pi*(r1+r2)*np.sqrt(np.power(r1-r2,2) + np.power(z1 - z2,2))
-    
+
     #get indices of rcoord and r_targ that are W
     W_ind = np.empty(len(r_W),dtype=int)
     for i in range(len(r_W)):
@@ -35,8 +35,8 @@ def simple2D(nP = int(1e3), \
     #define angle between material wall and major radius, x
     Alpha = np.abs(np.arctan((z2-z1) / (r2-r1)))
     Beta = np.abs(np.pi/2 - Alpha)
-    Alpha = np.abs(np.rad2deg(Alpha[W_ind[:-1]]))
-    Beta = np.abs(np.rad2deg(Beta[W_ind[:-1]]))
+    Alpha = Alpha[W_ind[:-1]] #np.abs(np.rad2deg(Alpha[W_ind[:-1]]))
+    Beta = Beta[W_ind[:-1]] #np.abs(np.rad2deg(Beta[W_ind[:-1]]))
     
     #use PyGITR to set up x,y,z,E,theta,psi distributions
     PartDist = Particles.ParticleDistribution(nP, ListAttr=['vx','vy','vz'])
@@ -129,7 +129,7 @@ def simple2D(nP = int(1e3), \
         if slope[i]>0:
             PartDist.RotateAngle('v',-b[i],0)
         elif slope[i]<0:
-            PartDist.RotateAngle('v',-90-b[i],0)
+            PartDist.RotateAngle('v',-np.pi/2-b[i],0)
         else:
             print('GITR Error: invalid slope')
         vx_lab = PartDist.Particles['vx']
