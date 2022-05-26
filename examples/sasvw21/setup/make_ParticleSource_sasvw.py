@@ -35,8 +35,8 @@ def simple2D(nP = int(1e3), \
     #define angle between material wall and major radius, x
     Alpha = np.abs(np.arctan((z2-z1) / (r2-r1)))
     Beta = np.abs(np.pi/2 - Alpha)
-    Alpha = Alpha[W_ind[:-1]] #np.abs(np.rad2deg(Alpha[W_ind[:-1]]))
-    Beta = Beta[W_ind[:-1]] #np.abs(np.rad2deg(Beta[W_ind[:-1]]))
+    Alpha = np.abs(Alpha[W_ind[:-1]]) #np.abs(np.rad2deg(Alpha[W_ind[:-1]]))
+    Beta = np.abs(Beta[W_ind[:-1]]) #np.abs(np.rad2deg(Beta[W_ind[:-1]]))
     
     #use PyGITR to set up x,y,z,E,theta,psi distributions
     PartDist = Particles.ParticleDistribution(nP, ListAttr=['vx','vy','vz'])
