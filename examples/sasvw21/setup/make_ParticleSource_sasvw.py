@@ -126,9 +126,9 @@ def simple2D(nP = int(1e3), \
         vz_prime = PartDist.Particles['vz']
         
         #rotate vx,vy,vz from particle frame to lab frame
-        if slope[i]>0:
+        if slope[i]<0:
             PartDist.RotateAngle('v',-b[i],0)
-        elif slope[i]<0:
+        elif slope[i]>0:
             PartDist.RotateAngle('v',-np.pi/2-b[i],0)
         else:
             print('GITR Error: invalid slope')
@@ -155,7 +155,7 @@ def simple2D(nP = int(1e3), \
     vx = np.delete(vx,0)
     vy = np.delete(vy,0)
     vz = np.delete(vz,0)
-    
+    '''
     #plot Thomson E dist
     plt.close()
     plt.hist(E,bins=100)
@@ -165,7 +165,6 @@ def simple2D(nP = int(1e3), \
     plt.savefig('plots/thomson')
     
     #plot particle framed v_dist relations
-    '''
     plt.close()
     plt.scatter(vx_prime,vy_prime,s=0.3)
     plt.axis('Scaled')
@@ -190,7 +189,6 @@ def simple2D(nP = int(1e3), \
     plt.title('SinCos Polar Angle Distribution')
     plt.savefig('plots/vxvz_lab')
     '''
-    
 
     #########################################
     #make NetCDF Particle Source file
