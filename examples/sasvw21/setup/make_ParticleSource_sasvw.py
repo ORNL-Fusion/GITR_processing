@@ -125,13 +125,14 @@ def simple2D(nP = int(1e3), \
         vy_prime = PartDist.Particles['vy']
         vz_prime = PartDist.Particles['vz']
         
-        #rotate vx,vy,vz from particle frame to lab frame
+        '''#rotate vx,vy,vz from particle frame to lab frame
         if slope[i]>0:
-            PartDist.RotateAngle('v',-a[i],0)
+            PartDist.RotateAngle('v',-b[i],0)
         elif slope[i]<0:
-            PartDist.RotateAngle('v',-np.pi/2-a[i],0)
+            PartDist.RotateAngle('v',-np.pi/2-b[i],0)
         else:
             print('GITR Error: invalid slope')
+        '''
         vx_lab = PartDist.Particles['vx']
         vy_lab = PartDist.Particles['vy']
         vz_lab = PartDist.Particles['vz']
