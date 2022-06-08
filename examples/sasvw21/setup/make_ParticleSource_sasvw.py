@@ -32,6 +32,8 @@ def simple2D(nP = int(1e3), \
     for i in range(len(r_W)):
         W_ind[i] = np.where(r1 == r_W[i])[0]
 
+    slope = slope[W_ind[:-1]]
+
     #define angle between material wall and major radius, x
     Alpha = np.abs(np.arctan((z2-z1) / (r2-r1)))
     Beta = np.abs(np.pi/2 - Alpha)
@@ -91,7 +93,7 @@ def simple2D(nP = int(1e3), \
     #x,y,z = random(nP,pps_weights,adj,slope,Beta, r1[W_ind],z1[W_ind])
     #x,y,z = uniform(nP,pps_weights,adj,slope,Beta, r1[W_ind],z1[W_ind])
     x,y,z = midpoints(nP,pps_weights,adj,slope,Beta, r_mid,z_mid)
-    
+
     plt.close()
     plt.plot(r_W,z_W,'-k')
     plt.scatter(x,z)
@@ -126,9 +128,9 @@ def simple2D(nP = int(1e3), \
         vz_prime = PartDist.Particles['vz']
         
         #rotate vx,vy,vz from particle frame to lab frame
-        if slope[i]<0:
+        if slope[i]>0:
             PartDist.RotateAngle('v',-b[i],0)
-        elif slope[i]>0:
+        elif slope[i]<0:
             PartDist.RotateAngle('v',-np.pi/2-b[i],0)
         else:
             print('GITR Error: invalid slope')
@@ -136,14 +138,14 @@ def simple2D(nP = int(1e3), \
         vx_lab = PartDist.Particles['vx']
         vy_lab = PartDist.Particles['vy']
         vz_lab = PartDist.Particles['vz']
-        
+
         plt.close()
         plt.scatter(vx_lab,vz_lab)
         plt.axis('Scaled')
         plt.xlabel('vx')
         plt.ylabel('vz')
         plt.title('SinCos Polar Angle in the Lab Frame')
-    
+
         #convert unit vectors to vx,vy,vz
         W_kg = 183.84 * 1.6605e-27 #mass of W in kg
         vtot = np.sqrt(E*1.6022e-19/W_kg) #convert eV to m/s
@@ -155,7 +157,7 @@ def simple2D(nP = int(1e3), \
     vx = np.delete(vx,0)
     vy = np.delete(vy,0)
     vz = np.delete(vz,0)
-    '''
+
     #plot Thomson E dist
     plt.close()
     plt.hist(E,bins=100)
@@ -188,7 +190,7 @@ def simple2D(nP = int(1e3), \
     plt.ylabel('vz')
     plt.title('SinCos Polar Angle Distribution')
     plt.savefig('plots/vxvz_lab')
-    '''
+
 
     #########################################
     #make NetCDF Particle Source file

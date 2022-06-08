@@ -81,6 +81,7 @@ def V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
     surfaces = np.zeros(len(r_final))
 
     W_indices = np.array(range(30,45))
+
     plt.close()
     plt.plot(r_right_target, z_right_target, '-k', label='Target', linewidth=0.5)
     plt.plot(r_final[W_indices], z_final[W_indices], 'purple', label='W', linewidth=0.6)
@@ -90,6 +91,7 @@ def V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
     plt.ylabel('z [mm]')
     plt.title('W Part of Outer Divertor')
     plt.savefig('plots/W wall ID')
+
     Z[W_indices] = 74;
     surfaces[W_indices] = 1;
 
