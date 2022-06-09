@@ -129,9 +129,9 @@ def simple2D(nP = int(1e3), \
         
         #rotate vx,vy,vz from particle frame to lab frame
         if slope[i]>0:
-            PartDist.RotateAngle('v', -b[i],0, Degree=False)
-        elif slope[i]<0:
             PartDist.RotateAngle('v', -np.pi/2-b[i],0, Degree=False)
+        elif slope[i]<0:
+            PartDist.RotateAngle('v', -np.pi/2+b[i],0, Degree=False)
         else:
             print('GITR Error: invalid slope')
         
