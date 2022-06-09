@@ -131,7 +131,7 @@ def simple2D(nP = int(1e3), \
         if slope[i]>0:
             PartDist.RotateAngle('v', -Alpha[i],0, Degree=False)
         elif slope[i]<0:
-            PartDist.RotateAngle('v', 0.1,0, Degree=False)
+            PartDist.RotateAngle('v', -np.pi/2-Beta[i],0, Degree=False)
         else:
             print('GITR Error: invalid slope')
         
