@@ -129,7 +129,7 @@ def simple2D(nP = int(1e3), \
         vz_prime = PartDist.Particles['vz']
 
         #rotate vx,vy,vz from particle frame to lab frame
-        PartDist.RotateAngle('v', 0,0, Degree=False)
+        PartDist.RotateAngle('v', -m*Alpha[i],0, Degree=False)
         '''
         if slope[i]>0:
             PartDist.RotateAngle('v', -Alpha[i],0, Degree=False)
