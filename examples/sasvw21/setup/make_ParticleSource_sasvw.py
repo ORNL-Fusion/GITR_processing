@@ -112,6 +112,7 @@ def simple2D(nP = int(1e3), \
     for i in range(len(pps_weights)):
     
         weight = int(pps_weights[i])
+        m = np.sign(slope[i])
         
         #get IEADs for sputtered W
         E = PartDist.Generate(weight, 'Thomson')
@@ -121,19 +122,22 @@ def simple2D(nP = int(1e3), \
         #convert IEADs to vx,vy,vz unit vectors in particle frame of ref
         PartDist.SetAttr('vx', np.multiply(np.cos(PolAng), np.cos(AziAng)))
         PartDist.SetAttr('vy', np.multiply(np.cos(PolAng), np.sin(AziAng)))
-        PartDist.SetAttr('vz', np.sin(PolAng))
+        PartDist.SetAttr('vz', m*np.sin(PolAng))
         
         vx_prime = PartDist.Particles['vx']
         vy_prime = PartDist.Particles['vy']
         vz_prime = PartDist.Particles['vz']
-        
+
         #rotate vx,vy,vz from particle frame to lab frame
+        PartDist.RotateAngle('v', -m*Alpha[i],0, Degree=False)
+        '''
         if slope[i]>0:
             PartDist.RotateAngle('v', -Alpha[i],0, Degree=False)
         elif slope[i]<0:
             PartDist.RotateAngle('v', np.pi/2+Alpha[i],0, Degree=False)
         else:
             print('GITR Error: invalid slope')
+        '''
         
         vx_lab = PartDist.Particles['vx']
         vy_lab = PartDist.Particles['vy']
