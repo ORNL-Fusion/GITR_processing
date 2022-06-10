@@ -89,9 +89,9 @@ def simple2D(nP = int(1e3), \
     adj = 1e-5
 
     #populate x,y,z with r_mid,0,z_mid
-    #x,y,z = random(nP,pps_weights,adj,slope,Beta, r1,z1)
+    x,y,z = random(nP,pps_weights,adj,slope,Beta, r1,z1)
     #x,y,z = uniform(nP,pps_weights,adj,slope,Beta, r1,z1)
-    x,y,z = uniform(nP,pps_weights, adj,slope,Beta, r1,z1)
+    #x,y,z = midpoints(nP,pps_weights, adj,slope,Beta, r1,z1)
 
     plt.close()
     plt.plot(r_W,z_W,'-k')
@@ -266,9 +266,9 @@ def random(nP,pps_weights,adj,slope,Beta, r_coord,z_coord):
     counter = 0
     for i in range(len(pps_weights)):
         for j in range(pps_weights[i]):
-            chi = np.random
-            x[counter+j] = r1+chi*(r2[i]-r1[i]) - adj*np.abs(np.cos(Beta[i]))
-            z[counter+j] = z1+chi*(z2[i]-z1[i]) + np.sign(slope[i]) * adj*np.abs(np.sin(Beta[i]))
+            chi = np.random.rand(1)
+            x[counter+j] = r1[i]+chi*(r2[i]-r1[i]) - adj*np.abs(np.cos(Beta[i]))
+            z[counter+j] = z1[i]+chi*(z2[i]-z1[i]) + np.sign(slope[i]) * adj*np.abs(np.sin(Beta[i]))
         counter += pps_weights[i]
 
     return x,y,z
