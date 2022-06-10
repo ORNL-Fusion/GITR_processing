@@ -91,7 +91,7 @@ def simple2D(nP = int(1e3), \
     #populate x,y,z with r_mid,0,z_mid
     #x,y,z = random(nP,pps_weights,adj,slope,Beta, r1,z1)
     #x,y,z = uniform(nP,pps_weights,adj,slope,Beta, r1,z1)
-    x,y,z = midpoints(nP,pps_weights, adj,slope,Beta, r1,z1)
+    x,y,z = uniform(nP,pps_weights, adj,slope,Beta, r1,z1)
 
     plt.close()
     plt.plot(r_W,z_W,'-k')
@@ -224,9 +224,8 @@ def midpoints(nP,pps_weights,adj,slope,Beta, r1,z1):
     z = np.zeros(nP)
     counter = 0
     for i in range(len(pps_weights)):
-        m = np.sign(slope[i])
         x[counter:counter+pps_weights[i]] = r_mid[i] - adj*np.abs(np.cos(Beta[i]))
-        z[counter:counter+pps_weights[i]] = z_mid[i] + m * adj*np.abs(np.sin(Beta[i]))
+        z[counter:counter+pps_weights[i]] = z_mid[i] + np.sign(slope[i]) * adj*np.abs(np.sin(Beta[i]))
         counter += pps_weights[i]
 
     return x,y,z
