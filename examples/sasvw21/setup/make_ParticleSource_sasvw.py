@@ -86,7 +86,7 @@ def simple2D(nP = int(1e3), \
         counter += pps_weights[i]
 
     #define adjustment into the sheath because particles can't start exactly on the wall
-    adj = 1e-8
+    adj = 1e-7
 
     #populate x,y,z with r_mid,0,z_mid
     #x,y,z = random(nP,pps_weights,adj,slope,Beta, r1,z1)
