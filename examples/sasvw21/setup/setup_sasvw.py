@@ -37,7 +37,7 @@ solps.make_solps_targ_coord_file(gitr_geom_filename = '../input/gitrGeometry.cfg
                                     coords_file = 'assets/right_target_coordinates.txt', \
                                     right_target_filename = 'assets/rightTargOutput')
 """
-make_ParticleSource_sasvw.simple2D(nP = int(1e6), \
+make_ParticleSource_sasvw.simple2D(nP = int(1e3), \
                                     geom = '../input/gitrGeometry.cfg', \
                                     targFile = 'assets/rightTargOutput', \
                                     coordsFile = 'assets/right_target_coordinates.txt', \
