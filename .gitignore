@@ -5,6 +5,7 @@ examples/sasvw21/input/*.nc
 examples/sasvw21/output/*.nc
 examples/sasvw21/output/positions.m
 python/__pycache__/
+setup/__pycache__/
 *.DS_Store
 *.pdf
 *.png
