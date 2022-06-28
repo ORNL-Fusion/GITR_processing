@@ -88,6 +88,7 @@ hit = find(weight(end,:) < 1);
 %r = sqrt(x.^2 + y.^2);
 figure(6)
 plot(R,Z)
+%plot3(R,T,Z)
 hold on
 
 for i=1:1:length(x0)
@@ -96,10 +97,10 @@ plot(x(:,i),z(:,i))
 end
 
 axis equal
-xlim([1.46 1.52])
-ylim([1.16 1.25])
+%xlim([1.43 1.56])
+%ylim([1.07 1.25])
 xlabel('r [m]')
-ylabel('z [m]')
+zlabel('z [m]')
 title('Histories')
 end
 

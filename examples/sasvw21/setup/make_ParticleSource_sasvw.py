@@ -118,6 +118,7 @@ def simple2D(nP = int(1e3), \
         
         #get IEADs for sputtered W
         E = PartDist.Generate(weight, 'Thomson')
+        print('E',E)
         PolAng = PartDist.Generate(weight, 'SinCos', x=np.linspace(0,np.pi/2,weight))
         AziAng = PartDist.Generate(weight, 'Uniform', x=np.linspace(0,2*np.pi,weight))
         

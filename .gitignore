@@ -10,3 +10,4 @@ python/__pycache__/
 *.png
 *.swp
 *.pyc
+*.fig
