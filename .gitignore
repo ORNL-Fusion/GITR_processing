@@ -12,3 +12,4 @@ setup/__pycache__/
 *.swp
 *.pyc
 *.fig
+examples/sasvw21/LcS.nc
