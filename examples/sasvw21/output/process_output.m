@@ -52,6 +52,9 @@ vtot = sqrt(vx0.^2 +vy0.^2 + vz0.^2);
 %figure(2)
 %histogram(E)
 
+charge = ncread(file,'charge');
+charge_avg = mean(charge)
+
 figure(4)
 plot(R,Z)
 hold on
