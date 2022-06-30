@@ -90,13 +90,13 @@ hit = find(weight(end,:) < 1);
 
 %r = sqrt(x.^2 + y.^2);
 figure(6)
-plot(R,Z)
-%plot3(R,T,Z)
+%plot(R,Z)
+plot3(R,T,Z)
 hold on
 
 for i=1:1:length(x0)
-%plot3(x(:,i),y(:,i),z(:,i))
-plot(x(:,i),z(:,i))
+plot3(x(:,i),y(:,i),z(:,i))
+%plot(x(:,i),z(:,i))
 end
 
 axis equal

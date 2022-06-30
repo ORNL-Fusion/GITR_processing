@@ -273,8 +273,35 @@ def random(nP,pps_weights,adj,slope,Beta, r_coord,z_coord):
         counter += pps_weights[i]
 
     return x,y,z
-    
 
+
+def check_symmetry(nP = int(1e3)):
+    x = 1.75*np.ones(nP)
+    y = np.zeros(nP)
+    z = 0.4*np.ones(nP)
+    vx = np.zeros(nP)
+    vy = 1500*np.ones(nP)
+    vz = np.zeros(nP)
+
+    #########################################
+    #make NetCDF Particle Source file
+    #########################################
+
+    rootgrp = netCDF4.Dataset("particleSource.nc", "w", format="NETCDF4")
+    npp = rootgrp.createDimension("nP", nP)
+    xxx = rootgrp.createVariable("x","f8",("nP"))
+    yyy = rootgrp.createVariable("y","f8",("nP"))
+    zzz = rootgrp.createVariable("z","f8",("nP"))
+    vxx = rootgrp.createVariable("vx","f8",("nP"))
+    vyy = rootgrp.createVariable("vy","f8",("nP"))
+    vzz = rootgrp.createVariable("vz","f8",("nP"))
+    xxx[:] = x
+    yyy[:] = y
+    zzz[:] = z
+    vxx[:] = vx
+    vyy[:] = vy
+    vzz[:] = vz
+    rootgrp.close()
 
 
 
