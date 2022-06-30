@@ -4,6 +4,7 @@ examples/sasvw21/setup/plots/
 examples/sasvw21/input/*.nc
 examples/sasvw21/output/*.nc
 examples/sasvw21/output/positions.m
+examples/sasvw21/output/plots/
 python/__pycache__/
 setup/__pycache__/
 *.DS_Store

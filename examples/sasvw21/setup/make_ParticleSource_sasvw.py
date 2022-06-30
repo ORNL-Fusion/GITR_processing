@@ -89,9 +89,9 @@ def simple2D(nP = int(1e3), \
     adj = 1e-7
 
     #populate x,y,z with r_mid,0,z_mid
-    x,y,z = random(nP,pps_weights,adj,slope,Beta, r1,z1)
+    #x,y,z = random(nP,pps_weights,adj,slope,Beta, r1,z1)
     #x,y,z = uniform(nP,pps_weights,adj,slope,Beta, r1,z1)
-    #x,y,z = midpoints(nP,pps_weights, adj,slope,Beta, r1,z1)
+    x,y,z = midpoints(nP,pps_weights, adj,slope,Beta, r1,z1)
 
     plt.close()
     plt.plot(r_W,z_W,'-k')
