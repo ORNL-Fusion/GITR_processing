@@ -104,18 +104,18 @@ zlabel('z [m]')
 title('Histories')
 
 figure(7) %2D plotting
-plot(R,Z,'LineWidth',2)
+plot(R,T)
 hold on
 
 for i=1:1:length(x0)
-plot(x(:,i),z(:,i),'LineWidth',1)
+plot(x(:,i),y(:,i),'LineWidth',1)
 end
 
 axis equal
 %xlim([1.43 1.56])
 %ylim([1.07 1.25])
 xlabel('r [m]')
-ylabel('z [m]')
+ylabel('y [m]')
 title('Histories')
 
 end
