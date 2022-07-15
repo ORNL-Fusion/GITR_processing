@@ -286,7 +286,7 @@ def point_source(nP = int(1e3)):
     z = 1.2*np.ones(nP)
     vx = np.zeros(nP)
     vy = 5000*np.zeros(nP)
-    vz = -0.05*np.zeros(nP)
+    vz = 5*np.zeros(nP)
 
     #########################################
     #make NetCDF Particle Source file
@@ -457,4 +457,4 @@ def old_stuff_stolen_from_west_ex(nP = int(1e3), \
     rootgrp.close()
     
 if __name__ == "__main__":
-    simple2D()
+    point_source(nP = int(1e3))

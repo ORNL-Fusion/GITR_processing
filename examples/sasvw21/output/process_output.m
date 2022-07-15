@@ -63,8 +63,8 @@ hold on
 scatter(x0(notHit), z0(notHit), 'r')
 
 axis equal
-%xlim([1.46 1.52])
-%ylim([1.16 1.25])
+xlim([1.46 1.52])
+ylim([1.16 1.25])
 xlabel('r [m]')
 ylabel('z [m]')
 title('End Positions')
@@ -112,8 +112,8 @@ plot(x(:,i),z(:,i),'LineWidth',2)
 end
 
 axis equal
-%xlim([1.43 1.56])
-%ylim([1.07 1.25])
+xlim([1.43 1.56])
+ylim([1.07 1.25])
 xlabel('r [m]')
 ylabel('z [m]')
 title('Histories')
