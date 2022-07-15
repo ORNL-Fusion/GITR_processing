@@ -14,6 +14,7 @@ def simple2D(nP = int(1e3), \
             geom = '../input/gitrGeometry.cfg', \
             targFile = 'assets/rightTargOutput', \
             coordsFile = 'assets/right_target_coordinates.txt', \
+            configuration = 'midpoint', \
             r_W = None, z_W = None):
     
     #import r1,r2,z1,z2 coordinates
@@ -89,9 +90,14 @@ def simple2D(nP = int(1e3), \
     adj = 1e-7
 
     #populate x,y,z with r_mid,0,z_mid
-    #x,y,z = random(nP,pps_weights,adj,slope,Beta, r1,z1)
-    #x,y,z = uniform(nP,pps_weights,adj,slope,Beta, r1,z1)
-    x,y,z = midpoints(nP,pps_weights, adj,slope,Beta, r1,z1)
+    if configuration == 'random': 
+        x,y,z = random(nP,pps_weights,adj,slope,Beta, r1,z1)
+    elif configuration == 'uniform': 
+        x,y,z = uniform(nP,pps_weights,adj,slope,Beta, r1,z1)
+    elif configuration == 'midpoint': 
+        x,y,z = midpoints(nP,pps_weights, adj,slope,Beta, r1,z1)
+    else:
+        print('(x,y,z) configuration not set')
 
     plt.close()
     plt.plot(r_W,z_W,'-k')
@@ -118,7 +124,6 @@ def simple2D(nP = int(1e3), \
         
         #get IEADs for sputtered W
         E = PartDist.Generate(weight, 'Thomson')
-        print('E',E)
         PolAng = PartDist.Generate(weight, 'SinCos', x=np.linspace(0,np.pi/2,weight))
         AziAng = PartDist.Generate(weight, 'Uniform', x=np.linspace(0,2*np.pi,weight))
         
@@ -275,13 +280,13 @@ def random(nP,pps_weights,adj,slope,Beta, r_coord,z_coord):
     return x,y,z
 
 
-def check_symmetry(nP = int(1e3)):
-    x = 1.75*np.ones(nP)
+def point_source(nP = int(1e3)):
+    x = 1.49*np.ones(nP)
     y = np.zeros(nP)
-    z = 0.4*np.ones(nP)
+    z = 1.2*np.ones(nP)
     vx = np.zeros(nP)
-    vy = 1500*np.ones(nP)
-    vz = np.zeros(nP)
+    vy = 5000*np.zeros(nP)
+    vz = -0.05*np.zeros(nP)
 
     #########################################
     #make NetCDF Particle Source file

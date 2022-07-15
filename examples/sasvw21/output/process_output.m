@@ -63,8 +63,8 @@ hold on
 scatter(x0(notHit), z0(notHit), 'r')
 
 axis equal
-xlim([1.46 1.52])
-ylim([1.16 1.25])
+%xlim([1.46 1.52])
+%ylim([1.16 1.25])
 xlabel('r [m]')
 ylabel('z [m]')
 title('End Positions')
@@ -90,11 +90,11 @@ hit = find(weight(end,:) < 1);
 
 %r = sqrt(x.^2 + y.^2);
 figure(6) %3D plotting
-plot3(R,T,Z)
+plot3(R,T,Z, 'LineWidth',2)
 hold on
 
 for i=1:1:length(x0)
-plot3(x(:,i),y(:,i),z(:,i))
+plot3(x(:,i),y(:,i),z(:,i), 'LineWidth',2)
 end
 
 axis equal
@@ -108,7 +108,7 @@ plot(R,Z,'LineWidth',2)
 hold on
 
 for i=1:1:length(x0)
-plot(x(:,i),z(:,i),'LineWidth',1)
+plot(x(:,i),z(:,i),'LineWidth',2)
 end
 
 axis equal
