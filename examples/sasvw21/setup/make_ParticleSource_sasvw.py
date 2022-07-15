@@ -457,4 +457,4 @@ def old_stuff_stolen_from_west_ex(nP = int(1e3), \
     rootgrp.close()
     
 if __name__ == "__main__":
-    point_source(nP = int(1e3))
+    point_source(nP = int(1e2))
