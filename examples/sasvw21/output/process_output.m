@@ -94,7 +94,7 @@ plot3(R,T,Z, 'LineWidth',2)
 hold on
 
 for i=1:1:length(x0)
-plot3(x(:,i),y(:,i),z(:,i), 'LineWidth',2)
+plot3(x(:,i),y(:,i),z(:,i), 'LineWidth',1)
 end
 
 axis equal
@@ -108,7 +108,7 @@ plot(R,Z,'LineWidth',2)
 hold on
 
 for i=1:1:length(x0)
-plot(x(:,i),z(:,i),'LineWidth',2)
+plot(x(:,i),z(:,i),'LineWidth',1)
 end
 
 axis equal

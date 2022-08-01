@@ -16,7 +16,7 @@ r,z, rW,zW = make_geom_sasvw.V6e_v002(gitr_geometry_filename='gitrGeometry.cfg',
 
 os.remove('gitrGeometry.cfg0')
 shutil.move('gitrGeometry.cfg', '../input/gitrGeometry.cfg')
-
+'''
 solps.readEquilibrium(filename = 'assets/vertex_sasvw.eq', \
                                     solps_geom = 'assets/b2fgmtry', \
                                     solps_mesh_extra = None, \
@@ -39,11 +39,11 @@ solps.make_solps_targ_coord_file(gitr_geom_filename = '../input/gitrGeometry.cfg
 
 make_ParticleSource_sasvw.point_source(nP = int(1e2))
 '''
-make_ParticleSource_sasvw.simple2D(nP = int(1e3), \
+make_ParticleSource_sasvw.simple2D(nP = int(2e2), \
                                     geom = '../input/gitrGeometry.cfg', \
                                     targFile = 'assets/rightTargOutput', \
                                     coordsFile = 'assets/right_target_coordinates.txt', \
                                     configuration = 'midpoint', \
                                     r_W = rW, z_W = zW)
-'''
+
 shutil.move('particleSource.nc', '../input/particleSource.nc')

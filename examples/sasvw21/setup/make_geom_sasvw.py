@@ -87,8 +87,8 @@ def V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
     plt.plot(r_final[W_indices], z_final[W_indices], 'purple', label='W', linewidth=0.6)
     plt.scatter(r_final[W_indices], z_final[W_indices], color='purple', s=8)
     plt.legend()
-    plt.xlabel('r [mm]')
-    plt.ylabel('z [mm]')
+    plt.xlabel('r [m]')
+    plt.ylabel('z [m]')
     plt.title('W Part of Outer Divertor')
     plt.savefig('plots/W wall ID')
 
