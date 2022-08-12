@@ -94,10 +94,13 @@ plot3(R,T,Z, 'LineWidth',2)
 hold on
 
 for i=1:1:length(x0)
-plot3(x(:,i),y(:,i),z(:,i), 'LineWidth',1)
+plot3(x(:,i),y(:,i),z(:,i), 'LineWidth',0.1)
 end
 
 axis equal
+xlim([1.43 1.56])
+ylim([-0.05 0.05])
+zlim([1.07 1.25])
 xlabel('r [m]')
 ylabel('y [m]')
 zlabel('z [m]')

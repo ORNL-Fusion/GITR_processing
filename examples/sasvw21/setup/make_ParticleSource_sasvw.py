@@ -284,7 +284,7 @@ def point_source(nP = int(1e3)):
     x = 1.49*np.ones(nP)
     y = np.zeros(nP)
     z = 1.2*np.ones(nP)
-    vx = 72000*np.zeros(nP)
+    vx = 500*np.zeros(nP)
     vy = 5000*np.zeros(nP)
     vz = 500*np.ones(nP)
 
