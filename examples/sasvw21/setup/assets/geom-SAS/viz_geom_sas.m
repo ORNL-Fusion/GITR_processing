@@ -13,7 +13,7 @@ z1 = z(1:end-1);
 z2 = z(2:end);
 
 figure(1)
-title({'DIII-D SAS-VW Cross-Sectional','Geometry'})
+title({'DIII-D SAS Cross-Sectional','Geometry'})
 xlabel('r [m]')
 ylabel('z [m]')
 set(gca,'fontsize',16)
