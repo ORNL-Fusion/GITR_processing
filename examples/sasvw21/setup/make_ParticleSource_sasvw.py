@@ -10,10 +10,40 @@ import gitr
 import solps
 import Particles
 
+def point_source(nP = int(1e3)):
+    x = 1.49*np.ones(nP)
+    y = np.zeros(nP)
+    z = 1.15*np.ones(nP)
+    vx = 500000*np.ones(nP)
+    vy = 5000*np.zeros(nP)
+    vz = 50*np.zeros(nP)
+
+    #########################################
+    #make NetCDF Particle Source file
+    #########################################
+
+    rootgrp = netCDF4.Dataset("particleSource.nc", "w", format="NETCDF4")
+    npp = rootgrp.createDimension("nP", nP)
+    xxx = rootgrp.createVariable("x","f8",("nP"))
+    yyy = rootgrp.createVariable("y","f8",("nP"))
+    zzz = rootgrp.createVariable("z","f8",("nP"))
+    vxx = rootgrp.createVariable("vx","f8",("nP"))
+    vyy = rootgrp.createVariable("vy","f8",("nP"))
+    vzz = rootgrp.createVariable("vz","f8",("nP"))
+    xxx[:] = x
+    yyy[:] = y
+    zzz[:] = z
+    vxx[:] = vx
+    vyy[:] = vy
+    vzz[:] = vz
+    rootgrp.close()
+
+
 def simple2D(nP = int(1e3), \
             geom = '../input/gitrGeometry.cfg', \
             targFile = 'assets/rightTargOutput', \
             coordsFile = 'assets/right_target_coordinates.txt', \
+            ftBFile = 'assets/ftridynBackground.nc', \
             configuration = 'midpoint', \
             r_W = None, z_W = None):
     
@@ -46,19 +76,30 @@ def simple2D(nP = int(1e3), \
 
 
     #########################################
-    #get x,y,z distributions for sputtered W
+    #get W/s sputtered by D, He flux to wall
     #########################################
 
-    #get flux from background D
+    #REPLACE SPYLD = Ybar_i
+
+    #get flux from background D, He
     r_mid, z_mid, ti, ni, flux, te, ne = solps.read_target_file(targFile)
 
     #calcualte erosion flux
     ion_flux = np.abs(flux[:,1:][W_ind[:-1]]) #only bother with W surfaces
+    D_flux = np.abs(flux[:,:2][W_ind[:-1]])
+    print('D_flux',D_flux.shape,D_flux)
+    
+    #comment but keep this section for later
     spyld = 0.1 #assume sputtering yield of 0.1 for everything because we're lazy
     sputt_flux = spyld*ion_flux #multiply incoming ion flux by Y_s to get sputtered W flux
     sputt_flux_total = np.sum(sputt_flux,axis=1) #add together sputtered flux from 8 ion species
     pps = 0.1*np.multiply(sputt_flux_total,area[W_ind[:-1]]) #multiply by area to get the outgoing particles per second
     pps_weights = nP*pps/np.sum(pps)
+    
+    
+    #########################################
+    #get x,y,z distributions for sputtered W
+    #########################################
 
     #confirm nP stays constant
     for i in range(len(pps_weights)): pps_weights[i] = round(pps_weights[i])
@@ -280,33 +321,12 @@ def random(nP,pps_weights,adj,slope,Beta, r_coord,z_coord):
     return x,y,z
 
 
-def point_source(nP = int(1e3)):
-    x = 1.49*np.ones(nP)
-    y = np.zeros(nP)
-    z = 1.15*np.ones(nP)
-    vx = 500000*np.ones(nP)
-    vy = 5000*np.zeros(nP)
-    vz = 50*np.zeros(nP)
-
-    #########################################
-    #make NetCDF Particle Source file
-    #########################################
-
-    rootgrp = netCDF4.Dataset("particleSource.nc", "w", format="NETCDF4")
-    npp = rootgrp.createDimension("nP", nP)
-    xxx = rootgrp.createVariable("x","f8",("nP"))
-    yyy = rootgrp.createVariable("y","f8",("nP"))
-    zzz = rootgrp.createVariable("z","f8",("nP"))
-    vxx = rootgrp.createVariable("vx","f8",("nP"))
-    vyy = rootgrp.createVariable("vy","f8",("nP"))
-    vzz = rootgrp.createVariable("vz","f8",("nP"))
-    xxx[:] = x
-    yyy[:] = y
-    zzz[:] = z
-    vxx[:] = vx
-    vyy[:] = vy
-    vzz[:] = vz
-    rootgrp.close()
+def get_spyld(D_flux, ftDFile = 'assets/ftridynBackground.nc'):
+    ftBackground_D = netCDF4.Dataset(ftDFile, "r", format="NETCDF4")
+    spyld_D = ftBackground_D.variables['spyld']
+    E_D = ftBackground_D.variables['E']
+    A_D = ftBackground_D.variables['A']
+    
 
 
 
@@ -457,4 +477,4 @@ def old_stuff_stolen_from_west_ex(nP = int(1e3), \
     rootgrp.close()
     
 if __name__ == "__main__":
-    point_source(nP = int(1e2))
+    point_source(nP = int(2e2))
