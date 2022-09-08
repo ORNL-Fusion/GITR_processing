@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
-                                  solps_geomfile = 'assets/geom-SASV/SAS-V6e_v002.ogr', \
+                                  solps_geomfile = 'assets/geom-SASV6/SAS-V6e_v002.ogr', \
                                   solps_targfile = 'assets/b2fgmtry', \
                                   solps_rz = 'assets/geom-SASV6/solps_rz.txt', \
                                   gitr_rz = 'assets/geom-SASV6/gitr_rz.txt'):

@@ -8,7 +8,7 @@ import solps
 import make_geom_sasvw
 import make_ParticleSource_sasvw
 
-r,z, rW,zW = make_geom_sasvw.V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
+r,z, rW,zW = make_geom_sasv6.V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
                                     solps_geomfile = 'assets/geom-SASV6/SAS-V6e_v002.ogr', \
                                     solps_targfile = 'assets/b2fgmtry', \
                                     solps_rz = 'assets/geom-SASV6/solps_rz.txt', \
