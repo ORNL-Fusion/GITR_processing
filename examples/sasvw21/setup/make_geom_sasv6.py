@@ -20,9 +20,7 @@ def V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
     with open(solps_geomfile) as f: solps_geom = f.readlines()[1:]
     solps_geom[-1] += '\n' #need this for index counting in r,z extraction
 
-    r_ogr = z_ogr = np.zeros(1)
-    r_ogr = np.delete(r_ogr,0)
-    z_ogr = np.delete(z_ogr,0)
+    r_ogr = z_ogr = np.empty(0)
     for row in solps_geom:
         rvalue = float(row.split(' ')[0])
         r_ogr = np.append(r_ogr, rvalue)
