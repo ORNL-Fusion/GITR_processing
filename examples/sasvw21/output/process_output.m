@@ -1,4 +1,4 @@
-fileID = fopen('../setup/assets/geom-SASV/gitr_rz.txt','r');
+fileID = fopen('../setup/assets/geom-SASV6/gitr_rz.txt','r');
 formatSpec='%f %f';
 sizeA = [2 Inf];
 geom = fscanf(fileID,formatSpec,sizeA); 
@@ -10,7 +10,7 @@ Z = geom(2,:);
 %% startPosition
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-file = strcat(pwd,'/../input/particleSource.nc');
+file = strcat(pwd,'/../output/particleSource.nc');
 x0 = ncread(file,'x');
 y0 = ncread(file,'y');
 z0 = ncread(file,'z');
