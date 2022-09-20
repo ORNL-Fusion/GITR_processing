@@ -11,12 +11,12 @@ import solps
 import Particles
 
 def point_source(nP = int(2e2)):
-    x = 1.495*np.ones(nP)
+    x = 1.44*np.ones(nP)
     y = np.zeros(nP)
-    z = 1.16*np.ones(nP)
-    vx = 500*np.zeros(nP)
+    z = 1.15*np.ones(nP)
+    vx = 500*np.ones(nP)
     vy = 5000*np.zeros(nP)
-    vz = 10*np.ones(nP)
+    vz = 100*np.zeros(nP)
 
     #########################################
     #make NetCDF Particle Source file
