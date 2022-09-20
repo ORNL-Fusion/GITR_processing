@@ -10,7 +10,7 @@ import gitr
 import solps
 import Particles
 
-def point_source(nP = int(1e3)):
+def point_source(nP = int(1)):
     x = 1.44*np.ones(nP)
     y = np.zeros(nP)
     z = 1.15*np.ones(nP)
