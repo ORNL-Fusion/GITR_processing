@@ -81,8 +81,10 @@ def simple2D(nP = int(1e3), \
     #get W/s sputtered by D, He flux to wall
     #########################################
 
-    surf_te, surf_Bangle = get_surf_profiles(profilesFile, r1, z1, slope, plot_variables)
+    #get incoming ion energy and angle estimations
+    surfE, surfA = get_surf_profiles(profilesFile, r1, z1, slope, plot_variables)
 
+    #get D+ sputtering yields
 
     #get flux grid from background D, C
     r_mid, z_mid, ti, ni, flux, te, ne = solps.read_target_file(targFile)
@@ -329,12 +331,7 @@ def random(nP,pps_weights,adj,slope,Beta, r_coord,z_coord):
     return x,y,z
 
 
-def get_spyld(D_flux, ftDFile = 'assets/ftridynBackground.nc'):
-    ftBackground_D = netCDF4.Dataset(ftDFile, "r", format="NETCDF4")
-    spyld_D = ftBackground_D.variables['spyld']
-    E_D = ftBackground_D.variables['E']
-    A_D = ftBackground_D.variables['A']
-    
+
 
 def get_surf_profiles(profilesFile, r1, z1, slope, plot_variables):
     profiles = netCDF4.Dataset(profilesFile)
@@ -438,7 +435,11 @@ def get_surf_profiles(profilesFile, r1, z1, slope, plot_variables):
 
 
 
-
+def get_spyld(D_flux, ftDFile = 'assets/ftridynBackground.nc'):
+    ftBackground_D = netCDF4.Dataset(ftDFile, "r", format="NETCDF4")
+    spyld_D = ftBackground_D.variables['spyld']
+    E_D = ftBackground_D.variables['E']
+    A_D = ftBackground_D.variables['A']
 
 
 
