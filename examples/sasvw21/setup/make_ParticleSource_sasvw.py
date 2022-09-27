@@ -46,6 +46,7 @@ def simple2D(nP = int(1e3), \
             profilesFile = '../input/profiles.nc', \
             ftBFile = 'assets/ftridynBackground.nc', \
             configuration = 'midpoint', \
+            plot_variables = 0, \
             r_W = None, z_W = None):
     
     #import r1,r2,z1,z2 coordinates
@@ -80,14 +81,14 @@ def simple2D(nP = int(1e3), \
     #get W/s sputtered by D, He flux to wall
     #########################################
 
-    get_wall_profiles(profilesFile, r1, z1)
+    surf_te, surf_Bangle = get_surf_profiles(profilesFile, r1, z1, slope, plot_variables)
 
-    #REPLACE SPYLD = Ybar_i
 
-    #get flux from background D, He
+    #get flux grid from background D, C
     r_mid, z_mid, ti, ni, flux, te, ne = solps.read_target_file(targFile)
-
-    #calcualte erosion flux
+    print('TEST flux', np.shape(flux))
+    
+    #calcualte erosion flux at the surface
     ion_flux = np.abs(flux[:,1:][W_ind[:-1]]) #only bother with W surfaces
     D_flux = np.abs(flux[:,:2][W_ind[:-1]])
     print('D_flux',D_flux.shape,D_flux)
@@ -143,11 +144,12 @@ def simple2D(nP = int(1e3), \
     else:
         print('(x,y,z) configuration not set')
 
-    plt.close()
-    plt.plot(r_W,z_W,'-k')
-    plt.scatter(x,z)
-    plt.axis('Scaled')
-    plt.savefig('plots/test')
+    if plot_variables == 1:
+        plt.close()
+        plt.plot(r_W,z_W,'-k')
+        plt.scatter(x,z)
+        plt.axis('Scaled')
+        plt.savefig('plots/test')
 
 
     #########################################
@@ -187,12 +189,13 @@ def simple2D(nP = int(1e3), \
         vy_lab = PartDist.Particles['vy']
         vz_lab = PartDist.Particles['vz']
 
-        plt.close()
-        plt.scatter(vx_lab,vz_lab)
-        plt.axis('Scaled')
-        plt.xlabel('vx')
-        plt.ylabel('vz')
-        plt.title('SinCos Polar Angle in the Lab Frame')
+        if plot_variables == 1:
+            plt.close()
+            plt.scatter(vx_lab,vz_lab)
+            plt.axis('Scaled')
+            plt.xlabel('vx')
+            plt.ylabel('vz')
+            plt.title('SinCos Polar Angle in the Lab Frame')
 
         #convert unit vectors to vx,vy,vz
         W_kg = 183.84 * 1.6605e-27 #mass of W in kg
@@ -206,38 +209,40 @@ def simple2D(nP = int(1e3), \
     vy = np.delete(vy,0)
     vz = np.delete(vz,0)
 
-    # #plot Thomson E dist
-    # plt.close()
-    # plt.hist(E,bins=100)
-    # plt.xlabel('Energy Bins [eV]')
-    # plt.ylabel('Histogram')
-    # plt.title('Thomson Energy Distribution')
-    # plt.savefig('plots/thomson')
-    
-    # #plot particle framed v_dist relations
-    # plt.close()
-    # plt.scatter(vx_prime,vy_prime,s=0.3)
-    # plt.axis('Scaled')
-    # plt.xlabel('vx')
-    # plt.ylabel('vy')
-    # plt.title('Uniform Azimuthal Angle in the Particle Frame')
-    # plt.savefig('plots/vxvy_prime')
-    
-    # plt.close()
-    # plt.scatter(vx_prime,vz_prime,s=0.3)
-    # plt.axis('Scaled')
-    # plt.xlabel('vx')
-    # plt.ylabel('vz')
-    # plt.title('SinCos Polar Angle in the Particle Frame')
-    # plt.savefig('plots/vxvz_prime')
-    
-    # plt.close()
-    # plt.scatter(vx_lab,vz_lab,s=0.3)
-    # plt.axis('Scaled')
-    # plt.xlabel('vx')
-    # plt.ylabel('vz')
-    # plt.title('SinCos Polar Angle Distribution')
-    # plt.savefig('plots/vxvz_lab')
+    if plot_variables == 1:
+        #plot Thomson E dist
+        plt.close()
+        plt.hist(E,bins=100)
+        plt.xlabel('Energy Bins [eV]')
+        plt.ylabel('Histogram')
+        plt.title('Thomson Energy Distribution')
+        plt.savefig('plots/thomson')
+        
+        #plot particle framed v_dist relations
+        plt.close()
+        plt.scatter(vx_prime,vy_prime,s=0.3)
+        plt.axis('Scaled')
+        plt.xlabel('vx')
+        plt.ylabel('vy')
+        plt.title('Uniform Azimuthal Angle in the Particle Frame')
+        plt.savefig('plots/vxvy_prime')
+        
+        plt.close()
+        plt.scatter(vx_prime,vz_prime,s=0.3)
+        plt.axis('Scaled')
+        plt.xlabel('vx')
+        plt.ylabel('vz')
+        plt.title('SinCos Polar Angle in the Particle Frame')
+        plt.savefig('plots/vxvz_prime')
+        
+        plt.close()
+        plt.scatter(vx_lab,vz_lab,s=0.3)
+        plt.axis('Scaled')
+        plt.xlabel('vx')
+        plt.ylabel('vz')
+        plt.title('SinCos Polar Angle Distribution')
+        plt.savefig('plots/vxvz_lab')
+        plt.close()
 
 
     #########################################
@@ -331,7 +336,7 @@ def get_spyld(D_flux, ftDFile = 'assets/ftridynBackground.nc'):
     A_D = ftBackground_D.variables['A']
     
 
-def get_wall_profiles(profilesFile, r1, z1):
+def get_surf_profiles(profilesFile, r1, z1, slope, plot_variables):
     profiles = netCDF4.Dataset(profilesFile)
     
     #get mesh grid for the plasma profiles used in GITR
@@ -361,11 +366,75 @@ def get_wall_profiles(profilesFile, r1, z1):
                               np.nonzero(z_mesh==z_wall[i]-z_diff)[0]])
         z_indices[i] = z_index_possibilities[np.nonzero(z_index_possibilities)][0][0]
     
-    te_mesh = profiles.variables['te'][:]
-    ti_mesh = profiles.variables['ti'][:]
-    br_mesh = profiles.variables['br'][:]
-    bt_mesh = profiles.variables['bt'][:]
-    bz_mesh = profiles.variables['bz'][:]
+    r_indices = r_indices.astype(int)
+    z_indices = z_indices.astype(int)
+
+    #scoot the r_indices 1 cell to the left if the profiles.nc gridcell is too far off
+    br = profiles.variables['br'][:][z_indices,r_indices]
+    for i in range(len(br)):
+        if br[i]==-1: r_indices[i] -= 1
+
+    if plot_variables == 1:
+        # plot interpolated SOLPS gridpoints on the boundry
+        plt.plot(r_mesh[r_indices],z_mesh[z_indices])
+        plt.xlabel('r [m]')
+        plt.ylabel('z [m]')
+        plt.title('Interpolated SOLPS grid cell centers')
+        plt.axis('Scaled')
+        plt.savefig('plots/test_rz_indices')
+
+    #extract plasma parameters at the wall indices
+    te = profiles.variables['te'][:][z_indices,r_indices]
+    SimpleEnergyEst = 3*te
+    ti = profiles.variables['ti'][:][z_indices,r_indices]
+    v_para0 = profiles.variables['v_para0'][:][z_indices,r_indices]
+    v_para1 = profiles.variables['v_para1'][:][z_indices,r_indices]
+    ni0 = profiles.variables['ni0'][:][z_indices,r_indices]
+    ni1 = profiles.variables['ni1'][:][z_indices,r_indices]
+    br = profiles.variables['br'][:][z_indices,r_indices]
+    bt = profiles.variables['bt'][:][z_indices,r_indices]
+    bz = profiles.variables['bz'][:][z_indices,r_indices]
+
+    #TODO: will need v, n, and fluxes for all 9 species
+
+    #get normal directions at each wall segment
+    #get bmag and bnorm at wall indices from br, bt, bz
+    norm_slope = -1/slope
+    bmag = np.sqrt(br**2 + bt**2 + bz**2)
+    Bangle = np.zeros(len(norm_slope))
+    for i in range(len(norm_slope)):
+        norm_mag = np.sqrt(1+norm_slope[i]**2)
+        norm = np.array([-1/norm_mag, 0, norm_slope[i]/norm_mag])
+
+        bnorm = np.array([br[i], bt[i], bz[i]])/bmag[i]
+        Bangle[i] = np.arccos(np.dot(norm,bnorm))*180/np.pi
+
+    if plot_variables == 1:
+        #plot plasma parameters along the surface
+        plt.close()
+        plt.plot(z_mesh[z_indices], te)
+        plt.xlabel('z [m]')
+        plt.ylabel('Te [eV]')
+        plt.title('Electron Temperature along the SAS-V Divertor')
+        plt.savefig('plots/surf_te.png')
+
+        plt.close()
+        plt.plot(z_mesh[z_indices], SimpleEnergyEst)
+        plt.xlabel('z [m]')
+        plt.ylabel('energyy [eV]')
+        plt.title('Estimate of incoming D,C Ion Energy along the SAS-V Divertor')
+        plt.savefig('plots/surf_energyest')
+
+        plt.close()
+        plt.plot(z_mesh[z_indices], Bangle)
+        plt.xlabel('z [m]')
+        plt.ylabel('angle [degrees]')
+        plt.title('Angle of B Field with respect to the surfac normal')
+        plt.savefig('plots/surf_Bangle.png')
+        plt.close()
+
+    return SimpleEnergyEst, Bangle
+
 
 
 
