@@ -39,7 +39,7 @@ def point_source(nP = int(2e2)):
     rootgrp.close()
 
 
-def simple2D(nP = int(1e3), \
+def simple2D(nP, \
             geom = '../input/gitrGeometry.cfg', \
             targFile = 'assets/rightTargOutput', \
             coordsFile = 'assets/right_target_coordinates.txt', \
@@ -127,6 +127,7 @@ def simple2D(nP = int(1e3), \
             rand_index = np.random.choice(len(pps_weights))
             pps_weights[rand_index] -= 1
     pps_weights = pps_weights.astype(int)
+    print('total nP', nP)
     print('nP(r_mid):', pps_weights)
     nP_diff = nP-np.sum(pps_weights)
     print('nP_diff should be 0: ', nP_diff)
