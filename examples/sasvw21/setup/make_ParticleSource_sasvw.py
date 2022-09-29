@@ -44,8 +44,8 @@ def simple2D(nP = int(1e3), \
             targFile = 'assets/rightTargOutput', \
             coordsFile = 'assets/right_target_coordinates.txt', \
             profilesFile = '../input/profiles.nc', \
-            ftBFile = 'assets/ftridynBackground.nc', \
-            configuration = 'midpoint', \
+            ftDFile = 'assets/ftridynBackgroundD.nc', \
+            configuration = 'random', \
             plot_variables = 0, \
             r_W = None, z_W = None):
     
@@ -81,28 +81,35 @@ def simple2D(nP = int(1e3), \
     #get W/s sputtered by D, He flux to wall
     #########################################
 
-    #get incoming ion energy and angle estimations
-    surfE, surfA = get_surf_profiles(profilesFile, r1, z1, slope, plot_variables)
-
-    #get D+ sputtering yields
-
     #get flux grid from background D, C
     r_mid, z_mid, ti, ni, flux, te, ne = solps.read_target_file(targFile)
-    print('TEST flux', np.shape(flux))
-    
-    #calcualte erosion flux at the surface
+
+    #split total flux into D and C ion fluxes at the W surface
     ion_flux = np.abs(flux[:,1:][W_ind[:-1]]) #only bother with W surfaces
-    D_flux = np.abs(flux[:,:2][W_ind[:-1]])
-    print('D_flux',D_flux.shape,D_flux)
-    
-    #comment but keep this section for later
-    spyld = 0.1 #assume sputtering yield of 0.1 for everything because we're lazy
-    sputt_flux = spyld*ion_flux #multiply incoming ion flux by Y_s to get sputtered W flux
-    sputt_flux_total = np.sum(sputt_flux,axis=1) #add together sputtered flux from 8 ion species
-    pps = 0.1*np.multiply(sputt_flux_total,area[W_ind[:-1]]) #multiply by area to get the outgoing particles per second
+    Dflux = np.transpose(np.abs(flux[:,1][W_ind[:-1]]))
+    Cflux = np.transpose(np.abs(flux[:,3:][W_ind[:-1]]))
+
+    #get incoming ion energy and angle estimations where the integer input is z
+    DsurfE, DsurfA = get_surf_profiles(profilesFile, r1, z1, slope, 1, plot_variables)
+    CsurfE, CsurfA = get_surf_profiles(profilesFile, r1, z1, slope, 6, plot_variables)
+    print('D energies',DsurfE) #should not sputter anything :'(
+    print('C energies',CsurfE) #should sputter things
+
+    #get sputtering yields for D0 and D1+ on W from fractal tridyn tables
+    Dspyld = get_ft_spyld(DsurfE, DsurfA, ftDFile)[1] #file input includes He, which we aren't using
+    Cspyld = get_analytic_spyld(CsurfE, CsurfA)
+    print('D spyld', Dspyld)
+    print('C spyld', Cspyld)
+
+    #multiply incoming ion flux by Y_s to get sputtered W flux by each species
+    sputt_flux = Dspyld*Dflux + Cspyld*np.sum(Cflux,axis=0)
+    print('SPUTT FLUX',sputt_flux)
+
+    #multiply by area to get the outgoing particles per second
+    pps = np.multiply(sputt_flux,area[W_ind[:-1]])
     pps_weights = nP*pps/np.sum(pps)
-    
-    
+
+
     #########################################
     #get x,y,z distributions for sputtered W
     #########################################
@@ -331,9 +338,19 @@ def random(nP,pps_weights,adj,slope,Beta, r_coord,z_coord):
     return x,y,z
 
 
+def interpolate(small,big):
+    indices = np.zeros(len(small))
+    for i in range(len(small)):
+        diff = np.min(np.abs(big-small[i]))
+        index_possibilities = np.array([np.where(big==small[i]+diff)[0], \
+                             np.where(big==small[i]-diff)[0]], dtype=object)
+        try: indices[i] = index_possibilities[1]
+        except: indices[i] = index_possibilities[0]
+
+    return indices.astype(int)
 
 
-def get_surf_profiles(profilesFile, r1, z1, slope, plot_variables):
+def get_surf_profiles(profilesFile, r1, z1, slope, z, plot_variables):
     profiles = netCDF4.Dataset(profilesFile)
     
     #get mesh grid for the plasma profiles used in GITR
@@ -348,23 +365,8 @@ def get_surf_profiles(profilesFile, r1, z1, slope, plot_variables):
         z_wall[i] = np.average(np.array([z1[i],z1[i+1]]))
     
     #figure out which indices touch the wall on the profiles mesh
-    r_indices = np.zeros(len(r_wall))
-    z_indices = np.zeros(len(z_wall)) 
-
-    for i in range(len(r_wall)):
-        r_diff = np.amin(np.abs(r_mesh-r_wall[i]))
-        r_index_possibilities = np.array([np.nonzero(r_mesh==r_wall[i]+r_diff)[0], \
-                             np.nonzero(r_mesh==r_wall[i]-r_diff)[0]])
-        r_indices[i] = r_index_possibilities[np.nonzero(r_index_possibilities)][0][0]
-
-    for i in range(len(z_wall)):
-        z_diff = np.amin(np.abs(z_mesh-z_wall[i]))
-        z_index_possibilities = np.array([np.nonzero(z_mesh==z_wall[i]+z_diff)[0], \
-                              np.nonzero(z_mesh==z_wall[i]-z_diff)[0]])
-        z_indices[i] = z_index_possibilities[np.nonzero(z_index_possibilities)][0][0]
-    
-    r_indices = r_indices.astype(int)
-    z_indices = z_indices.astype(int)
+    r_indices = interpolate(r_wall,r_mesh)
+    z_indices = interpolate(z_wall,z_mesh)
 
     #scoot the r_indices 1 cell to the left if the profiles.nc gridcell is too far off
     br = profiles.variables['br'][:][z_indices,r_indices]
@@ -382,8 +384,8 @@ def get_surf_profiles(profilesFile, r1, z1, slope, plot_variables):
 
     #extract plasma parameters at the wall indices
     te = profiles.variables['te'][:][z_indices,r_indices]
-    SimpleEnergyEst = 3*te
     ti = profiles.variables['ti'][:][z_indices,r_indices]
+    SimpleEnergyEst = 2*ti+3*te*z
     v_para0 = profiles.variables['v_para0'][:][z_indices,r_indices]
     v_para1 = profiles.variables['v_para1'][:][z_indices,r_indices]
     ni0 = profiles.variables['ni0'][:][z_indices,r_indices]
@@ -433,14 +435,91 @@ def get_surf_profiles(profilesFile, r1, z1, slope, plot_variables):
     return SimpleEnergyEst, Bangle
 
 
+def get_ft_spyld(surfE, surfA, ftBFile):
+    #import sputtering yield tables for D0 and D1+ on W
+    ftB = netCDF4.Dataset(ftBFile, "r", format="NETCDF4")
+    spyld = ftB.variables['spyld'][:]
+    ftE = ftB.variables['E'][:]
+    ftA = ftB.variables['A'][:]
+
+    #find which FT index contains the energies and angles at the surface
+    E_indices = interpolate(surfE, ftE)
+    A_indices = interpolate(surfA, ftA)
+
+    surfY = spyld[:,E_indices,A_indices]
+    return surfY
 
 
-def get_spyld(D_flux, ftDFile = 'assets/ftridynBackground.nc'):
-    ftBackground_D = netCDF4.Dataset(ftDFile, "r", format="NETCDF4")
-    spyld_D = ftBackground_D.variables['spyld']
-    E_D = ftBackground_D.variables['E']
-    A_D = ftBackground_D.variables['A']
+def FittingParameters_NonW(E,Eth):
+    Esp = np.ones(len(E))
+    f = np.zeros(len(E))
+    b = np.zeros(len(E))
+    c = np.zeros(len(E))
+    for i,v in enumerate(E):
+        if v<Eth:
+            continue
+        elif v>=Eth and v<49:
+            f[i] = 2.9557
+            b[i] = 5.8879
+            c[i] = 0.9465
+        elif v>=65 and v<75:
+            f[i] = 0.4622
+            b[i] = 2.5095
+            c[i] = 1.0118
+        elif v>=85 and v<95:
+            f[i] = 2.1152
+            b[i] = 2.6541
+            c[i] = 0.9226
+        elif v>=170 and v<250:
+            f[i] = 2.0138
+            b[i] = 1.3460
+            c[i] = 1.0316
+        elif v>=250 and v<400:
+            f[i] = 2.2531
+            b[i] = 1.2151
+            c[i] = 1.0310
+        else:
+            print('WARNING: TABULAR SPUTTERING FITTING PARAMETERS MISSING')
+    return Esp, f, b, c
 
+
+def get_analytic_spyld(surfE, surfA, Z1=6, M1=12, Z2=74, M2=183.84, FitParam='Ni', Eth=45.3362, lam=0.0921, q=1.4389, mu=2.0225):
+    #this entire function that is simply the Eckstein formula
+    #defaults are for C on W but with fitting parameters, Eth, and Esp for N on W
+    #M1, Z1 are for the projectile
+    #M2, Z2 are for the target
+    #Eth is the threshold energy for any sputtering to occur
+    #Esp is the SBE for self-bombardment
+    #lam, q, mu, f, b, c are fitting parameters from Eckstein tables
+
+    e = -1.602176634e-19
+
+    a_L = 0.0529177*((9*np.pi**2/128)**(1/3)) + \
+        (Z1**(2/3) + Z2**(2/3))**-0.5
+
+    epsilon_L = surfE * (M2/(M1+M2)) * (a_L/(Z1*Z2*e**2))
+
+    omega = epsilon_L + 0.1728*np.sqrt(epsilon_L) + \
+        0.008*epsilon_L**0.1504
+
+    snKrC = 0.5*np.log(1+1.2288*epsilon_L)/omega
+    
+    #spyld(E, angle = 0) normal incidence
+    Y_0 = q*snKrC*(surfE/Eth-1)**mu / \
+        (lam/omega + (surfE/Eth-1)**mu)
+    
+    Y_0[np.where(surfE<Eth)[0]] = 0
+
+    #choose basis for fitting parameters for different energies
+    Esp, f, b, c = FittingParameters_NonW(surfE,Eth)
+
+    theta_0 = np.pi - np.arccos(np.sqrt(1/(1+surfE/Esp)))
+
+    #spyld(E,A)    
+    Y = Y_0 * (np.cos((np.pi*surfA/(2*theta_0))**c))**(-f) * \
+        np.exp(b*(1-1/np.cos((np.pi*surfA/(2*theta_0))**c)))
+
+    return Y_0
 
 
 
