@@ -58,7 +58,7 @@ def simple2D(nP = int(1e3), \
     z1 = z1[gitr_inds] #coords[:,6]
     z2 = z2[gitr_inds] #coords[:,7]
     slope = slope[gitr_inds] #coords[:,7]
-    area = np.pi*(r1+r2)*np.sqrt(np.power(r1-r2,2) + np.power(z1 - z2,2))
+    area = 0.12*np.sqrt(np.power(r1-r2,2) + np.power(z1-z2,2))#*np.pi*(r1+r2)
 
     #get indices of rcoord and r_targ that are W
     W_ind = np.empty(len(r_W),dtype=int)
