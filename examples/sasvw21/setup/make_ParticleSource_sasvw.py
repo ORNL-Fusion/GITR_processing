@@ -155,6 +155,42 @@ def simple2D(nP, \
         print('(x,y,z) configuration not set')
 
     if plot_variables == 1:
+        zmid_surf = (z1[:-1]+z1[1:])/2
+        plt.close()
+        plt.plot(zmid_surf, Dflux)
+        plt.xlabel('z [m]')
+        plt.ylabel('Flux [#/m2s]')
+        plt.title('Incoming D Ion Flux')
+        plt.savefig('plots/surf_Dflux.png')
+
+        plt.close()
+        plt.plot(zmid_surf, np.sum(Cflux,axis=0))
+        plt.xlabel('z [m]')
+        plt.ylabel('Flux [#/m2s]')
+        plt.title('Incoming C Ion Flux')
+        plt.savefig('plots/surf_Cflux.png')
+
+        plt.close()
+        plt.plot(zmid_surf, Dspyld)
+        plt.xlabel('z [m]')
+        plt.ylabel('Yield')
+        plt.title('Average Sputtering Yield for D on W')
+        plt.savefig('plots/Dspyld.png')
+
+        plt.close()
+        plt.plot(zmid_surf, Cspyld)
+        plt.xlabel('z [m]')
+        plt.ylabel('Yield')
+        plt.title('Average Sputtering Yield for C on W')
+        plt.savefig('plots/Cspyld.png')
+
+        plt.close()
+        plt.plot(zmid_surf, sputt_flux)
+        plt.xlabel('z [m]')
+        plt.ylabel('Sputtered Flux [#/m2s]')
+        plt.title('Flux of W Sputtered off Wall')
+        plt.savefig('plots/sputt_flux.png')
+
         plt.close()
         plt.plot(r_W,z_W,'-k')
         plt.scatter(x,z)
@@ -429,7 +465,7 @@ def get_surf_profiles(profilesFile, r1, z1, slope, z, plot_variables):
         plt.plot(z_mesh[z_indices], Bangle)
         plt.xlabel('z [m]')
         plt.ylabel('angle [degrees]')
-        plt.title('Angle of B Field with respect to the surfac normal')
+        plt.title('Angle of B Field with respect to the surface normal')
         plt.savefig('plots/surf_Bangle.png')
         plt.close()
 
@@ -451,7 +487,7 @@ def get_ft_spyld(surfE, surfA, ftBFile):
     return surfY
 
 
-def FittingParameters_NonW(E,Eth):
+def FittingParameters_NonW(E, Eth):
     Esp = np.ones(len(E))
     f = np.zeros(len(E))
     b = np.zeros(len(E))

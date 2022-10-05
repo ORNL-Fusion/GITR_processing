@@ -78,6 +78,8 @@ def readEquilibrium(filename='/Users/Alyssa/Dev/WEST/baserun/west_54034_10p2s_ma
     psi = np.reshape(psi,[len(z),len(r)])
 
     if plot_variables==1:
+        # set the limits of the plot to the limits of the data
+        plt.axis([r.min(), r.max(), z.min(), z.max()])
         plt.pcolor(r, z, psi)
         plt.plot(r_wall, z_wall, 'k-')
         plt.plot(r_left_target, z_left_target, 'g-')
@@ -86,13 +88,13 @@ def readEquilibrium(filename='/Users/Alyssa/Dev/WEST/baserun/west_54034_10p2s_ma
         plt.xlabel('r [m]')
         plt.ylabel('z [m]')
         plt.title('Magnetic Flux')
-        # set the limits of the plot to the limits of the data
-        plt.axis([r.min(), r.max(), z.min(), z.max()])
         plt.colorbar(label='Flux [Wb/rad')
         print( 'Saving psi function as psi.png ')
         plt.savefig('plots/psi.pdf')
         plt.close()
 
+        # set the limits of the plot to the limits of the data
+        plt.axis([r.min(), r.max(), z.min(), z.max()])
         plt.contour(r,z,psi,100)
         plt.plot(r_wall, z_wall, 'k-')
         plt.plot(r_left_target, z_left_target, 'g-')
@@ -101,8 +103,6 @@ def readEquilibrium(filename='/Users/Alyssa/Dev/WEST/baserun/west_54034_10p2s_ma
         plt.xlabel('r [m]')
         plt.ylabel('z [m]')
         plt.title('Magnetic Flux Contours')
-        # set the limits of the plot to the limits of the data
-        plt.axis([r.min(), r.max(), z.min(), z.max()])
         plt.colorbar(label='Flux [Wb/rad]')
         print ('Saving psi contour as psiContour.png ')
         plt.savefig('plots/psiContour.pdf')
@@ -503,11 +503,12 @@ def get_dakota_variable(index,dak,rdak,zdak,nR,nZ,title='title',plot_variables=0
     variable = np.reshape(dak[:, index], (nZ, nR))
 
     if plot_variables:
+        #plot in whole machine
         off_grid_inds = np.where(variable == -1)
         variable[off_grid_inds] = float("nan");
         plt.close()
         plt.plot(rwall,zwall,'-k')
-        plt.pcolor(rdak, zdak, np.reshape(variable, (nZ, nR)))
+        plt.pcolor(rdak, zdak, np.reshape(variable, (nZ, nR)), shading='auto')
         plt.colorbar(orientation='vertical',label=colorlabel)
         plt.axis('Scaled')
         plt.xlabel('r [m]')
@@ -515,6 +516,27 @@ def get_dakota_variable(index,dak,rdak,zdak,nR,nZ,title='title',plot_variables=0
         plt.title(title)
         plt.savefig('plots/'+title+'.png')
         plt.close()
+        '''
+        # plot in divertor region
+        nr_minned = np.where(rdak>=1.38)
+        nz_minned = np.where(zdak>=1.02)
+        nr = np.where(rdak[nr_minned]<=1.56)[0]
+        nz = np.where(zdak[nz_minned]<=1.25)[0]
+        r = rdak[nr]
+        z = zdak[nz]
+        var = np.reshape(variable,(nZ,nR))
+        print('TEST TEST TEST', np.shape(var), '\n',np.shape(nz),np.shape(nr),nz,nr)
+        var = var[nz][nr]
+        plt.pcolor(r, z, var, shading='auto')
+        plt.colorbar(orientation='vertical',label=colorlabel)
+        plt.axis('Scaled')
+        plt.xlabel('r [m]')
+        plt.ylabel('z [m]')
+        title = title+' in Divertor'
+        plt.title(title)
+        plt.savefig('plots/'+title+'.png')
+        plt.close()
+        '''
         variable[off_grid_inds] = -1;
 
     return variable

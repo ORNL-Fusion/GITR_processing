@@ -130,7 +130,6 @@ end
 file = strcat(pwd,'/surface.nc');
 grossDep = transpose(ncread(file,'grossDeposition'));
 grossEro = transpose(ncread(file,'grossErosion'));
-netEro=grossEro-grossDep
 
 %find where the hell the surface is
 Rsurf = R(31:45)
@@ -143,9 +142,6 @@ figure(11)
 plot(Zsurf,grossEro,'-r')
 hold on
 plot(Zsurf,grossDep,'-g')
-hold on
-plot(Zsurf,netEro,'-b')
-
 
 
 
