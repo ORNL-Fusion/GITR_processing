@@ -347,7 +347,7 @@ def process_solps_output_for_gitr(dakota_filename = 'assets/dakota', \
     v_parallel_total = np.zeros((nZ, nR))
     aveMass = np.zeros((nZ, nR))
     aveCharge = np.zeros((nZ, nR))
-
+    
     for i in range(nIonSpecies):
         if zamin[i] > 0.0:
             ni_total = ni_total + np.reshape(ni[i, :, :], (nZ, nR))
@@ -425,8 +425,9 @@ def process_solps_output_for_gitr(dakota_filename = 'assets/dakota', \
     nee = rootgrp.createVariable("ne", "f8", ("nZ", "nR"))
     tii = rootgrp.createVariable("ti", "f8", ("nZ", "nR"))
     nii = rootgrp.createVariable("ni", "f8", ("nZ", "nR"))
-    nii0 = rootgrp.createVariable("ni0","f8", ("nZ", "nR"))
-    nii1 = rootgrp.createVariable("ni1","f8", ("nZ", "nR"))
+    nii_dict = {}
+    for i in range(nIonSpecies):
+        nii_dict['nii%d'%i] = rootgrp.createVariable("ni%d"%i,"f8", ("nZ", "nR"))
     mass = rootgrp.createVariable("mass", "f8", ("nZ", "nR"))
     charge = rootgrp.createVariable("charge", "f8", ("nZ", "nR"))
     v_para0 = rootgrp.createVariable("v_para0", "f8", ("nZ", "nR"))
@@ -447,8 +448,8 @@ def process_solps_output_for_gitr(dakota_filename = 'assets/dakota', \
     nee[:] = ne
     tii[:] = ti
     nii[:] = ni_total
-    nii0[:] = ni[0]
-    nii1[:] = ni[0]
+    for i in range(nIonSpecies):
+        nii_dict['nii%d'%i][:] = ni[i]
     mass[:] = aveMass
     charge[:] = aveCharge
     v_para0[:] = v_parallel[0]

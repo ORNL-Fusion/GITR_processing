@@ -9,8 +9,11 @@ import matplotlib.pyplot as plt
 def V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
                                   solps_geomfile = 'assets/geom-SASV6/SAS-V6e_v002.ogr', \
                                   solps_targfile = 'assets/b2fgmtry', \
-                                  solps_rz = 'assets/geom-SASV6/solps_rz.txt', \
-                                  gitr_rz = 'assets/geom-SASV6/gitr_rz.txt'):
+                                  solps_rz = 'assets/solps_rz.txt', \
+                                  gitr_rz = 'assets/gitr_rz.txt', \
+                                  surf_coarse = 'assets/surf_coarse.txt', \
+                                  surf_ind = 'assets/surf_ind.txt', \
+                                  numAddedPoints = 100):
 
     # This program uses the solps geometry .ogr file to create a 2d geometry for GITR
     # in which the solps plasma profiles properly match the divertor target geometry.
@@ -54,6 +57,42 @@ def V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
 
     r_final, z_final = gitr.replace_line_segment(r_left_target, z_left_target, r_wall, z_wall)
     r_final, z_final = gitr.replace_line_segment(r_right_target, z_right_target, r_wall, z_wall)
+    r_final_coarse, z_final_coarse = r_final, z_final
+    
+    ###################################################################
+    # Increase Fineness of W Divertor Surface
+    ###################################################################
+    W_indicesCoarse = np.array(range(30,45))
+    
+    #set number of added points in a line segment to be proportional to the length of the segment
+    rSurfCoarse = r_final[W_indicesCoarse]
+    zSurfCoarse = z_final[W_indicesCoarse]
+    dist = np.sqrt((rSurfCoarse[:-1]-rSurfCoarse[1:])**2 + (zSurfCoarse[:-1]-zSurfCoarse[1:])**2)
+    totalDist = np.sum(dist)
+    addedPoints = numAddedPoints*dist/totalDist
+    print('addedPoints',addedPoints)
+    for i,v in enumerate(addedPoints): addedPoints[i] = round(v)
+    addedPoints = np.array(addedPoints,dtype='int')
+    
+    #populate rSurfFine and zSurfFine with the added points
+    rSurfFine = rSurfCoarse[0]
+    zSurfFine = zSurfCoarse[0]
+    for i,v in enumerate(addedPoints):
+        rBegin = rSurfCoarse[i]
+        zBegin = zSurfCoarse[i]
+        rEnd = rSurfCoarse[i+1]
+        zEnd = zSurfCoarse[i+1]
+        dr = (rEnd-rBegin)/(v+1)
+        dz = (zEnd-zBegin)/(v+1)
+        for j in range(1,v+1):
+            rSurfFine = np.append(rSurfFine,rSurfCoarse[i]+j*dr)
+            zSurfFine = np.append(zSurfFine,zSurfCoarse[i]+j*dz)
+        
+        rSurfFine = np.append(rSurfFine,rSurfCoarse[i+1])
+        zSurfFine = np.append(zSurfFine,zSurfCoarse[i+1])
+    
+    r_final, z_final = gitr.replace_line_segment(rSurfFine, zSurfFine, r_final, z_final)
+    W_indices = np.array(range(W_indicesCoarse[0], W_indicesCoarse[-1]+numAddedPoints))
 
     #plot correctly-ordered line segments
     print('plotting correctly-ordered line segments to solps_wall.pdf')
@@ -68,28 +107,29 @@ def V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
 
     #define interior side of each line segment in the geometry with inDir
     inDir = np.ones(len(r_final))
-    inDir[2:9] = inDir[10] = inDir[17:30] = inDir[61] = inDir[63] = inDir[68:70] = inDir[74:] = -1
+    inDir[2:9] = inDir[10] = inDir[17:30] = inDir[61+numAddedPoints] = inDir[63+numAddedPoints] = \
+        inDir[68+numAddedPoints:70+numAddedPoints] = inDir[74+numAddedPoints:] = -1
 
     #populate lines and check that vectors point inward
     lines = gitr.gitr_lines_from_points(r_final, z_final)
     gitr.lines_to_vectors(lines, inDir, 'inDir', plt)
-    
+
+    plt.close()
+    fs = 14
+    plt.plot(r_right_target, z_right_target, '-k', label='Carbon', linewidth=0.5)
+    plt.plot(r_final[W_indices], z_final[W_indices], 'violet', label='Tungsten', linewidth=0.6)
+    plt.scatter(r_final[W_indices], z_final[W_indices], color='violet', marker='_', s=10)
+    plt.legend()
+    plt.xlabel('r [m]',fontsize=fs)
+    plt.ylabel('z [m]',fontsize=fs)
+    plt.xticks(fontsize=fs-3)
+    plt.yticks(fontsize=fs)
+    plt.title('Upper Outer SAS-VW Divertor in DIII-D',fontsize=fs)
+    plt.savefig('plots/W wall ID')
+
     #give the divertor target segments, targ_indices, a material and an interactive surface
     Z = np.zeros(len(r_final))
     surfaces = np.zeros(len(r_final))
-
-    W_indices = np.array(range(30,45))
-
-    plt.close()
-    plt.plot(r_right_target, z_right_target, '-k', label='Target', linewidth=0.5)
-    plt.plot(r_final[W_indices], z_final[W_indices], 'purple', label='W', linewidth=0.6)
-    plt.scatter(r_final[W_indices], z_final[W_indices], color='purple', s=8)
-    plt.legend()
-    plt.xlabel('r [m]')
-    plt.ylabel('z [m]')
-    plt.title('W Part of Outer Divertor')
-    plt.savefig('plots/W wall ID')
-
     Z[W_indices] = 74;
     surfaces[W_indices] = 1;
 
@@ -105,10 +145,17 @@ def V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
         for i in range(0,len(r_final)):
             f.write(str(r_final[i]) +' '+ str(z_final[i]) +'\n')
 
+    with open(surf_coarse, 'w') as f:
+        for i in range(0,len(W_indicesCoarse)):
+            f.write(str(W_indicesCoarse[i])+'\n')
+
+    with open(surf_ind, 'w') as f:
+        for i in range(0,len(W_indices)):
+            f.write(str(W_indices[i])+'\n')
 
     print('r_min:', min(r_final), '\nr_max:', max(r_final), '\nz_min:', min(z_final), '\nz_max:', max(z_final))
     print('created gitrGeometry.cfg')
-    return r_final, z_final, r_final[W_indices], z_final[W_indices]
+    return r_final, z_final, r_final[W_indices], z_final[W_indices], r_final_coarse, z_final_coarse, addedPoints
 
 if __name__ == "__main__":
     V6e_v002()

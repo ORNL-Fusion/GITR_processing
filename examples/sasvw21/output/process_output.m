@@ -10,7 +10,7 @@ Z = geom(2,:);
 %% startPosition
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-file = strcat(pwd,'/../output/particleSource.nc');
+file = strcat(pwd,'/../input/particleSource.nc');
 x0 = ncread(file,'x');
 y0 = ncread(file,'y');
 z0 = ncread(file,'z');
@@ -145,6 +145,11 @@ hold on
 plot(Zsurf,grossDep,'-g')
 hold on
 plot(Zsurf,netEro,'-b')
+
+xlabel('z [m]')
+ylabel('Particles per Second')
+legend('Gross Erosion', 'Redposition', 'Net Erosion')
+title('GITR Predicted Erosion and Redeposition Profiles')
 
 
 
