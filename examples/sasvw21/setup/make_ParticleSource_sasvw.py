@@ -74,13 +74,13 @@ def simple2D(nP, \
     slope = np.zeros(len(r1))
     Alpha = np.zeros(len(r1))
     for i in range(len(r1)):
-        if (r2[i]-r1[i])>0:
+        if (r2[i]-r1[i])!=0:
             slope[i] = (z2[i]-z1[i])/(r2[i]-r1[i])
             #define angle between material wall and major radius, x
             Alpha[i] = np.abs(np.arctan((z2[i]-z1[i]) / (r2[i]-r1[i])))
-        else: 
+        elif (r2[i]-r1[i])==0:
             slope[i] = 100
-            Alpha[i] = 89.99*np.pi/180
+            Alpha[i] = 89.999*np.pi/180
 
     #get indices of rcoord and r_targ that are W
     #import W surface indices
@@ -98,6 +98,8 @@ def simple2D(nP, \
     #specify W r,z coordinates and slope for the outer target
     r1 = r1[W_ind]
     z1 = z1[W_ind]
+    r2 = r2[W_ind]
+    z2 = z2[W_ind]
     slope = slope[W_ind]
 
     #########################################
@@ -106,13 +108,13 @@ def simple2D(nP, \
 
     
     #get incoming ion energy and angle estimations where the integer input is z
-    rmrs_mid, DsurfE, DsurfA = get_surf_profiles(profilesFile, r1, z1, r2[W_ind], z2[W_ind], 1, plot_variables)
-    rmrs_mid, CsurfE1, CsurfA1 = get_surf_profiles(profilesFile, r1, z1, r2[W_ind], z2[W_ind], 1, plot_variables)
-    rmrs_mid, CsurfE2, CsurfA2 = get_surf_profiles(profilesFile, r1, z1, r2[W_ind], z2[W_ind], 2, plot_variables)
-    rmrs_mid, CsurfE3, CsurfA3 = get_surf_profiles(profilesFile, r1, z1, r2[W_ind], z2[W_ind], 3, plot_variables)
-    rmrs_mid, CsurfE4, CsurfA4 = get_surf_profiles(profilesFile, r1, z1, r2[W_ind], z2[W_ind], 4, plot_variables)
-    rmrs_mid, CsurfE5, CsurfA5 = get_surf_profiles(profilesFile, r1, z1, r2[W_ind], z2[W_ind], 5, plot_variables)
-    rmrs_mid, CsurfE6, CsurfA6 = get_surf_profiles(profilesFile, r1, z1, r2[W_ind], z2[W_ind], 6, plot_variables)
+    rmrs_mid, DsurfE, DsurfA = get_surf_profiles(profilesFile, r1, z1, r2, z2, 1, plot_variables)
+    rmrs_mid, CsurfE1, CsurfA1 = get_surf_profiles(profilesFile, r1, z1, r2, z2, 1, plot_variables)
+    rmrs_mid, CsurfE2, CsurfA2 = get_surf_profiles(profilesFile, r1, z1, r2, z2, 2, plot_variables)
+    rmrs_mid, CsurfE3, CsurfA3 = get_surf_profiles(profilesFile, r1, z1, r2, z2, 3, plot_variables)
+    rmrs_mid, CsurfE4, CsurfA4 = get_surf_profiles(profilesFile, r1, z1, r2, z2, 4, plot_variables)
+    rmrs_mid, CsurfE5, CsurfA5 = get_surf_profiles(profilesFile, r1, z1, r2, z2, 5, plot_variables)
+    rmrs_mid, CsurfE6, CsurfA6 = get_surf_profiles(profilesFile, r1, z1, r2, z2, 6, plot_variables)
     
     if plot_variables == 1:
         ls, fs = 5, 14
@@ -169,8 +171,14 @@ def simple2D(nP, \
 
 
     #multiply incoming ion flux by Y_s to get sputtered W flux by each species
-    sputt_flux = Cspyld1*Cflux1 + Cspyld2*Cflux2 + Cspyld3*Cflux3 + Cspyld4*Cflux4 + Cspyld5*Cflux5 + Cspyld6*Cflux6
-    print('SPUTT FLUX',sputt_flux)
+    sputt_flux1 = Cspyld1*Cflux1
+    sputt_flux2 = Cspyld2*Cflux2
+    sputt_flux3 = Cspyld3*Cflux3
+    sputt_flux4 = Cspyld4*Cflux4
+    sputt_flux5 = Cspyld5*Cflux5
+    sputt_flux6 = Cspyld6*Cflux6
+    sputt_flux = sputt_flux1 + sputt_flux2 + sputt_flux3 + sputt_flux4 + sputt_flux5 + sputt_flux6
+    print('SPUTT FLUX',len(sputt_flux),'\n',sputt_flux)
 
     #multiply by area to get the outgoing particles per second
     pps = np.multiply(sputt_flux,area[W_ind])
@@ -201,6 +209,7 @@ def simple2D(nP, \
     nP_diff = nP-np.sum(int_weights)
 
     print('total nP', nP)
+    print('pps over nP', np.sum(pps)/nP)
     print('nP(r_mid):', int_weights)
     print('nP_diff should be 0: ', nP_diff)
     
@@ -222,35 +231,61 @@ def simple2D(nP, \
         ls,fs = 5, 14
         
         plt.close()
-        plt.plot(rmrs_mid, Cflux1, 'red', linewidth=ls)
-        plt.plot(rmrs_mid, Cflux2, 'orange', linewidth=ls)
-        plt.plot(rmrs_mid, Cflux3, 'yellow', linewidth=ls)
-        plt.plot(rmrs_mid, Cflux4, 'green', linewidth=ls)
-        plt.plot(rmrs_mid, Cflux5, 'blue', linewidth=ls)
-        plt.plot(rmrs_mid, Cflux6, 'purple', linewidth=ls)
+        plt.plot(rmrs_mid, Cflux1, 'red', linewidth=ls, label='C1+')
+        plt.plot(rmrs_mid, Cflux2, 'orange', linewidth=ls, label='C2+')
+        plt.plot(rmrs_mid, Cflux3, 'yellow', linewidth=ls, label='C3+')
+        plt.plot(rmrs_mid, Cflux4, 'green', linewidth=ls, label='C4+')
+        plt.plot(rmrs_mid, Cflux5, 'blue', linewidth=ls, label='C5+')
+        plt.plot(rmrs_mid, Cflux6, 'purple', linewidth=ls, label='C6+')
         plt.xlabel('D-Dsep [m]',fontsize=fs)
         plt.ylabel('Flux [#/m2s]',fontsize=fs)
         plt.xticks(fontsize=fs)
         plt.yticks(fontsize=fs)
+        plt.legend(loc='upper right', fontsize=fs)
         plt.title('Incoming C Ion Flux',fontsize=fs)
         plt.savefig('plots/surf_Cflux.png')
 
         plt.close()
-        plt.plot(rmrs_mid, Cspyld1, 'red', linewidth=ls)
-        plt.plot(rmrs_mid, Cspyld2, 'orange', linewidth=ls)
-        plt.plot(rmrs_mid, Cspyld3, 'yellow', linewidth=ls)
-        plt.plot(rmrs_mid, Cspyld4, 'green', linewidth=ls)
-        plt.plot(rmrs_mid, Cspyld5, 'blue', linewidth=ls)
-        plt.plot(rmrs_mid, Cspyld6, 'purple', linewidth=ls)
+        plt.plot(rmrs_mid, Cspyld1, 'red', linewidth=ls, label='C1+')
+        plt.plot(rmrs_mid, Cspyld2, 'orange', linewidth=ls, label='C2+')
+        plt.plot(rmrs_mid, Cspyld3, 'yellow', linewidth=ls, label='C3+')
+        plt.plot(rmrs_mid, Cspyld4, 'green', linewidth=ls, label='C4+')
+        plt.plot(rmrs_mid, Cspyld5, 'blue', linewidth=ls, label='C5+')
+        plt.plot(rmrs_mid, Cspyld6, 'purple', linewidth=ls, label='C6+')
         plt.xlabel('D-Dsep [m]',fontsize=fs)
         plt.ylabel('Yield',fontsize=fs)
         plt.xticks(fontsize=fs)
         plt.yticks(fontsize=fs-3)
+        plt.legend(loc='upper left', fontsize=fs)
         plt.title('Average Sputtering Yield for C on W',fontsize=fs)
         plt.savefig('plots/Cspyld.png')
+        
+        plt.close()
+        plt.plot(rmrs_mid, sputt_flux1, 'red', linewidth=ls, label='C1+')
+        plt.plot(rmrs_mid, sputt_flux2, 'orange', linewidth=ls, label='C2+')
+        plt.plot(rmrs_mid, sputt_flux3, 'yellow', linewidth=ls, label='C3+')
+        plt.plot(rmrs_mid, sputt_flux4, 'green', linewidth=ls, label='C4+')
+        plt.plot(rmrs_mid, sputt_flux5, 'blue', linewidth=ls, label='C5+')
+        plt.plot(rmrs_mid, sputt_flux6, 'purple', linewidth=ls, label='C6+')
+        plt.xlabel('D-Dsep [m]',fontsize=fs)
+        plt.ylabel('Flux [#/m2s]',fontsize=fs)
+        plt.xticks(fontsize=fs)
+        plt.yticks(fontsize=fs-3)
+        plt.legend(loc='upper left', fontsize=fs)
+        plt.title('Flux of W Sputtered off Wall',fontsize=fs)
+        plt.savefig('plots/sputt_flux_charge_dependent.png')
 
         plt.close()
-        plt.plot(rmrs_mid, sputt_flux, linewidth=ls)
+        plt.plot(rmrs_mid, area[W_ind], linewidth=ls)
+        plt.xlabel('D-Dsep [m]',fontsize=fs)
+        plt.ylabel('Area [m2]',fontsize=fs)
+        plt.xticks(fontsize=fs)
+        plt.yticks(fontsize=fs-8)
+        plt.title('Area of each line segment',fontsize=fs)
+        plt.savefig('plots/surf_area.png')
+
+        plt.close()
+        plt.plot(rmrs_mid, sputt_flux2, linewidth=ls)
         plt.xlabel('D-Dsep [m]',fontsize=fs)
         plt.ylabel('Flux [#/m2s]',fontsize=fs)
         plt.xticks(fontsize=fs)

@@ -1,4 +1,4 @@
-fileID = fopen('../setup/assets/geom-SASV6/gitr_rz.txt','r');
+fileID = fopen('../setup/assets/gitr_rz.txt','r');
 formatSpec='%f %f';
 sizeA = [2 Inf];
 geom = fscanf(fileID,formatSpec,sizeA); 
