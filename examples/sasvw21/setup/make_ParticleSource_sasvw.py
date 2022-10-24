@@ -5,10 +5,10 @@ sys.path.insert(0, '../../../../pyGITR/pyGITR')
 import numpy as np
 import matplotlib.pyplot as plt
 
-import netCDF4
 import gitr
 import solps
 import Particles
+import netCDF4
 
 def point_source(nP = int(1e3)):
     x = 1.49*np.ones(nP)

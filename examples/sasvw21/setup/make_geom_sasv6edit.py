@@ -1,21 +1,16 @@
 import sys
-import os
-absolute_path = os.path.abspath(__file__)
-relpath = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(absolute_path))))
-bestpath = relpath + '\\python'
-sys.path.insert(0, bestpath)
+sys.path.insert(0, '../../../python/')
 
-import gitr
-import solps
 import numpy as np
 import matplotlib.pyplot as plt
-sys.path.insert(0, absolute_path)
+import solps
+import gitr
 
-def V6e_v002(gitr_geometry_filename='gitrGeometryv6.cfg', \
-                                    solps_geomfile = 'assets/geom-SASV6/SAS-V6e_v002.ogr', \
-                                    solps_targfile = 'assets/b2fgmtry', \
-                                    solps_rz = 'assets/geom-SASV6/solps_rz.txt', \
-                                    gitr_rz = 'assets/geom-SASV6/gitr_rz.txt'):
+def V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
+                                  solps_geomfile = 'assets/geom-SASV6/SAS-V6e_v002.ogr', \
+                                  solps_targfile = 'assets/b2fgmtry', \
+                                  solps_rz = 'assets/geom-SASV6/solps_rz.txt', \
+                                  gitr_rz = 'assets/geom-SASV6/gitr_rz.txt'):
 
     # This program uses the solps geometry .ogr file to create a 2d geometry for GITR
     # in which the solps plasma profiles properly match the divertor target geometry.
@@ -25,7 +20,10 @@ def V6e_v002(gitr_geometry_filename='gitrGeometryv6.cfg', \
     with open(solps_geomfile) as f: solps_geom = f.readlines()[1:]
     solps_geom[-1] += '\n' #need this for index counting in r,z extraction
 
-    r_ogr = z_ogr = np.empty(0)
+#use np.empty instead of np.zeros
+    r_ogr = z_ogr = np.zeros(1)
+    r_ogr = np.delete(r_ogr,0)
+    z_ogr = np.delete(z_ogr,0)
     for row in solps_geom:
         rvalue = float(row.split(' ')[0])
         r_ogr = np.append(r_ogr, rvalue)
@@ -112,7 +110,7 @@ def V6e_v002(gitr_geometry_filename='gitrGeometryv6.cfg', \
 
 
     print('r_min:', min(r_final), '\nr_max:', max(r_final), '\nz_min:', min(z_final), '\nz_max:', max(z_final))
-    print('created gitrGeometryv6.cfg')
+    print('created gitrGeometry.cfg')
     return r_final, z_final, r_final[W_indices], z_final[W_indices]
 
 if __name__ == "__main__":
