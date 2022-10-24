@@ -6,10 +6,10 @@ import numpy as np
 import scipy.interpolate as scii
 import matplotlib.pyplot as plt
 
-import netCDF4
 import gitr
 import solps
 import Particles
+import netCDF4
 
 def point_source(nP = int(2e2)):
     x = 1.44*np.ones(nP)

@@ -1,10 +1,15 @@
 import sys
-sys.path.insert(0, '../../../python/')
+import os
+absolute_path = os.path.abspath(__file__)
+relpath = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(absolute_path))))
+bestpath = relpath + '\\python'
+sys.path.insert(0, bestpath)
 
 import gitr
 import solps
 import numpy as np
 import matplotlib.pyplot as plt
+sys.path.insert(0, absolute_path)
 
 def V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
                                   solps_geomfile = 'assets/geom-SASV6/SAS-V6e_v002.ogr', \
@@ -14,9 +19,6 @@ def V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
                                   surf_coarse = 'assets/surf_coarse.txt', \
                                   surf_ind = 'assets/surf_ind.txt', \
                                   numAddedPoints = 100):
-
-    # This program uses the solps geometry .ogr file to create a 2d geometry for GITR
-    # in which the solps plasma profiles properly match the divertor target geometry.
     # This geometry is then written to a config (cfg) file for use in GITR simulation.
 
     #read in ogr r,z wall geometry
@@ -156,6 +158,5 @@ def V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
     print('r_min:', min(r_final), '\nr_max:', max(r_final), '\nz_min:', min(z_final), '\nz_max:', max(z_final))
     print('created gitrGeometry.cfg')
     return r_final, z_final, r_final[W_indices], z_final[W_indices], r_final_coarse, z_final_coarse, addedPoints
-
 if __name__ == "__main__":
     V6e_v002()
