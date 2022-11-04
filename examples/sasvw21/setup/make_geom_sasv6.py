@@ -19,6 +19,9 @@ def V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
                                   surf_coarse = 'assets/surf_coarse.txt', \
                                   surf_ind = 'assets/surf_ind.txt', \
                                   numAddedPoints = 100):
+
+    # This program uses the solps geometry .ogr file to create a 2d geometry for GITR
+    # in which the solps plasma profiles properly match the divertor target geometry.
     # This geometry is then written to a config (cfg) file for use in GITR simulation.
 
     #read in ogr r,z wall geometry
