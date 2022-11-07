@@ -18,13 +18,14 @@ def V6e_v002(gitr_geometry_filename='gitrGeometry1v.cfg', \
                                     gitr_rz = 'assets/geom-SAS1V/gitr_rz.txt'):
     
     # This program uses the solps geometry .ogr file to create a 2d geometry for GITR
-    # in which the solps plasma profiles properly match the divertor target geometry.
+    # in which the solps plasma profiles properly match the solps divertor target.
     # This geometry is then written to a config (cfg) file for use in GITR simulation.
     
     #read in ogr r,z wall geometry
     with open(solps_geomfile) as f: solps_geom = f.readlines()[1:]
     solps_geom[-1] += '\n' #need this for index counting in r,z extraction
     
+    # uses np.
     r_ogr = z_ogr = np.empty(0)
     for row in solps_geom:
         rvalue = float(row.split(' ')[0])

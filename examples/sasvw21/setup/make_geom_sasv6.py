@@ -1,16 +1,17 @@
 import sys
-import os
-absolute_path = os.path.abspath(__file__)
-relpath = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(absolute_path))))
-bestpath = relpath + '\\python'
-sys.path.insert(0, bestpath)
+# adds path to gitr.py and solps.py
+sys.path.insert(0, '../../../python/')
 
 import gitr
 import solps
 import numpy as np
 import matplotlib.pyplot as plt
-sys.path.insert(0, absolute_path)
 
+# This function uses the original geometry .ogr file to create a 2d geometry for GITR
+# in which the solps divertor target replaces the .ogr divertor target geometry.
+# This geometry is then written to a config (cfg) file for use in GITR simulation.
+
+# start of the function and labeling of files
 def V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
                                   solps_geomfile = 'assets/geom-SASV6/SAS-V6e_v002.ogr', \
                                   solps_targfile = 'assets/b2fgmtry', \
@@ -20,14 +21,16 @@ def V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
                                   surf_ind = 'assets/surf_ind.txt', \
                                   numAddedPoints = 100):
 
-    # This program uses the solps geometry .ogr file to create a 2d geometry for GITR
-    # in which the solps plasma profiles properly match the divertor target geometry.
-    # This geometry is then written to a config (cfg) file for use in GITR simulation.
-
-    #read in ogr r,z wall geometry
+    ###################################################################
+    # Turn your file data into coordinate points (r and z for 2-D or r, z, and t for 3-D)
+    # that can be plotted as your desired shape. Assume the points are not in order
+    ###################################################################
+    
+    # read data in ogr r,z wall geometry from original gemotry file
     with open(solps_geomfile) as f: solps_geom = f.readlines()[1:]
-    solps_geom[-1] += '\n' #need this for index counting in r,z extraction
+    solps_geom[-1] += '\n' # need this for index counting in r,z extraction
 
+    # creates empty matricies for r_ogr and z_ogr
     r_ogr = z_ogr = np.empty(0)
     for row in solps_geom:
         rvalue = float(row.split(' ')[0])
@@ -36,15 +39,21 @@ def V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
         zvalue = float(row.split(' ')[1][0:-1])
         z_ogr = np.append(z_ogr, zvalue)
 
+    # creates a closed geometery by putting the first data point at the end
     r_ogr = np.append(r_ogr, r_ogr[0])
     z_ogr = np.append(z_ogr, z_ogr[0])
 
-    #save (r_ogr, z_ogr) to a file for easy visualization using viz_geom_sasvw.m
+    # save (r_ogr, z_ogr) to a file for easy visualization using viz_geom_sasvw.m
     with open(solps_rz, 'w') as f:
         for i in range(0,len(r_ogr)):
             f.write(str(r_ogr[i]) +' '+ str(z_ogr[i]) +'\n')
 
-    #order line segments as determined visually using viz_geom_sasvw.m
+    ###################################################################
+    # Reordering Coordinate points since .ogr file is not in order
+    ###################################################################
+    
+    # order line segments r and z as determined visually using viz_geom_sasvw.m(make into python)
+    # so that they're in spatial order
     manual_indices = np.zeros(int(122/2), dtype=int)
     i=1
     for j in range(1,122):
@@ -54,6 +63,7 @@ def V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
 
     manual_indices = np.append(manual_indices, range(121,160))
 
+    # must convert points into meters once they are ordered
     r_wall = r_ogr[manual_indices]/1000 #mm->m
     z_wall = z_ogr[manual_indices]/1000 #mm->m
 
@@ -142,6 +152,7 @@ def V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
     gitr.lines_to_gitr_geometry(gitr_geometry_filename+'0', lines, Z, surfaces, inDir)
     gitr.removeQuotes(gitr_geometry_filename+'0', gitr_geometry_filename)
 
+    # rewrites .cfg files to avoid clutter (deprocated, clean up of gitr.py need before deletion)
     #gitr.remove_endline_after_comma(infile=gitr_geometry_filename+"0", outfile=gitr_geometry_filename+"00")
     #gitr.remove_endline_after_comma2(infile=gitr_geometry_filename+"00", outfile=gitr_geometry_filename)
 
