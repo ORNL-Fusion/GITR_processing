@@ -52,7 +52,7 @@ def V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
     # Reordering Coordinate points since .ogr file is not in order
     ###################################################################
     
-    # order line segments r and z as determined visually using viz_geom_sasvw.m(make into python)
+    # order points r and z as determined visually using viz_geom_sasvw.m(make into python)
     # so that they're in spatial order
     manual_indices = np.zeros(int(122/2), dtype=int)
     i=1
@@ -67,9 +67,10 @@ def V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
     r_wall = r_ogr[manual_indices]/1000 #mm->m
     z_wall = z_ogr[manual_indices]/1000 #mm->m
 
-    #get target geometry from b2fgmtry and stitch to wall geometry
+    #get target geometry from b2fgmtry (SOLPS) and stitch to wall geometry
     r_right_target, z_right_target, r_left_target, z_left_target = solps.get_target_coordinates(solps_targfile)
 
+    # Replace wall points with b2fgmtry target points
     r_final, z_final = gitr.replace_line_segment(r_left_target, z_left_target, r_wall, z_wall)
     r_final, z_final = gitr.replace_line_segment(r_right_target, z_right_target, r_wall, z_wall)
     r_final_coarse, z_final_coarse = r_final, z_final
@@ -126,9 +127,11 @@ def V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
         inDir[68+numAddedPoints:70+numAddedPoints] = inDir[74+numAddedPoints:] = -1
 
     #populate lines and check that vectors point inward
+    #edit lines above so that interior is correctly defined
     lines = gitr.gitr_lines_from_points(r_final, z_final)
     gitr.lines_to_vectors(lines, inDir, 'inDir', plt)
 
+    #plot divertor 
     plt.close()
     fs = 14
     plt.plot(r_right_target, z_right_target, '-k', label='Carbon', linewidth=0.5)
@@ -142,7 +145,7 @@ def V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
     plt.title('Upper Outer SAS-VW Divertor in DIII-D',fontsize=fs)
     plt.savefig('plots/W wall ID')
 
-    #give the divertor target segments, targ_indices, a material and an interactive surface
+    #define the divertor target segments, targ_indices, a material and an interactive surface
     Z = np.zeros(len(r_final))
     surfaces = np.zeros(len(r_final))
     Z[W_indices] = 74;
