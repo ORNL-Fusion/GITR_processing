@@ -120,13 +120,13 @@ def simple2D(nP, \
         ls, fs = 5, 14
         plt.close()
         plt.plot(rmrs_mid, CsurfE1, 'red', linewidth=ls, label='C1+')
-        plt.plot(rmrs_mid, CsurfE2, 'orange', linewidth=ls, label='C2+')
-        plt.plot(rmrs_mid, CsurfE3, 'yellow', linewidth=ls, label='C3+')
+        plt.plot(rmrs_mid, CsurfE2, 'darkorange', linewidth=ls, label='C2+')
+        plt.plot(rmrs_mid, CsurfE3, 'gold', linewidth=ls, label='C3+')
         plt.plot(rmrs_mid, CsurfE4, 'green', linewidth=ls, label='C4+')
         plt.plot(rmrs_mid, CsurfE5, 'blue', linewidth=ls, label='C5+')
         plt.plot(rmrs_mid, CsurfE6, 'purple', linewidth=ls, label='C6+')
         plt.xlabel('D-Dsep [m]',fontsize=fs)
-        plt.ylabel('energyy [eV]',fontsize=fs)
+        plt.ylabel('energy [eV]',fontsize=fs)
         plt.xticks(fontsize=fs)
         plt.yticks(fontsize=fs)
         plt.legend(fontsize=fs)
@@ -155,7 +155,7 @@ def simple2D(nP, \
     
     #get flux grid from background D, C
     r_mid, z_mid, ti, ni, flux, te, ne = solps.read_target_file(targFile)
-    W_targfile = np.array(range(16,31))#hard code this because ok wtf
+    W_targfile = np.array(range(16,31)) #hard code this because ok wtf
 
     #split total flux into D and C ion fluxes at the W surface
     #ion_flux = np.abs(flux[:,1:][W_ind[:-1]]) #only bother with W surfaces
@@ -231,9 +231,10 @@ def simple2D(nP, \
         ls,fs = 5, 14
         
         plt.close()
+        plt.rcParams.update({'font.size':fs})
         plt.plot(rmrs_mid, Cflux1, 'red', linewidth=ls, label='C1+')
-        plt.plot(rmrs_mid, Cflux2, 'orange', linewidth=ls, label='C2+')
-        plt.plot(rmrs_mid, Cflux3, 'yellow', linewidth=ls, label='C3+')
+        plt.plot(rmrs_mid, Cflux2, 'darkorange', linewidth=ls, label='C2+')
+        plt.plot(rmrs_mid, Cflux3, 'gold', linewidth=ls, label='C3+')
         plt.plot(rmrs_mid, Cflux4, 'green', linewidth=ls, label='C4+')
         plt.plot(rmrs_mid, Cflux5, 'blue', linewidth=ls, label='C5+')
         plt.plot(rmrs_mid, Cflux6, 'purple', linewidth=ls, label='C6+')
@@ -246,9 +247,10 @@ def simple2D(nP, \
         plt.savefig('plots/surf_Cflux.png')
 
         plt.close()
+        plt.rcParams.update({'font.size':fs})
         plt.plot(rmrs_mid, Cspyld1, 'red', linewidth=ls, label='C1+')
-        plt.plot(rmrs_mid, Cspyld2, 'orange', linewidth=ls, label='C2+')
-        plt.plot(rmrs_mid, Cspyld3, 'yellow', linewidth=ls, label='C3+')
+        plt.plot(rmrs_mid, Cspyld2, 'darkorange', linewidth=ls, label='C2+')
+        plt.plot(rmrs_mid, Cspyld3, 'gold', linewidth=ls, label='C3+')
         plt.plot(rmrs_mid, Cspyld4, 'green', linewidth=ls, label='C4+')
         plt.plot(rmrs_mid, Cspyld5, 'blue', linewidth=ls, label='C5+')
         plt.plot(rmrs_mid, Cspyld6, 'purple', linewidth=ls, label='C6+')
@@ -261,9 +263,10 @@ def simple2D(nP, \
         plt.savefig('plots/Cspyld.png')
         
         plt.close()
+        plt.rcParams.update({'font.size':fs})
         plt.plot(rmrs_mid, sputt_flux1, 'red', linewidth=ls, label='C1+')
-        plt.plot(rmrs_mid, sputt_flux2, 'orange', linewidth=ls, label='C2+')
-        plt.plot(rmrs_mid, sputt_flux3, 'yellow', linewidth=ls, label='C3+')
+        plt.plot(rmrs_mid, sputt_flux2, 'darkorange', linewidth=ls, label='C2+')
+        plt.plot(rmrs_mid, sputt_flux3, 'gold', linewidth=ls, label='C3+')
         plt.plot(rmrs_mid, sputt_flux4, 'green', linewidth=ls, label='C4+')
         plt.plot(rmrs_mid, sputt_flux5, 'blue', linewidth=ls, label='C5+')
         plt.plot(rmrs_mid, sputt_flux6, 'purple', linewidth=ls, label='C6+')
@@ -285,7 +288,8 @@ def simple2D(nP, \
         plt.savefig('plots/surf_area.png')
 
         plt.close()
-        plt.plot(rmrs_mid, sputt_flux2, linewidth=ls)
+        plt.rcParams.update({'font.size':fs})
+        plt.plot(rmrs_mid, sputt_flux, linewidth=ls)
         plt.xlabel('D-Dsep [m]',fontsize=fs)
         plt.ylabel('Flux [#/m2s]',fontsize=fs)
         plt.xticks(fontsize=fs)
