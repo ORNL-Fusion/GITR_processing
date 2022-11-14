@@ -6,6 +6,14 @@ R = geom(1,:);
 T = zeros(length(R));
 Z = geom(2,:);
 
+fileID = fopen('../setup/assets/surf_ind.txt','r');
+formatSpec='%f %f';
+sizeA = [2 Inf];
+geom = fscanf(fileID,formatSpec,sizeA); 
+Rsurf = R(geom(:));
+T = zeros(length(R));
+Zsurf = Z(geom(:));
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% startPosition
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -128,13 +136,11 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 file = strcat(pwd,'/surface.nc');
-grossDep = transpose(ncread(file,'grossDeposition'));
-grossEro = transpose(ncread(file,'grossErosion'));
+grossDep = flip(ncread(file,'grossDeposition'));
+grossEro = flip(ncread(file,'grossErosion'));
 netEro=grossEro-grossDep
 
 %find where the hell the surface is
-Rsurf = R(31:45)
-Zsurf = Z(31:45)
 figure(10)
 plot(Rsurf,Zsurf)
 axis equal
@@ -148,7 +154,7 @@ plot(Zsurf,netEro,'-b')
 
 xlabel('z [m]')
 ylabel('Particles per Second')
-legend('Gross Erosion', 'Redposition', 'Net Erosion')
+legend('Gross Erosion', 'Redposition', 'Net Erosion','Location','northwest')
 title('GITR Predicted Erosion and Redeposition Profiles')
 
 
