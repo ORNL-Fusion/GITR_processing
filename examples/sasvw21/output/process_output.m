@@ -138,7 +138,7 @@ end
 file = strcat(pwd,'/surface.nc');
 grossDep = flip(ncread(file,'grossDeposition'));
 grossEro = flip(ncread(file,'grossErosion'));
-netEro=grossEro-grossDep
+netEro=grossEro-grossDep;
 
 %find where the hell the surface is
 figure(10)
