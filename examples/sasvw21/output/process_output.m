@@ -39,7 +39,6 @@ title('Start Positions')
 %% endPosition
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-plot_tracks = 1;
 file = strcat(pwd,'/positions.nc');
 hitWall = ncread(file,'hitWall');
 nHit = length(find(hitWall));
@@ -82,52 +81,71 @@ legend('wall','hasHit','notHit')
 %% history
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+plot_tracks = 1;
 if plot_tracks
-file = strcat(pwd,'/history.nc');
-x = ncread(file,'x');
-y = ncread(file,'y');
-z = ncread(file,'z');
-vx = ncread(file,'vx');
-vy = ncread(file,'vy');
-vz = ncread(file,'vz');
-charge = ncread(file,'charge');
-weight = ncread(file,'weight');
-sizeArray = size(x);
-nP = sizeArray(2);
-hit = find(weight(end,:) < 1);
+    file = strcat(pwd,'/history.nc');
+    x = ncread(file,'x');
+    y = ncread(file,'y');
+    z = ncread(file,'z');
+    vx = ncread(file,'vx');
+    vy = ncread(file,'vy');
+    vz = ncread(file,'vz');
+    charge = ncread(file,'charge');
+    weight = ncread(file,'weight');
+    sizeArray = size(x);
+    nP = sizeArray(2);
+    hit = find(weight(end,:) < 1);
 
-%r = sqrt(x.^2 + y.^2);
-figure(6) %3D plotting
-plot3(R,T,Z, 'LineWidth',2)
-hold on
+    figure(6) %3D plotting
+    plot3(R,T,Z, 'LineWidth',2)
+    hold on
 
-for i=1:1:length(x0)
-plot3(x(:,i),y(:,i),z(:,i), 'LineWidth',0.1)
-end
+    for i=1:1:length(x0)
+    plot3(x(:,i),y(:,i),z(:,i), 'LineWidth',0.1)
+    end
 
-axis equal
-xlim([1.43 1.56])
-ylim([-0.05 0.05])
-zlim([1.07 1.25])
-xlabel('r [m]')
-ylabel('y [m]')
-zlabel('z [m]')
-title('Histories')
+    axis equal
+    xlim([1.43 1.56])
+    ylim([-0.05 0.05])
+    zlim([1.07 1.25])
+    xlabel('r [m]')
+    ylabel('y [m]')
+    zlabel('z [m]')
+    title('Histories')
 
-figure(7) %2D plotting
-plot(R,Z,'LineWidth',2)
-hold on
+    figure(7) %2D plotting
+    plot(R,Z,'LineWidth',2)
+    hold on
+    
+    for i=1:1:length(x0)
+        if charge(i)==1
+            plot(x(:,i),z(:,i),'LineWidth',1,'color','red')
+        else if charge(i)==2
+            plot(x(:,i),z(:,i),'LineWidth',1,'color','#D95319')
+        else if charge(i)==3
+            plot(x(:,i),z(:,i),'LineWidth',1,'color','yellow')
+        else if charge(i)==4
+            plot(x(:,i),z(:,i),'LineWidth',1,'color','green')
+        else if charge(i)==5
+            plot(x(:,i),z(:,i),'LineWidth',1,'color','cyan')
+        else if charge(i)==0
+            plot(x(:,i),z(:,i),'LineWidth',1,'color','black')
+        else
+            plot(x(:,i),z(:,i),'LineWidth',1,'color','magenta')
+            end
+            end
+            end
+            end
+            end
+        end
+    end
 
-for i=1:1:length(x0)
-plot(x(:,i),z(:,i),'LineWidth',1)
-end
-
-axis equal
-xlim([1.43 1.56])
-ylim([1.07 1.25])
-xlabel('r [m]')
-ylabel('z [m]')
-title('Histories')
+    axis equal
+    xlim([1.43 1.56])
+    ylim([1.07 1.25])
+    xlabel('r [m]')
+    ylabel('z [m]')
+    title('Histories')
 
 end
 
