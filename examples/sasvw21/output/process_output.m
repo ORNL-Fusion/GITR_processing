@@ -100,9 +100,9 @@ if plot_tracks
     plot3(R,T,Z, 'LineWidth',2)
     hold on
 
-    for i=1:1:length(x0)
-    plot3(x(:,i),y(:,i),z(:,i), 'LineWidth',0.1)
-    end
+    %for i=1:1:length(x0)
+    %plot3(x(:,i),y(:,i),z(:,i), 'LineWidth',0.1)
+    %end
 
     axis equal
     xlim([1.43 1.56])
@@ -117,7 +117,7 @@ if plot_tracks
     plot(R,Z,'LineWidth',2)
     hold on
     
-    for i=1:1:length(x0)
+    for i=1:1:length(x)
         if charge(i)==1
             plot(x(:,i),z(:,i),'LineWidth',1,'color','red')
         else if charge(i)==2
