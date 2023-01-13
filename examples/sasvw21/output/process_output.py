@@ -2,68 +2,102 @@ import numpy as np
 import netCDF4
 import matplotlib.pyplot as plt
 
-#import wall geometry to plot over
-wall_file = '../setup/assets/gitr_rz.txt'
-with open(wall_file, 'r') as file:
-    wall = file.readlines()
+def init():
+    #import wall geometry to plot over
+    wall_file = '../setup/assets/gitr_rz.txt'
+    with open(wall_file, 'r') as file:
+        wall = file.readlines()
+    
+    R = np.zeros(len(wall))
+    Z = np.zeros(len(wall))
+    for i,line in enumerate(wall):
+        point = line.split()
+        R[i] = float(point[0])
+        Z[i] = float(point[1])
+    
+    #import W surface indices
+    surf_file = '../setup/assets/surf_ind.txt'
+    with open(surf_file, 'r') as file:
+        surf = file.readlines()
+    
+    surf = np.array(surf,dtype='int')
+    Rsurf = np.zeros(len(surf))
+    Zsurf = np.zeros(len(surf))
+    for i,v in enumerate(surf):
+        Rsurf[i] = R[v]
+        Zsurf[i] = Z[v]
+    
+    area = 0.12*np.sqrt(np.power((Rsurf[:-1]-Rsurf[1:]),2) + np.power((Zsurf[:-1]-Zsurf[1:]),2))
+    dist = np.sqrt((Rsurf[:-1]-Rsurf[1:])**2 + (Zsurf[:-1]-Zsurf[1:])**2)
+    rmrs =  np.cumsum(dist)
 
-R = np.zeros(len(wall))
-Z = np.zeros(len(wall))
-for i,line in enumerate(wall):
-    point = line.split()
-    R[i] = float(point[0])
-    Z[i] = float(point[1])
+    return R,Z,Rsurf,Zsurf,area,rmrs
+R,Z,Rsurf,Zsurf,area,rmrs = init()
 
-#import W surface indices
-surf_file = '../setup/assets/surf_ind.txt'
-with open(surf_file, 'r') as file:
-    surf = file.readlines()
-
-surf = np.array(surf,dtype='int')
-Rsurf = np.zeros(len(surf))
-Zsurf = np.zeros(len(surf))
-for i,v in enumerate(surf):
-    Rsurf[i] = R[v]
-    Zsurf[i] = Z[v]
-
-area = 0.12*np.sqrt(np.power((Rsurf[:-1]-Rsurf[1:]),2) + np.power((Zsurf[:-1]-Zsurf[1:]),2))
-dist = np.sqrt((Rsurf[:-1]-Rsurf[1:])**2 + (Zsurf[:-1]-Zsurf[1:])**2)
-rmrs =  np.cumsum(dist)
-
-def plot_history2D():
+def plot_history2D(basic=0, continuousChargeState=1, endChargeState=0):
     history = netCDF4.Dataset("history.nc", "r", format="NETCDF4")
 
+    nP = len(history.dimensions['nP'])
+    nT = len(history.dimensions['nT'])
     x = history.variables['x']
     z = history.variables['z']
+    charge = history.variables['charge']
 
     plt.close()
+    plt.rcParams.update({'font.size':14})
+    plt.rcParams.update({'lines.linewidth':1})
     plt.plot(R,Z,'-k',linewidth=0.7)
     plt.axis('scaled')
     plt.xlabel('r [m]')
     plt.ylabel('z [m]')
     plt.title('Particle Tracks')
+    
+    #define charge state to color mapping
+    colors = {0:'black', 1:'red', 2:'orange', 3:'olive', 4:'green', 5:'cyan', \
+              6:'purple', 7:'darkmagenta', 8:'pink', 9:'deep pink', 10:'gray'}
+    
+    # all particle source vars ordered as (nP, nT)
+    if basic==1:
+        for p in range(0,nP):
+            plt.plot(x[p][:],z[p][:])
+    
+    if continuousChargeState==1:
+        for p in range(0,nP):
+            print(p,'out of', nP)
+            for t in range(0,nT-1):
+                plt.plot(x[p][t:t+2],z[p][t:t+2], colors[charge[p][t]])
 
-    for i in range(0,len(x)):
-        plt.plot(x[i][:],z[i][:], linewidth=0.2)
-
+    if endChargeState==1:
+        for p in range(0,nP):
+            plt.plot(x[p][:],z[p][:], colors[charge[p][-1]])
+        
     plt.xlim(1.43, 1.56)
     plt.ylim(1.07, 1.25)
     plt.savefig('plots/history.pdf')
 
-def plot_surf_nc(ls,fs, pps_per_nP):
-    surface = netCDF4.Dataset("surface.nc", "r", format="NETCDF4")
-    print(surface.variables['grossErosion'][:])
+    return
 
-    grossEro = (surface.variables['grossErosion'][:])*pps_per_nP
-    grossDep = (surface.variables['grossDeposition'][:])*pps_per_nP
+def plot_surf_nc(ls,fs, pps_per_nP):
+    surface = netCDF4.Dataset("surface_nP1e5_nT1e6.nc", "r", format="NETCDF4")
+    #print(surface.variables['grossErosion'][:])
+
+    grossEro = (surface.variables['grossErosion'][:])
+    grossDep = (surface.variables['grossDeposition'][:])
     netEro = (grossEro-grossDep)
     
-    grossEro = np.average([grossEro[:-1], grossEro[1:]],axis=0)/area
-    grossDep = np.average([grossDep[:-1], grossDep[1:]],axis=0)/area
+    print('total gross eroded comp particles',sum(grossEro))
+    print('total redeposited comp particles',sum(grossDep))
+    print('total net eroded comp particles',sum(netEro))
+    
+    grossEro = np.average([grossEro[:-1], grossEro[1:]],axis=0)*pps_per_nP/area
+    grossDep = np.average([grossDep[:-1], grossDep[1:]],axis=0)*pps_per_nP/area
     netEro = np.average([netEro[:-1], netEro[1:]],axis=0)/area
     
-    print('rmrs',len(rmrs))
-    print('surf',len(grossEro))
+    print('rmrs length',len(rmrs))
+    print('surf length',len(grossEro))
+    print('total gross eroded flux',sum(grossEro))
+    print('total redeposited flux',sum(grossDep))
+    print('total net eroded flux',sum(netEro))
 
     plt.close()
     plt.plot(rmrs,grossEro,'r', label='Gross Erosion',linewidth=ls)
@@ -159,9 +193,6 @@ def plot_surf_plasma_params(plot_variables):
         plt.legend()
         plt.savefig('plots/surf_IonizRate')
 
-        
-        
-
 def interpolate(small,big):
     indices = np.zeros(len(small))
     for i in range(len(small)):
@@ -176,6 +207,6 @@ def interpolate(small,big):
 
 
 if __name__ == "__main__":
-    #plot_history2D()
-    #plot_surf_nc(1,30,111879178639.80714)
-    plot_surf_plasma_params(1)
+    plot_history2D()
+    #plot_surf_nc(3,30,111879178639.80714)
+    #plot_surf_plasma_params(1)

@@ -117,11 +117,11 @@ if plot_tracks
     plot(R,Z,'LineWidth',2)
     hold on
     
-    for i=1:1:length(x)
+    for i=1:1:length(x(0))
         if charge(i)==1
             plot(x(:,i),z(:,i),'LineWidth',1,'color','red')
         else if charge(i)==2
-            plot(x(:,i),z(:,i),'LineWidth',1,'color','#D95319')
+            plot(x(:,i),z(:,i),'LineWidth',1,'color','blue')
         else if charge(i)==3
             plot(x(:,i),z(:,i),'LineWidth',1,'color','yellow')
         else if charge(i)==4
@@ -150,10 +150,50 @@ if plot_tracks
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% history segment
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+figure(8) %2D plotting
+plot(R,Z,'LineWidth',2)
+hold on
+
+    
+    for i=1:1:length(x)
+        if z(1,i) >= 1.125 && z(1,i) <= 1.13
+            if charge(i)==1
+                plot(x(:,i),z(:,i),'LineWidth',1,'color','red')
+            else if charge(i)==2
+                plot(x(:,i),z(:,i),'LineWidth',1,'color','blue')
+            else if charge(i)==3
+                plot(x(:,i),z(:,i),'LineWidth',1,'color','yellow')
+            else if charge(i)==4
+                plot(x(:,i),z(:,i),'LineWidth',1,'color','green')
+            else if charge(i)==5
+                plot(x(:,i),z(:,i),'LineWidth',1,'color','cyan')
+            else if charge(i)==0
+                plot(x(:,i),z(:,i),'LineWidth',1,'color','black')
+            else
+                plot(x(:,i),z(:,i),'LineWidth',1,'color','magenta')
+                end
+                end
+                end
+                end
+                end
+            end
+        end
+    end
+        axis equal
+        xlim([1.43 1.56])
+        ylim([1.07 1.25])
+        xlabel('r [m]')
+        ylabel('z [m]')
+        title('Histories')
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% surface
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-file = strcat(pwd,'/surface.nc');
+file = strcat(pwd,'/surface_nP1e5_nT1e6.nc');
 grossDep = flip(ncread(file,'grossDeposition'));
 grossEro = flip(ncread(file,'grossErosion'));
 netEro=grossEro-grossDep;
