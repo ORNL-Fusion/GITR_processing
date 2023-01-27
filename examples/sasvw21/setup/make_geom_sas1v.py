@@ -1,15 +1,11 @@
 import sys
 import os
-absolute_path = os.path.abspath(__file__)
-relpath = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(absolute_path))))
-bestpath = relpath + '\\python'
-sys.path.insert(0, bestpath)
+sys.path.insert(0, '../../../python/')
 
 import gitr
 import solps
 import numpy as np
 import matplotlib.pyplot as plt
-sys.path.insert(0, absolute_path)
 
 def V6e_v002(gitr_geometry_filename='gitrGeometry1v.cfg', \
                                     solps_geomfile = 'assets/geom-SAS1V/SAS-1V_v002.ogr', \

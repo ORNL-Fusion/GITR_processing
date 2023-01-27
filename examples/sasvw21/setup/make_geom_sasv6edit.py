@@ -19,8 +19,8 @@ def plot(r,z,sizescat,sizelin,name,savename,scatter,line,legend,color,fontsize):
     if legend == 1:
         plt.legend()
     plt.axis('scaled')
-    plt.xlabel('r [mm]',fontsize=fontsize)
-    plt.ylabel('z [mm]',fontsize=fontsize)
+    plt.xlabel('r [m]',fontsize=fontsize)
+    plt.ylabel('z [m]',fontsize=fontsize)
     plt.title(name,fontsize=fontsize)
     savename0 = 'plots/'+savename+'.pdf'
     plt.savefig(savename0)

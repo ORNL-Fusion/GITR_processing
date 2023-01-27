@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 import gitr
 import solps
-import Particles
+import particles
 import netCDF4
 
 def point_source(nP = int(2e2)):
