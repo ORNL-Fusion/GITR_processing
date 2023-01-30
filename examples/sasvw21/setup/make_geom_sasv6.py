@@ -1,4 +1,5 @@
 import sys
+# adds path to gitr.py and solps.py
 sys.path.insert(0, '../../../python/')
 
 import gitr
@@ -6,6 +7,11 @@ import solps
 import numpy as np
 import matplotlib.pyplot as plt
 
+# This function uses the original geometry .ogr file to create a 2d geometry for GITR
+# in which the solps divertor target replaces the .ogr divertor target geometry.
+# This geometry is then written to a config (cfg) file for use in GITR simulation.
+
+# start of the function and labeling of files
 def V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
                                   solps_geomfile = 'assets/geom-SASV6/SAS-V6e_v002.ogr', \
                                   solps_targfile = 'assets/b2fgmtry', \
@@ -15,14 +21,16 @@ def V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
                                   surf_ind = 'assets/surf_ind.txt', \
                                   numAddedPoints = 100):
 
-    # This program uses the solps geometry .ogr file to create a 2d geometry for GITR
-    # in which the solps plasma profiles properly match the divertor target geometry.
-    # This geometry is then written to a config (cfg) file for use in GITR simulation.
-
-    #read in ogr r,z wall geometry
+    ###################################################################
+    # Turn your file data into coordinate points (r and z for 2-D or r, z, and t for 3-D)
+    # that can be plotted as your desired shape. Assume the points are not in order
+    ###################################################################
+    
+    # read data in ogr r,z wall geometry from original gemotry file
     with open(solps_geomfile) as f: solps_geom = f.readlines()[1:]
-    solps_geom[-1] += '\n' #need this for index counting in r,z extraction
+    solps_geom[-1] += '\n' # need this for index counting in r,z extraction
 
+    # creates empty matricies for r_ogr and z_ogr
     r_ogr = z_ogr = np.empty(0)
     for row in solps_geom:
         rvalue = float(row.split(' ')[0])
@@ -31,15 +39,21 @@ def V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
         zvalue = float(row.split(' ')[1][0:-1])
         z_ogr = np.append(z_ogr, zvalue)
 
+    # creates a closed geometery by putting the first data point at the end
     r_ogr = np.append(r_ogr, r_ogr[0])
     z_ogr = np.append(z_ogr, z_ogr[0])
 
-    #save (r_ogr, z_ogr) to a file for easy visualization using viz_geom_sasvw.m
+    # save (r_ogr, z_ogr) to a file for easy visualization using viz_geom_sasvw.m
     with open(solps_rz, 'w') as f:
         for i in range(0,len(r_ogr)):
             f.write(str(r_ogr[i]) +' '+ str(z_ogr[i]) +'\n')
 
-    #order line segments as determined visually using viz_geom_sasvw.m
+    ###################################################################
+    # Reordering Coordinate points since .ogr file is not in order
+    ###################################################################
+    
+    # order points r and z as determined visually using viz_geom_sasvw.m(make into python)
+    # so that they're in spatial order
     manual_indices = np.zeros(int(122/2), dtype=int)
     i=1
     for j in range(1,122):
@@ -49,12 +63,14 @@ def V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
 
     manual_indices = np.append(manual_indices, range(121,160))
 
+    # must convert points into meters once they are ordered
     r_wall = r_ogr[manual_indices]/1000 #mm->m
     z_wall = z_ogr[manual_indices]/1000 #mm->m
 
-    #get target geometry from b2fgmtry and stitch to wall geometry
+    #get target geometry from b2fgmtry (SOLPS) and stitch to wall geometry
     r_right_target, z_right_target, r_left_target, z_left_target = solps.get_target_coordinates(solps_targfile)
 
+    # Replace wall points with b2fgmtry target points
     r_final, z_final = gitr.replace_line_segment(r_left_target, z_left_target, r_wall, z_wall)
     r_final, z_final = gitr.replace_line_segment(r_right_target, z_right_target, r_wall, z_wall)
     r_final_coarse, z_final_coarse = r_final, z_final
@@ -111,9 +127,11 @@ def V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
         inDir[68+numAddedPoints:70+numAddedPoints] = inDir[74+numAddedPoints:] = -1
 
     #populate lines and check that vectors point inward
+    #edit lines above so that interior is correctly defined
     lines = gitr.gitr_lines_from_points(r_final, z_final)
     gitr.lines_to_vectors(lines, inDir, 'inDir', plt)
 
+    #plot divertor 
     plt.close()
     fs = 14
     plt.plot(r_right_target, z_right_target, '-k', label='Carbon', linewidth=0.5)
@@ -127,7 +145,7 @@ def V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
     plt.title('Upper Outer SAS-VW Divertor in DIII-D',fontsize=fs)
     plt.savefig('plots/W wall ID')
 
-    #give the divertor target segments, targ_indices, a material and an interactive surface
+    #define the divertor target segments, targ_indices, a material and an interactive surface
     Z = np.zeros(len(r_final))
     surfaces = np.zeros(len(r_final))
     Z[W_indices] = 74;
@@ -137,6 +155,7 @@ def V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
     gitr.lines_to_gitr_geometry(gitr_geometry_filename+'0', lines, Z, surfaces, inDir)
     gitr.removeQuotes(gitr_geometry_filename+'0', gitr_geometry_filename)
 
+    # rewrites .cfg files to avoid clutter (deprocated, clean up of gitr.py need before deletion)
     #gitr.remove_endline_after_comma(infile=gitr_geometry_filename+"0", outfile=gitr_geometry_filename+"00")
     #gitr.remove_endline_after_comma2(infile=gitr_geometry_filename+"00", outfile=gitr_geometry_filename)
 
@@ -156,6 +175,5 @@ def V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
     print('r_min:', min(r_final), '\nr_max:', max(r_final), '\nz_min:', min(z_final), '\nz_max:', max(z_final))
     print('created gitrGeometry.cfg')
     return r_final, z_final, r_final[W_indices], z_final[W_indices], r_final_coarse, z_final_coarse, addedPoints
-
 if __name__ == "__main__":
     V6e_v002()
