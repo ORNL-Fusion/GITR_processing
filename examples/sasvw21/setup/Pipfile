@@ -1,0 +1,17 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+libconf = "*"
+matplotlib = "*"
+numpy = "*"
+netcdf4 = "*"
+scipy = "*"
+math3d = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.9"
