@@ -511,7 +511,7 @@ def get_surf_profiles(profilesFile, r1, z1, r2, z2, q, plot_variables):
     #get midpoints for the refined W surface        
     r_mid = np.average(np.array([r1,r2]),axis=0)
     z_mid = np.average(np.array([z1,z2]),axis=0)
-    
+        
     #figure out which indices touch the wall on the profiles mesh
     r_indices = interpolate(r_mid,r_mesh)
     z_indices = interpolate(z_mid,z_mesh)

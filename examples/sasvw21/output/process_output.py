@@ -98,7 +98,11 @@ def plot_surf_nc(ls,fs, pps_per_nP):
     print('total gross eroded flux',sum(grossEro))
     print('total redeposited flux',sum(grossDep))
     print('total net eroded flux',sum(netEro))
-
+    
+    grossEro_cumsum = np.cumsum(grossEro)
+    grossDep_cumsum = np.cumsum(grossDep)
+    netEro_cumsum = np.cumsum(netEro)
+    
     plt.close()
     plt.plot(rmrs,grossEro,'r', label='Gross Erosion',linewidth=ls)
     plt.plot(rmrs,grossDep,'g', label='Redeposition',linewidth=ls)
@@ -110,6 +114,19 @@ def plot_surf_nc(ls,fs, pps_per_nP):
     plt.legend(loc='upper left', fontsize=fs)
     plt.title('GITR Predicted Erosion and Redeposition Profiles',fontsize=fs)
     plt.savefig('plots/surface.pdf')
+    
+    plt.close()
+    plt.plot(rmrs,grossEro_cumsum,'r', label='Gross Erosion',linewidth=ls)
+    plt.plot(rmrs,grossDep_cumsum,'g', label='Redeposition',linewidth=ls)
+    plt.plot(rmrs,netEro_cumsum,'k', label='Net Erosion',linewidth=ls)
+    plt.yscale('log')
+    plt.xlabel('D-Dsep [m]',fontsize=fs)
+    plt.ylabel('Flux [#/m2s]',fontsize=fs)
+    plt.xticks(fontsize=fs)
+    plt.yticks(fontsize=fs)
+    plt.legend(loc='upper left', fontsize=fs)
+    plt.title('GITR Predicted Cumulative Sum of\nErosion and Redeposition Profiles',fontsize=fs)
+    plt.savefig('plots/surface_cumsum.pdf')
 
 def plot_surf_plasma_params(plot_variables):
     profilesFile = '../input/profiles.nc'
@@ -207,6 +224,6 @@ def interpolate(small,big):
 
 
 if __name__ == "__main__":
-    plot_history2D()
-    #plot_surf_nc(3,30,111879178639.80714)
+    #plot_history2D()
+    plot_surf_nc(1,12,111879178639.80714)
     #plot_surf_plasma_params(1)
