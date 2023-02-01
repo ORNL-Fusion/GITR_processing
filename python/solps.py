@@ -589,8 +589,7 @@ def find_strike_points(solps_geometry_filename='/Users/tyounkin/Dissertation/ITE
     y_region_4 = cry_region_4[region_4_indx]
 
     plt.close()
-    plt.scatter(x_region_3,y_region_3)
-    plt.scatter(x_region_3,y_region_3)
+    plt.scatter(x_region_3,y_region_3, s=1)
     plt.savefig('plots/region34.png')
     plt.close()
 

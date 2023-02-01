@@ -30,6 +30,11 @@ def init():
     area = 0.12*np.sqrt(np.power((Rsurf[:-1]-Rsurf[1:]),2) + np.power((Zsurf[:-1]-Zsurf[1:]),2))
     dist = np.sqrt((Rsurf[:-1]-Rsurf[1:])**2 + (Zsurf[:-1]-Zsurf[1:])**2)
     rmrs =  np.cumsum(dist)
+    
+    #set plotting style defaults
+    plt.rcParams.update({'font.size':12})
+    plt.rcParams.update({'lines.linewidth':0.5})
+    plt.rcParams.update({'lines.markersize':1})
 
     return R,Z,Rsurf,Zsurf,area,rmrs
 R,Z,Rsurf,Zsurf,area,rmrs = init()
@@ -44,8 +49,6 @@ def plot_history2D(basic=0, continuousChargeState=1, endChargeState=0):
     charge = history.variables['charge']
 
     plt.close()
-    plt.rcParams.update({'font.size':14})
-    plt.rcParams.update({'lines.linewidth':1})
     plt.plot(R,Z,'-k',linewidth=0.7)
     plt.axis('scaled')
     plt.xlabel('r [m]')
@@ -104,28 +107,24 @@ def plot_surf_nc(ls,fs, pps_per_nP):
     netEro_cumsum = np.cumsum(netEro)
     
     plt.close()
-    plt.plot(rmrs,grossEro,'r', label='Gross Erosion',linewidth=ls)
-    plt.plot(rmrs,grossDep,'g', label='Redeposition',linewidth=ls)
-    plt.plot(rmrs,netEro,'k', label='Net Erosion',linewidth=ls)
-    plt.xlabel('D-Dsep [m]',fontsize=fs)
-    plt.ylabel('Flux [#/m2s]',fontsize=fs)
-    plt.xticks(fontsize=fs)
-    plt.yticks(fontsize=fs)
-    plt.legend(loc='upper left', fontsize=fs)
-    plt.title('GITR Predicted Erosion and Redeposition Profiles',fontsize=fs)
+    plt.plot(rmrs,grossEro,'r', label='Gross Erosion')
+    plt.plot(rmrs,grossDep,'g', label='Redeposition')
+    plt.plot(rmrs,netEro,'k', label='Net Erosion')
+    plt.xlabel('D-Dsep [m]')
+    plt.ylabel('Flux [#/m2s]')
+    plt.legend(loc='upper left')
+    plt.title('GITR Predicted Erosion and Redeposition Profiles')
     plt.savefig('plots/surface.pdf')
     
     plt.close()
-    plt.plot(rmrs,grossEro_cumsum,'r', label='Gross Erosion',linewidth=ls)
-    plt.plot(rmrs,grossDep_cumsum,'g', label='Redeposition',linewidth=ls)
-    plt.plot(rmrs,netEro_cumsum,'k', label='Net Erosion',linewidth=ls)
+    plt.plot(rmrs,grossEro_cumsum,'r', label='Gross Erosion')
+    plt.plot(rmrs,grossDep_cumsum,'g', label='Redeposition')
+    plt.plot(rmrs,netEro_cumsum,'k', label='Net Erosion')
     plt.yscale('log')
-    plt.xlabel('D-Dsep [m]',fontsize=fs)
-    plt.ylabel('Flux [#/m2s]',fontsize=fs)
-    plt.xticks(fontsize=fs)
-    plt.yticks(fontsize=fs)
-    plt.legend(loc='upper left', fontsize=fs)
-    plt.title('GITR Predicted Cumulative Sum of\nErosion and Redeposition Profiles',fontsize=fs)
+    plt.xlabel('D-Dsep [m]')
+    plt.ylabel('Flux [#/m2s]')
+    plt.legend(loc='upper left')
+    plt.title('GITR Predicted Cumulative Sum of\nErosion and Redeposition Profiles')
     plt.savefig('plots/surface_cumsum.pdf')
 
 def plot_surf_plasma_params(plot_variables):
@@ -147,13 +146,10 @@ def plot_surf_plasma_params(plot_variables):
     ne = profiles.variables['ne'][:][z_indices, r_indices]
     te = profiles.variables['te'][:][z_indices, r_indices]
     
-    if plot_variables==1:    
-        ls, fs = 3, 14
-        plt.rcParams.update({'font.size':fs})
-        
+    if plot_variables==1:            
         #electron density along surface
         plt.close()
-        plt.plot(rmrs, ne, linewidth=ls)
+        plt.plot(rmrs, ne)
         plt.xlabel('D-Dsep [m]')
         plt.ylabel('ne [m-3]')
         plt.title('Electron Density along the SAS-VW Divertor')
@@ -161,7 +157,7 @@ def plot_surf_plasma_params(plot_variables):
     
         #electron temperature along surface
         plt.close()
-        plt.plot(rmrs, te, linewidth=ls)
+        plt.plot(rmrs, te)
         plt.xlabel('D-Dsep [m]')
         plt.ylabel('Te [eV]')
         plt.title('Electron Temperature along the SAS-VW Divertor')
@@ -181,11 +177,11 @@ def plot_surf_plasma_params(plot_variables):
         invtau3 = 1/(np.exp(x3/kte)/np.sqrt(kte))
         invtau4 = 1/(np.exp(x4/kte)/np.sqrt(kte))
         plt.close()
-        plt.plot(kte, invtau0, 'red', linewidth=ls, label='0 → 1')
-        plt.plot(kte, invtau1, 'darkorange', linewidth=ls, label='1 → 2')
-        plt.plot(kte, invtau2, 'gold', linewidth=ls, label='2 → 3')
-        plt.plot(kte, invtau3, 'green', linewidth=ls, label='3 → 4')
-        plt.plot(kte, invtau4, 'blue', linewidth=ls, label='4 → 5')
+        plt.plot(kte, invtau0, 'red', label='0 → 1')
+        plt.plot(kte, invtau1, 'darkorange', label='1 → 2')
+        plt.plot(kte, invtau2, 'gold', label='2 → 3')
+        plt.plot(kte, invtau3, 'green', label='3 → 4')
+        plt.plot(kte, invtau4, 'blue', label='4 → 5')
         plt.xlabel('Te [eV]')
         plt.ylabel('Relative Ionization Rate [1/s]')
         plt.title('Te Dependence of Ionization Rate for W')
@@ -199,16 +195,18 @@ def plot_surf_plasma_params(plot_variables):
         surf_IonizRate3 = ne/(np.exp(x3/te)/np.sqrt(te))
         surf_IonizRate4 = ne/(np.exp(x4/te)/np.sqrt(te))
         plt.close()
-        plt.plot(rmrs, surf_IonizRate0, 'red', linewidth=ls, label='0 → 1')
-        plt.plot(rmrs, surf_IonizRate1, 'darkorange', linewidth=ls, label='1 → 2')
-        plt.plot(rmrs, surf_IonizRate2, 'gold', linewidth=ls, label='2 → 3')
-        plt.plot(rmrs, surf_IonizRate3, 'green', linewidth=ls, label='3 → 4')
-        plt.plot(rmrs, surf_IonizRate4, 'blue', linewidth=ls, label='4 → 5')
+        plt.plot(rmrs, surf_IonizRate0, 'red', label='0 → 1')
+        plt.plot(rmrs, surf_IonizRate1, 'darkorange', label='1 → 2')
+        plt.plot(rmrs, surf_IonizRate2, 'gold', label='2 → 3')
+        plt.plot(rmrs, surf_IonizRate3, 'green', label='3 → 4')
+        plt.plot(rmrs, surf_IonizRate4, 'blue', label='4 → 5')
         plt.xlabel('D-Dsep [m]')
         plt.ylabel('Relative Ionization Rate [1/s]')
         plt.title('Ionization Rate along SAS-VW')
         plt.legend()
         plt.savefig('plots/surf_IonizRate')
+
+
 
 def interpolate(small,big):
     indices = np.zeros(len(small))
@@ -221,9 +219,29 @@ def interpolate(small,big):
 
     return indices.astype(int)
 
+def plot(r,z,line,scatter, \
+             color,legend,labelname, \
+             ylabel,title,savename):
+    if line == 1:
+        plt.plot(r, z, label=labelname, color=color)
+    else:
+        return
+    if scatter == 1:    
+        plt.scatter(r, z,color=color)
+    else:
+        return
+    if legend == 1:
+        plt.legend()
+    plt.axis('scaled')
+    plt.xlabel('D-Dsep [m]')
+    plt.ylabel(ylabel)
+    plt.title(title)
+    savename0 = 'plots/'+savename+'.pdf'
+    plt.savefig(savename0)
+
 
 
 if __name__ == "__main__":
-    #plot_history2D()
-    plot_surf_nc(1,12,111879178639.80714)
+    plot_history2D()
+    #plot_surf_nc(1,12,111879178639.80714)
     #plot_surf_plasma_params(1)
