@@ -552,11 +552,11 @@ def get_surf_profiles(profilesFile, r1, z1, r2, z2, q, plot_variables):
         AngleEst = ThetaMax
     else: AngleEst = (np.pi/2)*np.ones(len(SimpleEnergyEst))
 
-    if plot_variables == 1:
-        dist = np.sqrt((r1-r2)**2 + (z1-z2)**2)
-        rmrs = np.append(np.zeros(1), np.cumsum(dist))
-        rmrs_mid = np.average(np.array([rmrs[:-1],rmrs[1:]]),axis=0)
-        
+    dist = np.sqrt((r1-r2)**2 + (z1-z2)**2)
+    rmrs = np.append(np.zeros(1), np.cumsum(dist))
+    rmrs_mid = np.average(np.array([rmrs[:-1],rmrs[1:]]),axis=0)
+
+    if plot_variables == 1:        
         ls, fs = 5, 14
         #plot plasma parameters along the surface
         plt.close()

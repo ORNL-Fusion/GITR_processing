@@ -37,7 +37,7 @@ solps.make_solps_targ_coord_file(gitr_geom_filename = '../input/gitrGeometry.cfg
                                     solps_geom = 'assets/b2fgmtry', \
                                     coords_file = 'assets/right_target_coordinates.txt', \
                                     right_target_filename = 'assets/rightTargOutput')
-
+'''
 make_ParticleSource_sasvw.point_source(nP = int(5e2))
 '''
 make_ParticleSource_sasvw.simple2D(nP = int(1e4), \
@@ -51,7 +51,7 @@ make_ParticleSource_sasvw.simple2D(nP = int(1e4), \
                                     ftDFile = 'assets/ftridynBackgroundD.nc', \
                                     ftCFile = 'assets/ftridynBackgroundC.nc', \
                                     configuration = 'random', \
-                                    plot_variables = 1, \
+                                    plot_variables = 0, \
                                     r_W=rW, z_W=zW, rCoarse=rCoarse, zCoarse=zCoarse, addedPoints=addedPoints)
-'''
+
 shutil.move('particleSource.nc', '../input/particleSource.nc')
