@@ -55,6 +55,8 @@ def plot_history2D(basic=0, continuousChargeState=1, endChargeState=0):
     plt.ylabel('z [m]')
     plt.title('Particle Tracks')
     
+    plt.rcParams.update({'lines.linewidth':0.4})
+    
     #define charge state to color mapping
     colors = {0:'black', 1:'red', 2:'orange', 3:'olive', 4:'green', 5:'cyan', \
               6:'purple', 7:'darkmagenta', 8:'pink', 9:'deep pink', 10:'gray'}
