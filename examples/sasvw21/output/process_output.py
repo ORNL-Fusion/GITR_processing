@@ -39,7 +39,7 @@ def init():
     return R,Z,Rsurf,Zsurf,area,rmrs
 R,Z,Rsurf,Zsurf,area,rmrs = init()
 
-def plot_history2D(basic=0, continuousChargeState=1, endChargeState=0):
+def plot_history2D(basic=1, continuousChargeState=0, endChargeState=0):
     history = netCDF4.Dataset("history.nc", "r", format="NETCDF4")
 
     nP = len(history.dimensions['nP'])
@@ -54,9 +54,7 @@ def plot_history2D(basic=0, continuousChargeState=1, endChargeState=0):
     plt.xlabel('r [m]')
     plt.ylabel('z [m]')
     plt.title('Particle Tracks')
-    
-    plt.rcParams.update({'lines.linewidth':0.4})
-    
+        
     #define charge state to color mapping
     colors = {0:'black', 1:'red', 2:'orange', 3:'olive', 4:'green', 5:'cyan', \
               6:'purple', 7:'darkmagenta', 8:'pink', 9:'deep pink', 10:'gray'}
@@ -67,7 +65,7 @@ def plot_history2D(basic=0, continuousChargeState=1, endChargeState=0):
             plt.plot(x[p][:],z[p][:])
     
     if continuousChargeState==1:
-        for p in range(0,nP):
+        for p in range(15,16):
             print(p,'out of', nP)
             for t in range(0,nT-1):
                 plt.plot(x[p][t:t+2],z[p][t:t+2], colors[charge[p][t]])

@@ -103,7 +103,7 @@ def simple2D(nP, \
     slope = slope[W_ind]
 
     #########################################
-    #get W/s sputtered by D, He flux to wall
+    #get W/s sputtered by D, He, C flux to wall
     #########################################
 
     
@@ -431,7 +431,6 @@ def midpoints(nP,pps_weights,adj,slope,Beta, r1,z1,r2,z2):
 
     return x,y,z
 
-
 def uniform(nP,pps_weights,adj,slope,Beta, r1,z1,r2,z2):
     x = np.zeros(nP)
     y = np.zeros(nP)
@@ -449,7 +448,6 @@ def uniform(nP,pps_weights,adj,slope,Beta, r1,z1,r2,z2):
             tally += pps_weights[i]
 
     return x,y,z
-
 
 def random(nP,pps_weights,adj,slope,Beta, r1,z1,r2,z2):
     x = np.zeros(nP)
