@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 import gitr
 import solps
-import particles
+import Particles
 import netCDF4
 
 def point_source(nP = int(2e2)):
@@ -345,7 +345,7 @@ def simple2D(nP, \
     
             #convert unit vectors to vx,vy,vz
             W_kg = 183.84 * 1.6605e-27 #mass of W in kg
-            vtot = np.sqrt(E*1.6022e-19/W_kg) #convert eV to m/s
+            vtot = np.sqrt(2*E*1.6022e-19/W_kg) #convert eV to m/s
             
             vx = np.append(vx, vtot*vx_lab)
             vy = np.append(vy, vtot*vy_lab)
@@ -578,7 +578,7 @@ def get_surf_profiles(profilesFile, r1, z1, r2, z2, q, plot_variables):
 
     return rmrs_mid, SimpleEnergyEst, AngleEst
 
-
+# Fractal Trinyd Surface Sputtering Yeild
 def get_ft_spyld(surfE, surfA, ftBFile):
     #import sputtering yield tables for D0 and D1+ on W
     ftB = netCDF4.Dataset(ftBFile, "r", format="NETCDF4")
