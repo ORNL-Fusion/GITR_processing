@@ -43,7 +43,6 @@ def point_source(nP = int(2e2)):
 def simple2D(nP, \
             geom = '../input/gitrGeometry.cfg', \
             targFile = 'assets/rightTargOutput', \
-            coordsFile = 'right_target_coordinates.txt', \
             wallFile = 'assets/gitr_rz.txt', \
             surf_coarse = 'assets/surf_coarse.txt', \
             surf_ind = 'assets/surf_ind.txt', \
