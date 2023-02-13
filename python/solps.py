@@ -95,17 +95,19 @@ def readEquilibrium(filename='/Users/Alyssa/Dev/WEST/baserun/west_54034_10p2s_ma
 
         # set the limits of the plot to the limits of the data
         plt.axis([r.min(), r.max(), z.min(), z.max()])
-        plt.contour(r,z,psi,100)
+        plt.contour(r,z,psi,1000)
         plt.plot(r_wall, z_wall, 'k-')
         plt.plot(r_left_target, z_left_target, 'g-')
         plt.plot(r_right_target, z_right_target, 'r-')
         plt.axis('Scaled')
+        plt.xlim(1.4,1.6)
+        plt.ylim(1.0,1.25)
         plt.xlabel('r [m]')
         plt.ylabel('z [m]')
         plt.title('Magnetic Flux Contours')
         plt.colorbar(label='Flux [Wb/rad]')
         print ('Saving psi contour as psiContour.png ')
-        plt.savefig('plots/psiContour.pdf')
+        plt.savefig('plots/psiContour.png')
         plt.close()
 
     print('Take gradients of magnetic flux to produce magnetic field')
@@ -197,6 +199,7 @@ def findStrikepoint(x1,x2,z1,z2,length,r,z,psi,rmin=5.55,rmax=6.226,zmin=-4.6,zm
     zsep = z1[sepBoundary2] + abs(psiTarg[sepBoundary,0])/(psiTarg[sepBoundary,1]-psiTarg[sepBoundary,0])*(z2[sepBoundary2]-z1[sepBoundary2])
     print( 'Rsep Zsep of strike point: ',rsep,zsep)
     return rsep, zsep, targInds, sepBoundary2
+
 def interpolateBfield(r,z,br, bz, bt,psi,rTarget,zTarget,geometryFile='/global/homes/t/tyounkin/atomIPS/atom-install-edison/GITR/iter/iter_milestone/2d/input/iter2dRefinedOuterTarget.cfg',rmin=5.55,rmax=6.226,zmin=-4.6,zmax=-3.238):
     print ('Beginning interpolate B-field')
     x1,x2,z1,z2,length,Z = gitr.plot2dGeom(geometryFile) 
@@ -280,6 +283,7 @@ def interpolateBfield(r,z,br, bz, bt,psi,rTarget,zTarget,geometryFile='/global/h
         bAngle[i] = 180/np.pi*np.arccos(np.dot(normal,[br0,bt0,bz0])/bMag[i])
         #print 'brtz',br0,bt0,bz0
     return rSep,bAngle,bMag
+
 def getRsepFromRZ(x1,x2,z1,z2,slope,rMrs,r,z):
     #print 'get rsep from rz',r,z
     nS = len(x1)
@@ -298,6 +302,7 @@ def getRsepFromRZ(x1,x2,z1,z2,slope,rMrs,r,z):
     else:
         rMrSep = rMrs[surfNumber]+dx2
     return rMrSep,surfNumber
+
 def getBfield(rTarg,zTarg, \
               filename='/global/homes/t/tyounkin/atomIPS/atom-install-edison/solps-iter-data/Baseline2008-li0.70.x4.equ', \
               geometryFile='/global/homes/t/tyounkin/atomIPS/atom-install-edison/GITR/iter/iter_milestone/2d/input/iter2dRefinedOuterTarget.cfg',
@@ -625,8 +630,6 @@ def find_strike_points(solps_geometry_filename='/Users/tyounkin/Dissertation/ITE
            x_inner_strikepoint ,y_inner_strikepoint, \
            x_outer_strikepoint ,y_outer_strikepoint, topcut
 
-
-
 def get_target_coordinates(solps_geometry_filename='/Users/tyounkin/Dissertation/ITER/mq3/solps/b2fgmtry'):
 
     # Get number of mesh elements in x and y (SOLPS coordinates), nx, ny.
@@ -653,7 +656,6 @@ def get_target_coordinates(solps_geometry_filename='/Users/tyounkin/Dissertation
     return r_inner_target,z_inner_target, \
            r_outer_target,z_outer_target
 
-
 def read_b2f_geometry(solps_geometry_filename='/Users/tyounkin/Dissertation/ITER/mq3/solps/b2fgmtry'):
     nxny = read_b2f_variable(solps_geometry_filename= solps_geometry_filename, \
                             field_name='nx,ny')
@@ -679,6 +681,7 @@ def read_b2f_geometry(solps_geometry_filename='/Users/tyounkin/Dissertation/ITER
     region = np.transpose(np.reshape(region[0:nx*ny],(ny,nx)))
 
     return nx,ny,crx,cry,region
+
 def read_b2f_variable(solps_geometry_filename='/Users/tyounkin/Dissertation/ITER/mq3/solps/b2fgmtry', \
                       field_name = 'crx'):
     f = open(solps_geometry_filename, 'r')
@@ -711,7 +714,7 @@ def read_b2f_variable(solps_geometry_filename='/Users/tyounkin/Dissertation/ITER
             field.append(element)
 
     field = np.array(field)
-    field = field.astype(np.float)
+    field = field.astype(float)
 
     return field
 
