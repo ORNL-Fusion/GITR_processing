@@ -2,10 +2,15 @@ import sys
 import os
 sys.path.insert(0, '../../../python/')
 
-import solps
 import numpy as np
 import matplotlib.pyplot as plt
-import io, libconf
+import io, libconf, netCDF4
+
+def init():
+    #set plotting style defaults
+    plt.rcParams.update({'font.size':11.5})
+    plt.rcParams.update({'lines.linewidth':1.2})
+    plt.rcParams.update({'lines.markersize':1})
 
 def replace_line_segment(x_priority, y_priority, x_base, y_base):
     x_final = x_base;
@@ -140,16 +145,54 @@ def removeQuotes(infile='this.cfg',outfile='that.cfg'):
         for line in f:
             fo.write(line.replace('"', ''))
 
-def V4e_v004(gitr_geometry_filename='gitrGeometry4v.cfg', \
-                                    solps_geomfile = 'assets/sas-vw_v004.ogr', \
-                                    solps_targfile = 'assets/b2fgmtry', \
-                                    solps_rz = 'assets/solps_rz.txt', \
-                                    gitr_rz = 'assets/gitr_rz.txt', \
-                                    numAddedPoints = 100):
+def refine_target(rSurfCoarse, zSurfCoarse, rmrsCoarse, numAddedPoints=100):
+    dist = np.sqrt((rSurfCoarse[:-1]-rSurfCoarse[1:])**2 + (zSurfCoarse[:-1]-zSurfCoarse[1:])**2)
+    totalDist = np.sum(dist)
+    addedPoints = numAddedPoints*dist/totalDist
+    print('addedPoints',addedPoints)
+    for i,v in enumerate(addedPoints): addedPoints[i] = round(v)
+    addedPoints = np.array(addedPoints,dtype='int')
+    
+    #populate rSurfFine and zSurfFine with the added points
+    rSurfFine = rSurfCoarse[0]
+    zSurfFine = zSurfCoarse[0]
+    rmrsFine = rmrsCoarse[0]
+    for i,v in enumerate(addedPoints):
+        rBegin = rSurfCoarse[i]
+        zBegin = zSurfCoarse[i]
+        rmrsBegin = rmrsCoarse[i]
+        rEnd = rSurfCoarse[i+1]
+        zEnd = zSurfCoarse[i+1]
+        rmrsEnd = rmrsCoarse[i+1]
+        dr = (rEnd-rBegin)/(v+1)
+        dz = (zEnd-zBegin)/(v+1)
+        dd = (rmrsEnd-rmrsBegin)/(v+1)
+        for j in range(1,v+1):
+            rSurfFine = np.append(rSurfFine,rSurfCoarse[i]+j*dr)
+            zSurfFine = np.append(zSurfFine,zSurfCoarse[i]+j*dz)
+            rmrsFine = np.append(rmrsFine,rmrsCoarse[i]+j*dd)
+        
+        rSurfFine = np.append(rSurfFine,rSurfCoarse[i+1])
+        zSurfFine = np.append(zSurfFine,zSurfCoarse[i+1])
+        rmrsFine = np.append(rmrsFine,rmrsCoarse[i+1])
+    
+    return rSurfFine, zSurfFine, rmrsFine
+
+def main(gitr_geometry_filename='gitrGeometry.cfg', \
+             solps_geomfile = 'assets/sas-vw_v004.ogr', \
+             solps_targfile = 'assets/b2fgmtry', \
+             profiles_file = '../input/plasmaProfiles.nc', \
+             solps_rz = 'assets/solps_rz.txt', \
+             gitr_rz = 'assets/gitr_rz.txt', \
+             rmrs_fine_file = 'assets/rmrs_fine.txt', \
+             W_fine_file = 'assets/W_fine.txt', \
+             numAddedPoints = 100):
     
     # This program uses the solps geometry .ogr file to create a 2d geometry for GITR
     # in which the solps plasma profiles properly match the solps divertor target.
     # This geometry is then written to a config (cfg) file for use in GITR simulation.
+    
+    init()
     
     #read in ogr r,z wall geometry
     with open(solps_geomfile) as f: solps_geom = f.readlines()[1:]
@@ -186,7 +229,11 @@ def V4e_v004(gitr_geometry_filename='gitrGeometry4v.cfg', \
     z_wall = z_ogr[manual_indices]/1000 #mm->m
     
     #get target geometry from b2fgmtry and stitch to wall geometry
-    r_right_target, z_right_target, r_left_target, z_left_target = solps.get_target_coordinates(solps_targfile)
+    profiles = netCDF4.Dataset(profiles_file)
+    r_right_target = profiles.variables['r_inner_target']
+    z_right_target = profiles.variables['z_inner_target']
+    r_left_target = profiles.variables['r_outer_target']
+    z_left_target = profiles.variables['z_outer_target']
     
     r_final, z_final = replace_line_segment(r_left_target, z_left_target, r_wall, z_wall)
     r_final, z_final = replace_line_segment(r_right_target, z_right_target, r_wall, z_wall)
@@ -194,40 +241,21 @@ def V4e_v004(gitr_geometry_filename='gitrGeometry4v.cfg', \
     ###################################################################
     # Increase Fineness of W Divertor Surface
     ###################################################################
+    rmrsCoarse = profiles.variables['rmrs_inner_target']
+    
     W_indicesCoarse = np.array(range(24,38))
     
     #set number of added points in a line segment to be proportional to the length of the segment
     rSurfCoarse = r_final[W_indicesCoarse]
     zSurfCoarse = z_final[W_indicesCoarse]
-    dist = np.sqrt((rSurfCoarse[:-1]-rSurfCoarse[1:])**2 + (zSurfCoarse[:-1]-zSurfCoarse[1:])**2)
-    totalDist = np.sum(dist)
-    addedPoints = numAddedPoints*dist/totalDist
-    print('addedPoints',addedPoints)
-    for i,v in enumerate(addedPoints): addedPoints[i] = round(v)
-    addedPoints = np.array(addedPoints,dtype='int')
+
+    rSurfFine, zSurfFine, rmrsFine = refine_target(rSurfCoarse,zSurfCoarse,rmrsCoarse,numAddedPoints)
     
-    #populate rSurfFine and zSurfFine with the added points
-    rSurfFine = rSurfCoarse[0]
-    zSurfFine = zSurfCoarse[0]
-    for i,v in enumerate(addedPoints):
-        rBegin = rSurfCoarse[i]
-        zBegin = zSurfCoarse[i]
-        rEnd = rSurfCoarse[i+1]
-        zEnd = zSurfCoarse[i+1]
-        dr = (rEnd-rBegin)/(v+1)
-        dz = (zEnd-zBegin)/(v+1)
-        for j in range(1,v+1):
-            rSurfFine = np.append(rSurfFine,rSurfCoarse[i]+j*dr)
-            zSurfFine = np.append(zSurfFine,zSurfCoarse[i]+j*dz)
-        
-        rSurfFine = np.append(rSurfFine,rSurfCoarse[i+1])
-        zSurfFine = np.append(zSurfFine,zSurfCoarse[i+1])
-    
+    rmrsMid = (rmrsFine[:-1]+rmrsFine[1:])/2
     r_final, z_final = replace_line_segment(rSurfFine, zSurfFine, r_final, z_final)
     W_indices = np.array(range(W_indicesCoarse[0], W_indicesCoarse[-1]+numAddedPoints))
     
     #plot correctly-ordered line segments
-    plt.rcParams['font.size'] = 14
     print('plotting correctly-ordered line segments to solps_wall.pdf')
     plt.close()
     plt.plot(r_final, z_final, linewidth=0.1, label='V1e_v004')
@@ -257,7 +285,7 @@ def V4e_v004(gitr_geometry_filename='gitrGeometry4v.cfg', \
     plt.close()
     plt.plot(r_right_target, z_right_target, '-k', label='Carbon', linewidth=0.5)
     plt.plot(r_final[W_indices], z_final[W_indices], 'violet', label='Tungsten', linewidth=0.6)
-    plt.scatter(r_final[W_indices], z_final[W_indices], color='violet', s=8)
+    plt.scatter(r_final[W_indices], z_final[W_indices], marker='_', color='violet', s=8)
     plt.legend()
     plt.xticks(fontsize=11)
     plt.xlabel('r [m]')
@@ -275,18 +303,25 @@ def V4e_v004(gitr_geometry_filename='gitrGeometry4v.cfg', \
     #gitr.remove_endline_after_comma(infile=gitr_geometry_filename+"0", outfile=gitr_geometry_filename+"00")
     #gitr.remove_endline_after_comma2(infile=gitr_geometry_filename+"00", outfile=gitr_geometry_filename)
     
-    #save (r_final, z_final) to a file for easy visualization in outputs
+    #save (r_final, z_final) and W indices to a file for pulling into the particle source
     with open(gitr_rz, 'w') as f:
         for i in range(0,len(r_final)):
             f.write(str(r_final[i]) +' '+ str(z_final[i]) +'\n')
     
+    with open(W_fine_file, 'w') as f:
+        for i in range(0,len(W_indices)):
+            f.write(str(W_indices[i])+'\n')
+    
+    with open(rmrs_fine_file, 'w') as f:
+        for i in range(0,len(rmrsMid)):
+            f.write(str(rmrsMid[i]) +'\n')
     
     print('r_min:', min(r_final), '\nr_max:', max(r_final), '\nz_min:', min(z_final), '\nz_max:', max(z_final))
-    print('created gitrGeometry4v.cfg')
-    return r_final, z_final, r_final[W_indices], z_final[W_indices]
+    print('created gitrGeometry.cfg')
+    return
 
 if __name__ == "__main__":
-    V4e_v004()
+    main()
 
 
 

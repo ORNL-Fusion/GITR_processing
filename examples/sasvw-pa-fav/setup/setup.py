@@ -5,7 +5,7 @@ import shutil
 import solpsProcessing
 import makeGeom
 import makeParticleSource
-
+'''
 solpsProcessing.readEquilibrium(equilibrium_filename = 'assets/dg.equ', \
                                     solps_geom = 'assets/b2fgmtry', \
                                     solps_mesh_extra = None, \
@@ -13,21 +13,22 @@ solpsProcessing.readEquilibrium(equilibrium_filename = 'assets/dg.equ', \
 
 shutil.move('bField.nc', '../input/bField.nc')
 
-solpsProcessing.plot_surf_plasma_params()
+#solpsProcessing.plot_surf_plasma_params()
 
 '''
-r,z, rW,zW, rCoarse, zCoarse, addedPoints = makeGeom.V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
-                                    solps_geomfile = 'assets/geom-SASV6/SAS-V6e_v002.ogr', \
+makeGeom.main(gitr_geometry_filename='gitrGeometry.cfg', \
+                                    solps_geomfile = 'assets/sas-vw_v004.ogr', \
                                     solps_targfile = 'assets/b2fgmtry', \
+                                    profiles_file = '../input/plasmaProfiles.nc', \
                                     solps_rz = 'assets/solps_rz.txt', \
                                     gitr_rz = 'assets/gitr_rz.txt', \
-                                    surf_coarse = 'assets/surf_coarse.txt', \
-                                    surf_ind = 'assets/surf_ind.txt', \
+                                    rmrs_fine_file = 'assets/rmrs_fine.txt', \
+                                    W_fine_file = 'assets/W_fine.txt', \
                                     numAddedPoints = 100)
 
 os.remove('gitrGeometry.cfg0')
 shutil.move('gitrGeometry.cfg', '../input/gitrGeometry.cfg')
-
+'''
 
 makeParticleSource.point_source(nP = int(5e2))
 
