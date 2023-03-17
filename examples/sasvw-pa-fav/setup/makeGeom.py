@@ -182,6 +182,7 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
              solps_geomfile = 'assets/sas-vw_v004.ogr', \
              solps_targfile = 'assets/b2fgmtry', \
              profiles_file = '../input/plasmaProfiles.nc', \
+             surfW = np.arange(10,24), \
              solps_rz = 'assets/solps_rz.txt', \
              gitr_rz = 'assets/gitr_rz.txt', \
              rmrs_fine_file = 'assets/rmrs_fine.txt', \
@@ -241,7 +242,7 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     ###################################################################
     # Increase Fineness of W Divertor Surface
     ###################################################################
-    rmrsCoarse = profiles.variables['rmrs_inner_target']
+    rmrsCoarse = profiles.variables['rmrs_inner_target'][surfW]
     
     W_indicesCoarse = np.array(range(24,38))
     
@@ -280,18 +281,17 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     Z = np.zeros(len(r_final))
     surfaces = np.zeros(len(r_final))
     
-    W_indices = np.array(range(24,38+numAddedPoints))
+    W_indices = np.array(range(23,38+numAddedPoints-1))
     
     plt.close()
     plt.plot(r_right_target, z_right_target, '-k', label='Carbon', linewidth=0.5)
     plt.plot(r_final[W_indices], z_final[W_indices], 'violet', label='Tungsten', linewidth=0.6)
     plt.scatter(r_final[W_indices], z_final[W_indices], marker='_', color='violet', s=8)
     plt.legend()
-    plt.xticks(fontsize=11)
     plt.xlabel('r [m]')
     plt.ylabel('z [m]')
-    plt.title('Upper Outer SAS-WV4 Divertor in DIII-D')
-    plt.savefig('plots/W wall ID')
+    plt.title('Upper Outer SAS-VW Divertor in DIII-D \n makeGeom')
+    plt.savefig('plots/makeGeom.png')
     
     Z[W_indices] = 74;
     surfaces[W_indices] = 1;

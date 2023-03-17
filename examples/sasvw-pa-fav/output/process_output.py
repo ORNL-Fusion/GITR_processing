@@ -6,13 +6,11 @@ import matplotlib.pyplot as plt
 import netCDF4
 import solps
 
-def init():
+def init(W_indices = np.arange(10,24)):
     profilesFile = '../input/plasmaProfiles.nc'
     profiles = netCDF4.Dataset(profilesFile)
     
     #check which target is the region of interest
-    W_indices = np.arange(16,31)
-    print(W_indices)
     r_inner_target = profiles.variables['r_inner_target'][:]
     z_inner_target = profiles.variables['z_inner_target'][:]
     rmrs = profiles.variables['rmrs_inner_target_midpoints'][W_indices]
@@ -248,8 +246,12 @@ def plot_history2D(basic=1, continuousChargeState=0, endChargeState=0):
 
     return
 
-def plot_surf_nc(pps_per_nP, gitr_rz='../setup/assets/gitr_rz.txt', W_fine_file='../setup/assets/W_fine.txt'):
-    surface = netCDF4.Dataset("surface_nP1e5_nT1e6.nc", "r", format="NETCDF4")
+def plot_surf_nc(pps_per_nP, \
+                 gitr_rz='../setup/assets/gitr_rz.txt', \
+                 W_fine_file='../setup/assets/W_fine.txt', \
+                 rmrs_fine_file='../setup/assets/rmrs_fine.txt'):
+    
+    surface = netCDF4.Dataset("surface.nc", "r", format="NETCDF4")
     #print(surface.variables['grossErosion'][:])
     
     #calculate area from wall
@@ -261,6 +263,11 @@ def plot_surf_nc(pps_per_nP, gitr_rz='../setup/assets/gitr_rz.txt', W_fine_file=
     with open(W_fine_file, 'r') as file:
         W_fine = file.readlines()
     W_fine = np.array(W_fine,dtype='int')
+    
+    #import refined rmrs at the W surface
+    with open(rmrs_fine_file, 'r') as file:
+        rmrs_fine = file.readlines()   
+    rmrsFine = np.array(rmrs_fine,dtype='float')
     
     R = np.zeros(len(wall))
     Z = np.zeros(len(wall))
@@ -277,7 +284,8 @@ def plot_surf_nc(pps_per_nP, gitr_rz='../setup/assets/gitr_rz.txt', W_fine_file=
     z1 = Z[:-1]
     z2 = Z[1:]
     
-    area = 0.12*np.sqrt(np.power(r1-r2,2) + np.power(z1-z2,2))#*np.pi*(r1+r2)
+    dist = np.sqrt(np.power(r1-r2,2) + np.power(z1-z2,2))
+    area = np.pi*(r1+r2)*dist
 
     grossEro = (surface.variables['grossErosion'][:])
     grossDep = (surface.variables['grossDeposition'][:])
@@ -291,7 +299,7 @@ def plot_surf_nc(pps_per_nP, gitr_rz='../setup/assets/gitr_rz.txt', W_fine_file=
     grossDep = np.average([grossDep[:-1], grossDep[1:]],axis=0)*pps_per_nP/area
     netEro = np.average([netEro[:-1], netEro[1:]],axis=0)/area
     
-    print('rmrs length',len(rmrs))
+    print('rmrs length',len(rmrsFine))
     print('surf length',len(grossEro))
     print('total gross eroded flux',sum(grossEro))
     print('total redeposited flux',sum(grossDep))
@@ -302,24 +310,24 @@ def plot_surf_nc(pps_per_nP, gitr_rz='../setup/assets/gitr_rz.txt', W_fine_file=
     netEro_cumsum = np.cumsum(netEro)
     
     plt.close()
-    plt.plot(rmrs,grossEro,'r', label='Gross Erosion')
-    plt.plot(rmrs,grossDep,'g', label='Redeposition')
-    plt.plot(rmrs,netEro,'k', label='Net Erosion')
+    plt.plot(rmrsFine,grossEro,'r', label='Gross Erosion')
+    plt.plot(rmrsFine,grossDep,'g', label='Redeposition')
+    plt.plot(rmrsFine,netEro,'k', label='Net Erosion')
     plt.xlabel('D-Dsep [m]')
     plt.ylabel('Flux [#/m2s]')
     plt.legend(loc='upper left')
-    plt.title('GITR Predicted Erosion and Redeposition Profiles')
-    plt.savefig('plots/surface.pdf')
+    plt.title('GITR Predicted Erosion and \n Redeposition Profiles')
+    plt.savefig('plots/surface.png')
     
     plt.close()
-    plt.plot(rmrs,grossEro_cumsum,'r', label='Gross Erosion')
-    plt.plot(rmrs,grossDep_cumsum,'g', label='Redeposition')
-    plt.plot(rmrs,netEro_cumsum,'k', label='Net Erosion')
+    plt.plot(rmrsFine,grossEro_cumsum,'r', label='Gross Erosion')
+    plt.plot(rmrsFine,grossDep_cumsum,'g', label='Redeposition')
+    plt.plot(rmrsFine,netEro_cumsum,'k', label='Net Erosion')
     plt.yscale('log')
     plt.xlabel('D-Dsep [m]')
     plt.ylabel('Flux [#/m2s]')
     plt.legend(loc='upper left')
-    plt.title('GITR Predicted Cumulative Sum of\nErosion and Redeposition Profiles')
+    plt.title('GITR Predicted Cumulative Sum of \n Erosion and Redeposition Profiles')
     plt.savefig('plots/surface_cumsum.pdf')
 
 def plot_particle_source():
@@ -337,12 +345,17 @@ def plot_particle_source():
     plt.ylabel('z [m]')
     plt.title('Spatial Particle Source \n nP='+str(len(x)))
     plt.savefig('plots/particleSource.png')
+    
+    plt.close()
+    plt.hist(z,bins=10)
+    plt.xlabel('z [m]')
+    plt.title('Spatial Distribution in Z \n nP='+str(len(x)))
+    plt.savefig('plots/zhist.png')
 
 
 if __name__ == "__main__":
     #init()
     #plot_gitr_gridspace()
-    #plot_surf_plasma_params()
     #plot_history2D()
-    #plot_surf_nc(1,12,111879178639.80714)
-    plot_particle_source()
+    plot_surf_nc(279969602619591.62)
+    #plot_particle_source()

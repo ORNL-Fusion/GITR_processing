@@ -2,6 +2,7 @@ import sys, os
 sys.path.insert(0, os.path.abspath('../../../python/'))
 
 import shutil
+import numpy as np
 import solpsProcessing
 import makeGeom
 import makeParticleSource
@@ -20,6 +21,7 @@ makeGeom.main(gitr_geometry_filename='gitrGeometry.cfg', \
                                     solps_geomfile = 'assets/sas-vw_v004.ogr', \
                                     solps_targfile = 'assets/b2fgmtry', \
                                     profiles_file = '../input/plasmaProfiles.nc', \
+                                    surfW = np.arange(10,24), \
                                     solps_rz = 'assets/solps_rz.txt', \
                                     gitr_rz = 'assets/gitr_rz.txt', \
                                     rmrs_fine_file = 'assets/rmrs_fine.txt', \
