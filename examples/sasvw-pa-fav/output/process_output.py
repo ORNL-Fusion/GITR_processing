@@ -247,11 +247,12 @@ def plot_history2D(basic=1, continuousChargeState=0, endChargeState=0):
     return
 
 def plot_surf_nc(pps_per_nP, \
+                 surface_file="surface.nc", \
                  gitr_rz='../setup/assets/gitr_rz.txt', \
                  W_fine_file='../setup/assets/W_fine.txt', \
                  rmrs_fine_file='../setup/assets/rmrs_fine.txt'):
     
-    surface = netCDF4.Dataset("surface.nc", "r", format="NETCDF4")
+    surface = netCDF4.Dataset(surface_file, "r", format="NETCDF4")
     #print(surface.variables['grossErosion'][:])
     
     #calculate area from wall
@@ -294,10 +295,13 @@ def plot_surf_nc(pps_per_nP, \
     print('total gross eroded comp particles',sum(grossEro))
     print('total redeposited comp particles',sum(grossDep))
     print('total net eroded comp particles',sum(netEro))
+    print('ghost cells',grossEro[-1],grossDep[-1],netEro[-1])
     
-    grossEro = np.average([grossEro[:-1], grossEro[1:]],axis=0)*pps_per_nP/area
-    grossDep = np.average([grossDep[:-1], grossDep[1:]],axis=0)*pps_per_nP/area
-    netEro = np.average([netEro[:-1], netEro[1:]],axis=0)/area
+    #grossEro = np.average([grossEro[:-1], grossEro[1:]],axis=0)*pps_per_nP/area
+    #grossDep = np.average([grossDep[:-1], grossDep[1:]],axis=0)*pps_per_nP/area
+    grossEro = grossEro[:-1]*pps_per_nP/area
+    grossDep = grossDep[:-1]*pps_per_nP/area
+    netEro = netEro[:-1]*pps_per_nP/area
     
     print('rmrs length',len(rmrsFine))
     print('surf length',len(grossEro))
@@ -313,9 +317,10 @@ def plot_surf_nc(pps_per_nP, \
     plt.plot(rmrsFine,grossEro,'r', label='Gross Erosion')
     plt.plot(rmrsFine,grossDep,'g', label='Redeposition')
     plt.plot(rmrsFine,netEro,'k', label='Net Erosion')
+    plt.plot(rmrsFine,np.zeros(len(rmrsFine)),'gray')
     plt.xlabel('D-Dsep [m]')
     plt.ylabel('Flux [#/m2s]')
-    plt.legend(loc='upper left')
+    plt.legend()#loc='upper left')
     plt.title('GITR Predicted Erosion and \n Redeposition Profiles')
     plt.savefig('plots/surface.png')
     
@@ -357,5 +362,5 @@ if __name__ == "__main__":
     #init()
     #plot_gitr_gridspace()
     #plot_history2D()
-    plot_surf_nc(279969602619591.62)
+    plot_surf_nc(279969602619591.62, "surface.nc")
     #plot_particle_source()
