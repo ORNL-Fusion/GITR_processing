@@ -45,7 +45,6 @@ def point_source(nP = int(2e2)):
     vzz[:] = vz
     rootgrp.close()
 
-
 def distributed_source(nP, surfW=np.arange(10,24), \
             geom = '../input/gitrGeometry.cfg', \
             profiles_file = '../input/plasmaProfiles.nc', \
@@ -429,6 +428,7 @@ def distributed_source(nP, surfW=np.arange(10,24), \
     rootgrp.close()
 
 
+
 def midpoints(nP,pps_weights,adj,slope,Beta, r1,z1,r2,z2):
     #get midpoints of coords
     r_mid = np.zeros(len(r1)-1)
@@ -586,7 +586,8 @@ def FittingParameters_NonW(E):
             print('WARNING: TABULAR SPUTTERING FITTING PARAMETERS MISSING')
     return Esp, f, b, c, ThetaMax
 
-def get_analytic_spyld(surfE, surfA, Z1=6, M1=12, Z2=74, M2=183.84, FitParam='N', Eth=45.3362, lam=0.0921, q=1.4389, mu=2.0225):
+def get_analytic_spyld(surfE, surfA, Z1=6, M1=12, Z2=74, M2=183.84, \
+                       FitParam='N', Eth=45.3362, lam=0.0921, q=1.4389, mu=2.0225):
     #this entire function that is simply the Eckstein formula
     #defaults are for C on W but with fitting parameters, Eth, and Esp for N on W
     #M1, Z1 are for the projectile
