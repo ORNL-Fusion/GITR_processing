@@ -91,7 +91,7 @@ def distributed_source(nP, surfW=np.arange(10,24), \
     z1 = Z[:-1]
     z2 = Z[1:]
     
-    if plot_variables==0:
+    if plot_variables==1:
         plt.close()
         plt.plot(r_right_target, z_right_target, '-k', label='Carbon', linewidth=0.5, zorder=0)
        # plt.plot(r_right_target[surfW], z_right_target[surfW], 'purple', label='Profiles Tungsten', linewidth=3, zorder=1)
@@ -142,6 +142,7 @@ def distributed_source(nP, surfW=np.arange(10,24), \
         plt.plot(rmrsFine, energyC4, 'green', label='C4+')
         plt.plot(rmrsFine, energyC5, 'blue', label='C5+')
         plt.plot(rmrsFine, energyC6, 'purple', label='C6+')
+        plt.plot(rmrsFine, 45.3362*np.ones(len(rmrsFine)), 'gray', label='W Eth')
         plt.legend()
         plt.xlabel('D-Dsep [m]')
         plt.ylabel('energy [eV]')
