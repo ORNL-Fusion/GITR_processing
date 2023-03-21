@@ -17,7 +17,8 @@ makeGeom.main(gitr_geometry_filename='gitrGeometry.cfg', \
                     gitr_rz = 'assets/gitr_rz.txt', \
                     rmrs_fine_file = 'assets/rmrs_fine.txt', \
                     W_fine_file = 'assets/W_fine.txt', \
-                    numAddedPoints = 100)
+                    numAddedPoints = 100, \
+                    plot_variables = 0)
 
 os.remove('gitrGeometry.cfg0')
 shutil.move('gitrGeometry.cfg', '../input/gitrGeometry.cfg')
