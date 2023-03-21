@@ -167,12 +167,12 @@ def distributed_source(nP, surfW=np.arange(10,24), \
     #get sputtering yields for D0 and D1+ on W from fractal tridyn tables
     #Cspyld = get_ft_spyld(CsurfE, CsurfA, ftCFile)[0]
     spyldD = get_ft_spyld(1, energyD, angleD, ftDFile) #file input includes He, which we aren't using
-    spyldC1 = get_analytic_spyld(energyC1, angleC1)
-    spyldC2 = get_analytic_spyld(energyC2, angleC2)
-    spyldC3 = get_analytic_spyld(energyC3, angleC3)
-    spyldC4 = get_analytic_spyld(energyC4, angleC4)
-    spyldC5 = get_analytic_spyld(energyC5, angleC5)
-    spyldC6 = get_analytic_spyld(energyC6, angleC6)
+    spyldC1 = get_ft_spyld(0, energyC1, angleC1, ftCFile)
+    spyldC2 = get_ft_spyld(0, energyC2, angleC2, ftCFile)
+    spyldC3 = get_ft_spyld(0, energyC3, angleC3, ftCFile)
+    spyldC4 = get_ft_spyld(0, energyC4, angleC4, ftCFile)
+    spyldC5 = get_ft_spyld(0, energyC5, angleC5, ftCFile)
+    spyldC6 = get_ft_spyld(0, energyC6, angleC6, ftCFile)
     
     #get coarse flux profile from background D, C and refine to rmrsFine
     fluxCoarseD = np.abs(profiles.variables['flux_inner_target'][1][surfW])
@@ -520,17 +520,17 @@ def get_incoming_IEADs(q, profiles, surfW, rmrsCoarse, rmrsFine):
 
     SimpleEnergyEst = 2*ti+3*te*q
 
-    if q>0:
+    if q<0:
         Esp, f, b, c, ThetaMax = FittingParameters_NonW(SimpleEnergyEst)
         AngleEst = ThetaMax
-    else: AngleEst = (np.pi/2)*np.ones(len(SimpleEnergyEst))
+    else: AngleEst = 67*np.ones(len(SimpleEnergyEst))
 
     return SimpleEnergyEst, AngleEst
 
-def get_ft_spyld(q, surfE, surfA, ftBFile):
+def get_ft_spyld(S, surfE, surfA, ftBFile):
     #import sputtering yield tables for incident ions on W
     ftB = netCDF4.Dataset(ftBFile, "r", format="NETCDF4")
-    spyld = ftB.variables['spyld'][q][:]
+    spyld = ftB.variables['spyld'][S][:]
     ftE = ftB.variables['E'][:]
     ftA = ftB.variables['A'][:]
     
@@ -591,6 +591,7 @@ def get_analytic_spyld(surfE, surfA, Z1=6, M1=12, Z2=74, M2=183.84, \
                        FitParam='N', Eth=45.3362, lam=0.0921, q=1.4389, mu=2.0225):
     #this entire function that is simply the Eckstein formula
     #defaults are for C on W but with fitting parameters, Eth, and Esp for N on W
+    #energies are in eV and angles are in degrees
     #M1, Z1 are for the projectile
     #M2, Z2 are for the target
     #Eth is the threshold energy for any sputtering to occur
