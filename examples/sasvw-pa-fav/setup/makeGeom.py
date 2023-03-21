@@ -81,7 +81,7 @@ def gitr_lines_from_points(r,z):
 
     return lines
 
-def lines_to_vectors(lines, inDir, filename, plt):
+def lines_to_vectors(lines, inDir, filename, plt, plot_variables):
 
     x1 = lines[:, 0]
     z1 = lines[:, 1]
@@ -101,8 +101,9 @@ def lines_to_vectors(lines, inDir, filename, plt):
         zPerp = -inDir[i]*np.sign(perpSlope)*np.sqrt(1-rPerp*rPerp);
         plt.quiver([x1[i] + (x2[i]-x1[i])/2], [z1[i] + (z2[i]-z1[i])/2], [rPerp/10], [zPerp/10], width=0.0015, scale=5, headwidth=4)
 
-    plt.title(filename)
-    plt.savefig('plots/'+filename+'.pdf')
+    if plot_variables:
+        plt.title(filename)
+        plt.savefig('plots/'+filename+'.pdf')
     
 def lines_to_gitr_geometry(filename, lines, Z, surface, inDir):
 
@@ -187,7 +188,8 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
              gitr_rz = 'assets/gitr_rz.txt', \
              rmrs_fine_file = 'assets/rmrs_fine.txt', \
              W_fine_file = 'assets/W_fine.txt', \
-             numAddedPoints = 100):
+             numAddedPoints = 100, \
+             plot_variables = 0):
     
     # This program uses the solps geometry .ogr file to create a 2d geometry for GITR
     # in which the solps plasma profiles properly match the solps divertor target.
@@ -256,16 +258,17 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     r_final, z_final = replace_line_segment(rSurfFine, zSurfFine, r_final, z_final)
     W_indices = np.array(range(W_indicesCoarse[0], W_indicesCoarse[-1]+numAddedPoints))
     
-    #plot correctly-ordered line segments
-    print('plotting correctly-ordered line segments to solps_wall.pdf')
-    plt.close()
-    plt.plot(r_final, z_final, linewidth=0.1, label='V1e_v004')
-    plt.scatter(r_final, z_final, s=0.1)
-    plt.axis('scaled')
-    plt.xlabel('r [mm]')
-    plt.ylabel('z [mm]')
-    plt.title('DIII-D SAS-VW4 Geometry')
-    plt.savefig('plots/solps_final.pdf')
+    if plot_variables:
+        #plot correctly-ordered line segments
+        print('plotting correctly-ordered line segments to solps_wall.pdf')
+        plt.close()
+        plt.plot(r_final, z_final, linewidth=0.1, label='V1e_v004')
+        plt.scatter(r_final, z_final, s=0.1)
+        plt.axis('scaled')
+        plt.xlabel('r [mm]')
+        plt.ylabel('z [mm]')
+        plt.title('DIII-D SAS-VW4 Geometry')
+        plt.savefig('plots/solps_final.pdf')
     
     #define interior side of each line segment in the geometry with inDir
     inDir = np.ones(len(r_final))
@@ -275,7 +278,7 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     
     #populate lines and check that vectors point inward
     lines = gitr_lines_from_points(r_final, z_final)
-    lines_to_vectors(lines, inDir, 'inDir', plt)
+    lines_to_vectors(lines, inDir, 'inDir', plt, plot_variables)
     
     #give the divertor target segments, targ_indices, a material and an interactive surface
     Z = np.zeros(len(r_final))
@@ -283,15 +286,16 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     
     W_indices = np.array(range(23,38+numAddedPoints-1))
     
-    plt.close()
-    plt.plot(r_right_target, z_right_target, '-k', label='Carbon', linewidth=0.5)
-    plt.plot(r_final[W_indices], z_final[W_indices], 'violet', label='Tungsten', linewidth=0.6)
-    plt.scatter(r_final[W_indices], z_final[W_indices], marker='_', color='violet', s=8)
-    plt.legend()
-    plt.xlabel('r [m]')
-    plt.ylabel('z [m]')
-    plt.title('Upper Outer SAS-VW Divertor in DIII-D \n makeGeom')
-    plt.savefig('plots/makeGeom.png')
+    if plot_variables:
+        plt.close()
+        plt.plot(r_right_target, z_right_target, '-k', label='Carbon', linewidth=0.5)
+        plt.plot(r_final[W_indices], z_final[W_indices], 'violet', label='Tungsten', linewidth=0.6)
+        plt.scatter(r_final[W_indices], z_final[W_indices], marker='_', color='violet', s=8)
+        plt.legend()
+        plt.xlabel('r [m]')
+        plt.ylabel('z [m]')
+        plt.title('Upper Outer SAS-VW Divertor in DIII-D \n makeGeom')
+        plt.savefig('plots/makeGeom.png')
     
     Z[W_indices] = 74;
     surfaces[W_indices] = 1;
