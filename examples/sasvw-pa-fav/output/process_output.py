@@ -97,7 +97,8 @@ def plot_surf_nc(pps_per_nP, \
                  surface_file="surface.nc", \
                  gitr_rz='../setup/assets/gitr_rz.txt', \
                  W_fine_file='../setup/assets/W_fine.txt', \
-                 rmrs_fine_file='../setup/assets/rmrs_fine.txt'):
+                 rmrs_fine_file='../setup/assets/rmrs_fine.txt', \
+                 plot_cumsum=0):
     
     surface = netCDF4.Dataset(surface_file, "r", format="NETCDF4")
     #print(surface.variables['grossErosion'][:])
@@ -136,7 +137,9 @@ def plot_surf_nc(pps_per_nP, \
     area = np.pi*(r1+r2)*dist
 
     grossEro = (surface.variables['grossErosion'][:])
+    print(grossEro)
     grossDep = (surface.variables['grossDeposition'][:])
+    print(grossDep)
     netEro = (grossEro-grossDep)
     
     print('total gross eroded comp particles',sum(grossEro))
@@ -146,6 +149,7 @@ def plot_surf_nc(pps_per_nP, \
     
     #grossEro = np.average([grossEro[:-1], grossEro[1:]],axis=0)*pps_per_nP/area
     #grossDep = np.average([grossDep[:-1], grossDep[1:]],axis=0)*pps_per_nP/area
+    print('test',pps_per_nP, area)
     grossEro = grossEro[:-1]*pps_per_nP/area
     grossDep = grossDep[:-1]*pps_per_nP/area
     netEro = netEro[:-1]*pps_per_nP/area
@@ -168,19 +172,20 @@ def plot_surf_nc(pps_per_nP, \
     plt.xlabel('D-Dsep [m]')
     plt.ylabel('Flux [#/m2s]')
     plt.legend()#loc='upper left')
-    plt.title('GITR Predicted Erosion and \n Redeposition Profiles')
+    plt.title('GITR Predicted Erosion and \n Redeposition Profiles asdf')
     plt.savefig('plots/surface.png')
     
-    plt.close()
-    plt.plot(rmrsFine,grossEro_cumsum,'r', label='Gross Erosion')
-    plt.plot(rmrsFine,grossDep_cumsum,'g', label='Redeposition')
-    plt.plot(rmrsFine,netEro_cumsum,'k', label='Net Erosion')
-    plt.yscale('log')
-    plt.xlabel('D-Dsep [m]')
-    plt.ylabel('Flux [#/m2s]')
-    plt.legend(loc='upper left')
-    plt.title('GITR Predicted Cumulative Sum of \n Erosion and Redeposition Profiles')
-    plt.savefig('plots/surface_cumsum.pdf')
+    if plot_cumsum:
+        plt.close()
+        plt.plot(rmrsFine,grossEro_cumsum,'r', label='Gross Erosion')
+        plt.plot(rmrsFine,grossDep_cumsum,'g', label='Redeposition')
+        plt.plot(rmrsFine,netEro_cumsum,'k', label='Net Erosion')
+        plt.yscale('log')
+        plt.xlabel('D-Dsep [m]')
+        plt.ylabel('Flux [#/m2s]')
+        plt.legend(loc='upper left')
+        plt.title('GITR Predicted Cumulative Sum of \n Erosion and Redeposition Profiles')
+        plt.savefig('plots/surface_cumsum.pdf')
 
 def plot_particle_source():
     particleSource = netCDF4.Dataset("../input/particleSource.nc", "r", format="NETCDF4")
@@ -208,6 +213,6 @@ def plot_particle_source():
 if __name__ == "__main__":
     #init()
     #plot_gitr_gridspace()
-    plot_history2D("history_SMoff.nc")
-    #plot_surf_nc(27996960261959.164, "surface.nc")
+    #plot_history2D("history.nc")
+    plot_surf_nc(4.0548180976216253e+18, "surface.nc")
     #plot_particle_source()

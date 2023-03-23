@@ -632,7 +632,7 @@ def get_analytic_spyld(surfE, surfA, Z1=6, M1=12, Z2=74, M2=183.84, \
 
 if __name__ == "__main__":
     init()
-    distributed_source(1, surfW=np.arange(10,24), \
+    distributed_source(10000, surfW=np.arange(10,24), \
                 geom = '../input/gitrGeometry.cfg', \
                 profiles_file = '../input/plasmaProfiles.nc', \
                 gitr_rz = 'assets/gitr_rz.txt', \

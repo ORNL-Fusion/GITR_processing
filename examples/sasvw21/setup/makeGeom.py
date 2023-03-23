@@ -180,16 +180,16 @@ def refine_target(rSurfCoarse, zSurfCoarse, rmrsCoarse, numAddedPoints=100):
     return rSurfFine, zSurfFine, rmrsFine
 
 def main(gitr_geometry_filename='gitrGeometry.cfg', \
-             solps_geomfile = 'assets/sas-vw_v004.ogr', \
+             solps_geomfile = 'assets/geom-SASV6/SAS-V6e_v002.ogr', \
              solps_targfile = 'assets/b2fgmtry', \
              profiles_file = '../input/plasmaProfiles.nc', \
-             surfW = np.arange(10,24), \
+             surfW = np.arange(16,31), \
              solps_rz = 'assets/solps_rz.txt', \
              gitr_rz = 'assets/gitr_rz.txt', \
              rmrs_fine_file = 'assets/rmrs_fine.txt', \
              W_fine_file = 'assets/W_fine.txt', \
              numAddedPoints = 100, \
-             plot_variables = 0):
+             plot_variables = 1):
     
     # This program uses the solps geometry .ogr file to create a 2d geometry for GITR
     # in which the solps plasma profiles properly match the solps divertor target.
@@ -226,7 +226,7 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
             manual_indices[i] = j
             i+=1
     
-    manual_indices = np.append(manual_indices, range(113,114))
+    manual_indices = np.append(manual_indices, range(121,160))
     
     r_wall = r_ogr[manual_indices]/1000 #mm->m
     z_wall = z_ogr[manual_indices]/1000 #mm->m
@@ -246,14 +246,13 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     ###################################################################
     rmrsCoarse = profiles.variables['rmrs_inner_target'][surfW]
     
-    W_indicesCoarse = np.array(range(24,38))
+    W_indicesCoarse = np.array(range(30,45))
     
     if plot_variables:
         plt.close()
         plt.plot(r_right_target, z_right_target, '-k', label='Carbon', linewidth=0.5)
         plt.plot(r_final[W_indicesCoarse], z_final[W_indicesCoarse], 'violet', label='Tungsten', linewidth=0.6)
-        #plt.scatter(r_final[W_indicesCoarse], z_final[W_indicesCoarse], marker='_', color='violet', s=8)
-        plt.scatter
+        plt.scatter(r_final[W_indicesCoarse], z_final[W_indicesCoarse], marker='_', color='violet', s=8)
         plt.legend()
         plt.xlabel('r [m]')
         plt.ylabel('z [m]')
@@ -284,9 +283,8 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     
     #define interior side of each line segment in the geometry with inDir
     inDir = np.ones(len(r_final))
-    inDir[2:9] = inDir[10] = inDir[16:24] = -1
-    inDir[51+numAddedPoints] = inDir[53+numAddedPoints] = inDir[58+numAddedPoints:60+numAddedPoints] = -1
-    inDir[64+numAddedPoints:74+numAddedPoints] = -1
+    inDir[2:9] = inDir[10] = inDir[17:30] = inDir[61+numAddedPoints] = inDir[63+numAddedPoints] = \
+        inDir[68+numAddedPoints:70+numAddedPoints] = inDir[74+numAddedPoints:] = -1
     
     #populate lines and check that vectors point inward
     lines = gitr_lines_from_points(r_final, z_final)
@@ -296,7 +294,7 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     Z = np.zeros(len(r_final))
     surfaces = np.zeros(len(r_final))
     
-    W_indices = np.array(range(23,38+numAddedPoints-1))
+    W_indices = np.array(range(29,45+numAddedPoints))
     
     if plot_variables:
         plt.close()

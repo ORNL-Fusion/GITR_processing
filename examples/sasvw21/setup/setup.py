@@ -5,25 +5,25 @@ import shutil
 import numpy as np
 import solpsProcessing, makeGeom, makeParticleSource
 
-nP = int(1)
-W_surface_indices = np.arange(10,24)
+nP = int(1e5)
+W_surface_indices = np.arange(16,31)
 
 makeGeom.main(gitr_geometry_filename='gitrGeometry.cfg', \
-                    solps_geomfile = 'assets/sas-vw_v004.ogr', \
-                    solps_targfile = 'assets/b2fgmtry', \
-                    profiles_file = '../input/plasmaProfiles.nc', \
-                    surfW = W_surface_indices, \
-                    solps_rz = 'assets/solps_rz.txt', \
-                    gitr_rz = 'assets/gitr_rz.txt', \
-                    rmrs_fine_file = 'assets/rmrs_fine.txt', \
-                    W_fine_file = 'assets/W_fine.txt', \
-                    numAddedPoints = 100, \
-                    plot_variables = 0)
+                     solps_geomfile = 'assets/geom-SASV6/SAS-V6e_v002.ogr', \
+                     solps_targfile = 'assets/b2fgmtry', \
+                     profiles_file = '../input/plasmaProfiles.nc', \
+                     surfW = W_surface_indices, \
+                     solps_rz = 'assets/solps_rz.txt', \
+                     gitr_rz = 'assets/gitr_rz.txt', \
+                     rmrs_fine_file = 'assets/rmrs_fine.txt', \
+                     W_fine_file = 'assets/W_fine.txt', \
+                     numAddedPoints = 100, \
+                     plot_variables = 1)
 
 os.remove('gitrGeometry.cfg0')
 shutil.move('gitrGeometry.cfg', '../input/gitrGeometry.cfg')
 
-solpsProcessing.readEquilibrium(equilibrium_filename = 'assets/dg.equ', \
+solpsProcessing.readEquilibrium(equilibrium_filename = 'assets/vertex_sasvw.eq', \
                     W_indices = W_surface_indices, \
                     solps_geom = 'assets/b2fgmtry', \
                     plot_variables = 0)
