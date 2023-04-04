@@ -8,6 +8,7 @@ examples/sasvw21/input/*.nc
 examples/sasvw-pa-fav/input/*.nc
 examples/sasvw21/output/*.nc
 examples/sasvw-pa-fav/output/*.nc
+examples/sasvw-pa-fav/output/surfaces/*
 examples/sasvw21/output/plots/
 examples/sasvw-pa-fav/output/plots/
 python/__pycache__/
