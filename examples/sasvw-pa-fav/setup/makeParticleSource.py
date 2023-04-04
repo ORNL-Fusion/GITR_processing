@@ -523,7 +523,7 @@ def get_incoming_IEADs(q, profiles, surfW, rmrsCoarse, rmrsFine):
     if q<0:
         Esp, f, b, c, ThetaMax = FittingParameters_NonW(SimpleEnergyEst)
         AngleEst = ThetaMax
-    else: AngleEst = 67*np.ones(len(SimpleEnergyEst))
+    else: AngleEst = 70*np.ones(len(SimpleEnergyEst))
 
     return SimpleEnergyEst, AngleEst
 

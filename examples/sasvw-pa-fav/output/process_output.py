@@ -149,7 +149,6 @@ def plot_surf_nc(pps_per_nP, \
     
     #grossEro = np.average([grossEro[:-1], grossEro[1:]],axis=0)*pps_per_nP/area
     #grossDep = np.average([grossDep[:-1], grossDep[1:]],axis=0)*pps_per_nP/area
-    print('test',pps_per_nP, area)
     grossEro = grossEro[:-1]*pps_per_nP/area
     grossDep = grossDep[:-1]*pps_per_nP/area
     netEro = netEro[:-1]*pps_per_nP/area
@@ -172,7 +171,7 @@ def plot_surf_nc(pps_per_nP, \
     plt.xlabel('D-Dsep [m]')
     plt.ylabel('Flux [#/m2s]')
     plt.legend()#loc='upper left')
-    plt.title('GITR Predicted Erosion and \n Redeposition Profiles asdf')
+    plt.title('GITR Predicted Erosion and \n Redeposition Profiles')
     plt.savefig('plots/surface.png')
     
     if plot_cumsum:
