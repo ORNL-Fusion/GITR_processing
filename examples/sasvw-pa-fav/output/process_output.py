@@ -213,5 +213,5 @@ if __name__ == "__main__":
     #init()
     #plot_gitr_gridspace()
     #plot_history2D("history.nc")
-    plot_surf_nc(4.0548180976216253e+18, "surface.nc")
+    plot_surf_nc(379148076805661.56, "surfaces/nP4/surf-4-6.nc")
     #plot_particle_source()
