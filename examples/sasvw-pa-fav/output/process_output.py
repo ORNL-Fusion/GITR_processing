@@ -168,10 +168,14 @@ def plot_surf_nc(pps_per_nP, \
     plt.plot(rmrsFine,grossDep,'g', label='Redeposition')
     plt.plot(rmrsFine,netEro,'k', label='Net Erosion')
     plt.plot(rmrsFine,np.zeros(len(rmrsFine)),'gray')
+    plt.axvline(x=rmrs[4], color='k', linestyle='dotted')
+    plt.axvline(x=rmrs[10], color='k', linestyle='dotted')
+    plt.axvline(x=rmrs[11], color='k', linestyle='dotted')
+    plt.axvline(x=rmrs[12], color='k', linestyle='dotted')
     plt.xlabel('D-Dsep [m]')
     plt.ylabel('Flux [#/m2s]')
     plt.legend()#loc='upper left')
-    plt.title('GITR Predicted Erosion and \n Redeposition Profiles')
+    plt.title('GITR Predicted Erosion and \n Redeposition Profiles, nP=1e5, nT=1e6')
     plt.savefig('plots/surface.png')
     
     if plot_cumsum:
@@ -213,5 +217,5 @@ if __name__ == "__main__":
     #init()
     #plot_gitr_gridspace()
     #plot_history2D("history.nc")
-    plot_surf_nc(379148076805661.56, "surfaces/nP4/surf-4-6.nc")
+    plot_surf_nc(37914807680566.16, "surfaces/nP5/surf-5-6.nc")
     #plot_particle_source()

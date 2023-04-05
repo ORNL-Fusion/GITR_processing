@@ -5,7 +5,7 @@ import shutil
 import numpy as np
 import solpsProcessing, makeGeom, makeParticleSource
 
-nP = int(1e6)
+nP = int(5e2)
 W_surface_indices = np.arange(10,24)
 
 makeGeom.main(gitr_geometry_filename='gitrGeometry.cfg', \
@@ -18,7 +18,7 @@ makeGeom.main(gitr_geometry_filename='gitrGeometry.cfg', \
                     rmrs_fine_file = 'assets/rmrs_fine.txt', \
                     W_fine_file = 'assets/W_fine.txt', \
                     numAddedPoints = 100, \
-                    plot_variables = 0)
+                    plot_variables = 1)
 
 os.remove('gitrGeometry.cfg0')
 shutil.move('gitrGeometry.cfg', '../input/gitrGeometry.cfg')

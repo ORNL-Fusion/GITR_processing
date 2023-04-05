@@ -274,13 +274,13 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
         #plot correctly-ordered line segments
         print('plotting correctly-ordered line segments to solps_wall.pdf')
         plt.close()
-        plt.plot(r_final, z_final, linewidth=0.1, label='V1e_v004')
+        plt.plot(r_final, z_final, label='V1e_v004')
         plt.scatter(r_final, z_final, s=0.1)
         plt.axis('scaled')
-        plt.xlabel('r [mm]')
-        plt.ylabel('z [mm]')
-        plt.title('DIII-D SAS-VW4 Geometry')
-        plt.savefig('plots/solps_final.pdf')
+        plt.xlabel('r [m]')
+        plt.ylabel('z [m]')
+        plt.title('DIII-D SAS-VW Geometry')
+        plt.savefig('plots/solps_final.png')
     
     #define interior side of each line segment in the geometry with inDir
     inDir = np.ones(len(r_final))
