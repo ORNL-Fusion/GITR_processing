@@ -86,10 +86,12 @@ def plot_history2D(history_file, basic=1, continuousChargeState=0, endChargeStat
     if endChargeState==1:
         for p in range(0,nP):
             plt.plot(x[p][:],z[p][:], colors[charge[p][-1]])
+        plt.title('Particle Tracks by End Charge State')
         
-    plt.xlim(1.43, 1.56)
-    plt.ylim(1.07, 1.25)
+    #plt.xlim(1.43, 1.56)
+    #plt.ylim(1.07, 1.25)
     plt.savefig('plots/history.pdf')
+    plt.close()
 
     return
 
@@ -216,6 +218,6 @@ def plot_particle_source():
 if __name__ == "__main__":
     #init()
     #plot_gitr_gridspace()
-    #plot_history2D("history.nc")
-    plot_surf_nc(37914807680566.16, "surfaces/nP5/surf-5-6.nc")
+    plot_history2D("history.nc")
+    #plot_surf_nc(37914807680566.16, "surfaces/nP5/surf-5-6.nc")
     #plot_particle_source()
