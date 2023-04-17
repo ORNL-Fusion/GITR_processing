@@ -11,12 +11,15 @@ import solps
 import Particles
 import netCDF4
 
+<<<<<<< HEAD
 def init():
     #set plotting style defaults
     plt.rcParams.update({'font.size':11.5})
     plt.rcParams.update({'lines.linewidth':1.2})
     plt.rcParams.update({'lines.markersize':1})
 
+=======
+>>>>>>> 69cc0aee825703c268e66c320d067c36145e5763
 def point_source(nP = int(2e2)):
     x = 1.44*np.ones(nP)
     y = np.zeros(nP)
@@ -45,6 +48,7 @@ def point_source(nP = int(2e2)):
     vzz[:] = vz
     rootgrp.close()
 
+<<<<<<< HEAD
 def distributed_source(nP, surfW=np.arange(10,24), \
             geom = '../input/gitrGeometry.cfg', \
             profiles_file = '../input/plasmaProfiles.nc', \
@@ -76,6 +80,26 @@ def distributed_source(nP, surfW=np.arange(10,24), \
         W_fine = file.readlines()
     W_fine = np.array(W_fine,dtype='int')
 
+=======
+
+def simple2D(nP, \
+            geom = '../input/gitrGeometry.cfg', \
+            targFile = 'assets/rightTargOutput', \
+            wallFile = 'assets/gitr_rz.txt', \
+            surf_coarse = 'assets/surf_coarse.txt', \
+            surf_ind = 'assets/surf_ind.txt', \
+            profilesFile = '../input/profiles.nc', \
+            ftDFile = 'assets/ftridynBackgroundD.nc', \
+            ftCFile = 'assets/ftridynBackgroundC.nc', \
+            configuration = 'random', \
+            plot_variables = 0, \
+            r_W = None, z_W = None, rCoarse = None, zCoarse = None, addedPoints = 0):
+    
+    #import wall geometry to plot over
+    with open(wallFile, 'r') as file:
+        wall = file.readlines()
+
+>>>>>>> 69cc0aee825703c268e66c320d067c36145e5763
     R = np.zeros(len(wall))
     Z = np.zeros(len(wall))
     for i,line in enumerate(wall):
@@ -83,14 +107,18 @@ def distributed_source(nP, surfW=np.arange(10,24), \
         R[i] = float(point[0])
         Z[i] = float(point[1])
     
+<<<<<<< HEAD
     R = R[W_fine]
     Z = Z[W_fine]
     
+=======
+>>>>>>> 69cc0aee825703c268e66c320d067c36145e5763
     r1 = R[:-1]
     r2 = R[1:]
     z1 = Z[:-1]
     z2 = Z[1:]
     
+<<<<<<< HEAD
     if plot_variables==1:
         plt.close()
         plt.plot(r_right_target, z_right_target, '-k', label='Carbon', linewidth=0.5, zorder=0)
@@ -103,6 +131,9 @@ def distributed_source(nP, surfW=np.arange(10,24), \
         plt.title('Upper Outer SAS-VW Divertor in DIII-D \n makeParticleSource')
         plt.savefig('plots/makePSGeom.png')
 
+=======
+    area = 0.12*np.sqrt(np.power(r1-r2,2) + np.power(z1-z2,2))#*np.pi*(r1+r2)
+>>>>>>> 69cc0aee825703c268e66c320d067c36145e5763
     slope = np.zeros(len(r1))
     Alpha = np.zeros(len(r1))
     for i in range(len(r1)):
@@ -114,6 +145,7 @@ def distributed_source(nP, surfW=np.arange(10,24), \
             slope[i] = 100
             Alpha[i] = 89.999*np.pi/180
 
+<<<<<<< HEAD
     Alpha = np.abs(Alpha) #np.abs(np.rad2deg(Alpha[W_fine[:-1]]))
     Beta = np.abs(np.pi/2 - Alpha)
 
@@ -280,6 +312,110 @@ def distributed_source(nP, surfW=np.arange(10,24), \
         plt.ylabel('Weighted PPS [#/s]')
         plt.title('Computational Weights for Initially Sputtered W/s \n nP = '+str(nP))
         plt.savefig('plots/particle-source/pps_weights.png')
+=======
+    #get indices of rcoord and r_targ that are W
+    #import W surface indices
+    with open(surf_coarse, 'r') as file:
+        surf_coarse = file.readlines()    
+    with open(surf_ind, 'r') as file:
+        surf = file.readlines()
+
+    W_coarse = np.array(surf_coarse,dtype='int')
+    W_ind = np.array(surf,dtype='int')
+
+    Alpha = np.abs(Alpha[W_ind]) #np.abs(np.rad2deg(Alpha[W_ind[:-1]]))
+    Beta = np.abs(np.pi/2 - Alpha)
+
+    #specify W r,z coordinates and slope for the outer target
+    r1 = r1[W_ind]
+    z1 = z1[W_ind]
+    r2 = r2[W_ind]
+    z2 = z2[W_ind]
+    slope = slope[W_ind]
+
+    #########################################
+    #get W/s sputtered by D, He, C flux to wall
+    #########################################
+
+    
+    #get incoming ion energy and angle estimations where the integer input is z
+    rmrs_mid, DsurfE, DsurfA = get_surf_profiles(profilesFile, r1, z1, r2, z2, 1, plot_variables)
+    rmrs_mid, CsurfE1, CsurfA1 = get_surf_profiles(profilesFile, r1, z1, r2, z2, 1, plot_variables)
+    rmrs_mid, CsurfE2, CsurfA2 = get_surf_profiles(profilesFile, r1, z1, r2, z2, 2, plot_variables)
+    rmrs_mid, CsurfE3, CsurfA3 = get_surf_profiles(profilesFile, r1, z1, r2, z2, 3, plot_variables)
+    rmrs_mid, CsurfE4, CsurfA4 = get_surf_profiles(profilesFile, r1, z1, r2, z2, 4, plot_variables)
+    rmrs_mid, CsurfE5, CsurfA5 = get_surf_profiles(profilesFile, r1, z1, r2, z2, 5, plot_variables)
+    rmrs_mid, CsurfE6, CsurfA6 = get_surf_profiles(profilesFile, r1, z1, r2, z2, 6, plot_variables)
+    
+    if plot_variables == 1:
+        ls, fs = 5, 14
+        plt.close()
+        plt.plot(rmrs_mid, CsurfE1, 'red', linewidth=ls, label='C1+')
+        plt.plot(rmrs_mid, CsurfE2, 'darkorange', linewidth=ls, label='C2+')
+        plt.plot(rmrs_mid, CsurfE3, 'gold', linewidth=ls, label='C3+')
+        plt.plot(rmrs_mid, CsurfE4, 'green', linewidth=ls, label='C4+')
+        plt.plot(rmrs_mid, CsurfE5, 'blue', linewidth=ls, label='C5+')
+        plt.plot(rmrs_mid, CsurfE6, 'purple', linewidth=ls, label='C6+')
+        plt.xlabel('D-Dsep [m]',fontsize=fs)
+        plt.ylabel('energy [eV]',fontsize=fs)
+        plt.xticks(fontsize=fs)
+        plt.yticks(fontsize=fs)
+        plt.legend(fontsize=fs)
+        plt.title('Estimate of incoming Ion Eneries along the SAS-VW Divertor',fontsize=fs)
+        plt.savefig('plots/surf_energyest')
+
+    #get sputtering yields for D0 and D1+ on W from fractal tridyn tables
+    #Dspyld = get_ft_spyld(DsurfE, DsurfA, ftDFile)[1] #file input includes He, which we aren't using
+    #Cspyld = get_ft_spyld(CsurfE, CsurfA, ftCFile)[0]
+    Cspyld1 = get_analytic_spyld(CsurfE1, CsurfA1)
+    Cspyld2 = get_analytic_spyld(CsurfE2, CsurfA2)
+    Cspyld3 = get_analytic_spyld(CsurfE3, CsurfA3)
+    Cspyld4 = get_analytic_spyld(CsurfE4, CsurfA4)
+    Cspyld5 = get_analytic_spyld(CsurfE5, CsurfA5)
+    Cspyld6 = get_analytic_spyld(CsurfE6, CsurfA6)
+
+    #get coarse rmrs   
+    r1_coarse = rCoarse[W_coarse[:-1]]
+    r2_coarse = rCoarse[W_coarse[1:]]
+    z1_coarse = zCoarse[W_coarse[:-1]]
+    z2_coarse = zCoarse[W_coarse[1:]]
+    
+    coarse_dist = np.sqrt((r1_coarse-r2_coarse)**2 + (z1_coarse-z2_coarse)**2)
+    coarse_rmrs = np.append(np.zeros(1), np.cumsum(coarse_dist))
+    coarse_rmrs_mid = np.average(np.array([coarse_rmrs[:-1], coarse_rmrs[1:]]),axis=0)
+    
+    #get flux grid from background D, C
+    r_mid, z_mid, ti, ni, flux, te, ne = solps.read_target_file(targFile)
+    W_targfile = np.array(range(16,31)) #hard code this because ok wtf
+
+    #split total flux into D and C ion fluxes at the W surface
+    #ion_flux = np.abs(flux[:,1:][W_ind[:-1]]) #only bother with W surfaces
+    #Dflux = np.transpose(np.abs(flux[:,1][W_ind[:-1]]))
+    Cflux_coarse = np.transpose(np.abs(flux[:,3:][W_targfile[:-1]]))
+    
+    Cflux1 = refine_linear(W_coarse[:-1], W_ind, coarse_rmrs_mid, rmrs_mid, Cflux_coarse[0])
+    Cflux2 = refine_linear(W_coarse[:-1], W_ind, coarse_rmrs_mid, rmrs_mid, Cflux_coarse[1])
+    Cflux3 = refine_linear(W_coarse[:-1], W_ind, coarse_rmrs_mid, rmrs_mid, Cflux_coarse[2])
+    Cflux4 = refine_linear(W_coarse[:-1], W_ind, coarse_rmrs_mid, rmrs_mid, Cflux_coarse[3])
+    Cflux5 = refine_linear(W_coarse[:-1], W_ind, coarse_rmrs_mid, rmrs_mid, Cflux_coarse[4])
+    Cflux6 = refine_linear(W_coarse[:-1], W_ind, coarse_rmrs_mid, rmrs_mid, Cflux_coarse[5])
+
+
+    #multiply incoming ion flux by Y_s to get sputtered W flux by each species
+    sputt_flux1 = Cspyld1*Cflux1
+    sputt_flux2 = Cspyld2*Cflux2
+    sputt_flux3 = Cspyld3*Cflux3
+    sputt_flux4 = Cspyld4*Cflux4
+    sputt_flux5 = Cspyld5*Cflux5
+    sputt_flux6 = Cspyld6*Cflux6
+    sputt_flux = sputt_flux1 + sputt_flux2 + sputt_flux3 + sputt_flux4 + sputt_flux5 + sputt_flux6
+    print('SPUTT FLUX',len(sputt_flux),'\n',sputt_flux)
+
+    #multiply by area to get the outgoing particles per second
+    pps = np.multiply(sputt_flux,area[W_ind])
+    pps_weights = nP*pps/np.sum(pps)
+
+>>>>>>> 69cc0aee825703c268e66c320d067c36145e5763
 
     #########################################
     #get x,y,z distributions for sputtered W
@@ -323,6 +459,79 @@ def distributed_source(nP, surfW=np.arange(10,24), \
     else:
         print('(x,y,z) configuration not set')
 
+<<<<<<< HEAD
+=======
+    if plot_variables == 1:
+        ls,fs = 5, 14
+        
+        plt.close()
+        plt.rcParams.update({'font.size':fs})
+        plt.plot(rmrs_mid, Cflux1, 'red', linewidth=ls, label='C1+')
+        plt.plot(rmrs_mid, Cflux2, 'darkorange', linewidth=ls, label='C2+')
+        plt.plot(rmrs_mid, Cflux3, 'gold', linewidth=ls, label='C3+')
+        plt.plot(rmrs_mid, Cflux4, 'green', linewidth=ls, label='C4+')
+        plt.plot(rmrs_mid, Cflux5, 'blue', linewidth=ls, label='C5+')
+        plt.plot(rmrs_mid, Cflux6, 'purple', linewidth=ls, label='C6+')
+        plt.xlabel('D-Dsep [m]',fontsize=fs)
+        plt.ylabel('Flux [#/m2s]',fontsize=fs)
+        plt.xticks(fontsize=fs)
+        plt.yticks(fontsize=fs)
+        plt.legend(loc='upper right', fontsize=fs)
+        plt.title('Incoming C Ion Flux',fontsize=fs)
+        plt.savefig('plots/surf_Cflux.png')
+
+        plt.close()
+        plt.rcParams.update({'font.size':fs})
+        plt.plot(rmrs_mid, Cspyld1, 'red', linewidth=ls, label='C1+')
+        plt.plot(rmrs_mid, Cspyld2, 'darkorange', linewidth=ls, label='C2+')
+        plt.plot(rmrs_mid, Cspyld3, 'gold', linewidth=ls, label='C3+')
+        plt.plot(rmrs_mid, Cspyld4, 'green', linewidth=ls, label='C4+')
+        plt.plot(rmrs_mid, Cspyld5, 'blue', linewidth=ls, label='C5+')
+        plt.plot(rmrs_mid, Cspyld6, 'purple', linewidth=ls, label='C6+')
+        plt.xlabel('D-Dsep [m]',fontsize=fs)
+        plt.ylabel('Yield',fontsize=fs)
+        plt.xticks(fontsize=fs)
+        plt.yticks(fontsize=fs-3)
+        plt.legend(loc='upper left', fontsize=fs)
+        plt.title('Average Sputtering Yield for C on W',fontsize=fs)
+        plt.savefig('plots/Cspyld.png')
+        
+        plt.close()
+        plt.rcParams.update({'font.size':fs})
+        plt.plot(rmrs_mid, sputt_flux1, 'red', linewidth=ls, label='C1+')
+        plt.plot(rmrs_mid, sputt_flux2, 'darkorange', linewidth=ls, label='C2+')
+        plt.plot(rmrs_mid, sputt_flux3, 'gold', linewidth=ls, label='C3+')
+        plt.plot(rmrs_mid, sputt_flux4, 'green', linewidth=ls, label='C4+')
+        plt.plot(rmrs_mid, sputt_flux5, 'blue', linewidth=ls, label='C5+')
+        plt.plot(rmrs_mid, sputt_flux6, 'purple', linewidth=ls, label='C6+')
+        plt.xlabel('D-Dsep [m]',fontsize=fs)
+        plt.ylabel('Flux [#/m2s]',fontsize=fs)
+        plt.xticks(fontsize=fs)
+        plt.yticks(fontsize=fs-3)
+        plt.legend(loc='upper left', fontsize=fs)
+        plt.title('Flux of W Sputtered off Wall',fontsize=fs)
+        plt.savefig('plots/sputt_flux_charge_dependent.png')
+
+        plt.close()
+        plt.plot(rmrs_mid, area[W_ind], linewidth=ls)
+        plt.xlabel('D-Dsep [m]',fontsize=fs)
+        plt.ylabel('Area [m2]',fontsize=fs)
+        plt.xticks(fontsize=fs)
+        plt.yticks(fontsize=fs-8)
+        plt.title('Area of each line segment',fontsize=fs)
+        plt.savefig('plots/surf_area.png')
+
+        plt.close()
+        plt.rcParams.update({'font.size':fs})
+        plt.plot(rmrs_mid, sputt_flux, linewidth=ls)
+        plt.xlabel('D-Dsep [m]',fontsize=fs)
+        plt.ylabel('Flux [#/m2s]',fontsize=fs)
+        plt.xticks(fontsize=fs)
+        plt.yticks(fontsize=fs)
+        plt.title('Flux of W Sputtered off Wall',fontsize=fs)
+        plt.savefig('plots/sputt_flux.png')
+
+>>>>>>> 69cc0aee825703c268e66c320d067c36145e5763
     #########################################
     #get vx,vy,vz from IEADs
     #########################################
@@ -361,6 +570,17 @@ def distributed_source(nP, surfW=np.arange(10,24), \
             vy_lab = PartDist.Particles['vy']
             vz_lab = PartDist.Particles['vz']
     
+<<<<<<< HEAD
+=======
+            if plot_variables == 1:
+                plt.close()
+                plt.scatter(vx_lab,vz_lab)
+                plt.axis('Scaled')
+                plt.xlabel('vx')
+                plt.ylabel('vz')
+                plt.title('SinCos Polar Angle in the Lab Frame')
+    
+>>>>>>> 69cc0aee825703c268e66c320d067c36145e5763
             #convert unit vectors to vx,vy,vz
             W_kg = 183.84 * 1.6605e-27 #mass of W in kg
             vtot = np.sqrt(E*1.6022e-19/W_kg) #convert eV to m/s
@@ -376,6 +596,7 @@ def distributed_source(nP, surfW=np.arange(10,24), \
     if plot_variables == 1:
         #plot Thomson E dist
         plt.close()
+<<<<<<< HEAD
         plt.hist(E,bins=50)
         plt.xlabel('Energy Bins [eV]')
         plt.ylabel('Histogram')
@@ -408,6 +629,41 @@ def distributed_source(nP, surfW=np.arange(10,24), \
         plt.savefig('plots/particle-source/vxvz_lab.png')
         plt.close()
 
+=======
+        plt.hist(E,bins=100)
+        plt.xlabel('Energy Bins [eV]')
+        plt.ylabel('Histogram')
+        plt.title('Thomson Energy Distribution')
+        plt.savefig('plots/thomson')
+        
+        #plot particle framed v_dist relations
+        plt.close()
+        plt.scatter(vx_prime,vy_prime,s=0.3)
+        plt.axis('Scaled')
+        plt.xlabel('vx')
+        plt.ylabel('vy')
+        plt.title('Uniform Azimuthal Angle in the Particle Frame')
+        plt.savefig('plots/vxvy_prime')
+        
+        plt.close()
+        plt.scatter(vx_prime,vz_prime,s=0.3)
+        plt.axis('Scaled')
+        plt.xlabel('vx')
+        plt.ylabel('vz')
+        plt.title('SinCos Polar Angle in the Particle Frame')
+        plt.savefig('plots/vxvz_prime')
+        
+        plt.close()
+        plt.scatter(vx_lab,vz_lab,s=0.3)
+        plt.axis('Scaled')
+        plt.xlabel('vx')
+        plt.ylabel('vz')
+        plt.title('SinCos Polar Angle Distribution')
+        plt.savefig('plots/vxvz_lab')
+        plt.close()
+
+
+>>>>>>> 69cc0aee825703c268e66c320d067c36145e5763
     #########################################
     #make NetCDF Particle Source file
     #########################################
@@ -429,7 +685,10 @@ def distributed_source(nP, surfW=np.arange(10,24), \
     rootgrp.close()
 
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 69cc0aee825703c268e66c320d067c36145e5763
 def midpoints(nP,pps_weights,adj,slope,Beta, r1,z1,r2,z2):
     #get midpoints of coords
     r_mid = np.zeros(len(r1)-1)
@@ -482,6 +741,20 @@ def random(nP,pps_weights,adj,slope,Beta, r1,z1,r2,z2):
     return x,y,z
 
 
+<<<<<<< HEAD
+=======
+def interpolate(small,big):
+    indices = np.zeros(len(small))
+    for i in range(len(small)):
+        diff = np.min(np.abs(big-small[i]))
+        index_possibilities = np.array([np.where(big==small[i]+diff)[0], \
+                             np.where(big==small[i]-diff)[0]], dtype=object)
+        try: indices[i] = index_possibilities[1]
+        except: indices[i] = index_possibilities[0]
+
+    return indices.astype(int)
+
+>>>>>>> 69cc0aee825703c268e66c320d067c36145e5763
 
 def refine_linear(a,b,coarse_rmrs, fine_rmrs, coarse_variable):
     fine_variable = np.zeros(len(fine_rmrs))
@@ -505,6 +778,7 @@ def refine_linear(a,b,coarse_rmrs, fine_rmrs, coarse_variable):
         
     return fine_variable
 
+<<<<<<< HEAD
 def get_incoming_IEADs(q, profiles, surfW, rmrsCoarse, rmrsFine):
     #extract plasma parameters at the wall indices
     teCoarse = profiles.variables['te_inner_target'][surfW]
@@ -538,6 +812,102 @@ def get_ft_spyld(S, surfE, surfA, ftBFile):
     
     return surfY
 
+=======
+
+def get_surf_profiles(profilesFile, r1, z1, r2, z2, q, plot_variables):
+    profiles = netCDF4.Dataset(profilesFile)
+    
+    #get mesh grid for the plasma profiles used in GITR
+    r_mesh = profiles.variables['r'][:]
+    z_mesh = profiles.variables['z'][:]
+
+    #get midpoints for the refined W surface        
+    r_mid = np.average(np.array([r1,r2]),axis=0)
+    z_mid = np.average(np.array([z1,z2]),axis=0)
+        
+    #figure out which indices touch the wall on the profiles mesh
+    r_indices = interpolate(r_mid,r_mesh)
+    z_indices = interpolate(z_mid,z_mesh)
+        
+    #scoot the r_indices 1 cell to the left if the profiles.nc gridcell is too far off
+    br = profiles.variables['br'][:][z_indices,r_indices]
+    for i in range(len(br)):
+        if br[i]==-1: r_indices[i] -= 1
+        
+    if plot_variables == 1:
+        # plot interpolated SOLPS gridpoints on the boundry
+        plt.plot(r_mesh[r_indices],z_mesh[z_indices])
+        plt.xlabel('r [m]')
+        plt.ylabel('z [m]')
+        plt.title('Interpolated SOLPS grid cell centers')
+        plt.axis('Scaled')
+        plt.savefig('plots/test_rz_indices')
+        
+    #extract plasma parameters at the wall indices
+    te = profiles.variables['te'][:][z_indices,r_indices]
+    ti = profiles.variables['ti'][:][z_indices,r_indices]
+    '''
+    te = profiles.variables['te'][:]
+    ti = profiles.variables['ti'][:]
+    print('meshes',np.shape(np.array([z_mesh,r_mesh])))
+    print('te',np.shape(te))
+    print('mids',np.shape(np.transpose([r_mid,z_mid])))
+    te_interp = np.zeros(len(r_mid))
+    for i in range(len(r_mid)):
+        te_interp[i] = scii.interpn([z_mesh,r_mesh],te,[z_mid[i],r_mid[i]])
+    print('test te_interp',np.shape(te_interp))
+    '''
+    
+    SimpleEnergyEst = 2*ti+3*te*q
+
+    if q==7 or q==6:
+        Esp, f, b, c, ThetaMax = FittingParameters_NonW(SimpleEnergyEst)
+        AngleEst = ThetaMax
+    else: AngleEst = (np.pi/2)*np.ones(len(SimpleEnergyEst))
+
+    dist = np.sqrt((r1-r2)**2 + (z1-z2)**2)
+    rmrs = np.append(np.zeros(1), np.cumsum(dist))
+    rmrs_mid = np.average(np.array([rmrs[:-1],rmrs[1:]]),axis=0)
+
+    if plot_variables == 1:        
+        ls, fs = 5, 14
+        #plot plasma parameters along the surface
+        plt.close()
+        plt.plot(rmrs_mid, te, linewidth=ls)
+        plt.xlabel('D-Dsep [m]',fontsize=fs)
+        plt.ylabel('Te [eV]',fontsize=fs)
+        plt.xticks(fontsize=fs)
+        plt.yticks(fontsize=fs)
+        plt.title('Electron Temperature along the SAS-V Divertor',fontsize=fs)
+        plt.savefig('plots/surf_te.png')
+
+        plt.close()
+        plt.plot(rmrs_mid, AngleEst)
+        plt.xlabel('z [m]')
+        plt.ylabel('angle [degrees]')
+        plt.title('Angle of B Field with respect to the surface normal')
+        plt.savefig('plots/surf_Bangle.png')
+        plt.close()
+
+    return rmrs_mid, SimpleEnergyEst, AngleEst
+
+
+def get_ft_spyld(surfE, surfA, ftBFile):
+    #import sputtering yield tables for D0 and D1+ on W
+    ftB = netCDF4.Dataset(ftBFile, "r", format="NETCDF4")
+    spyld = ftB.variables['spyld'][:]
+    ftE = ftB.variables['E'][:]
+    ftA = ftB.variables['A'][:]
+
+    #find which FT index contains the energies and angles at the surface
+    E_indices = interpolate(surfE, ftE)
+    A_indices = interpolate(surfA, ftA)
+
+    surfY = spyld[:,E_indices,A_indices]
+    return surfY
+
+
+>>>>>>> 69cc0aee825703c268e66c320d067c36145e5763
 def FittingParameters_NonW(E):
     Eth=45.3362
     Esp = np.ones(len(E))
@@ -587,11 +957,18 @@ def FittingParameters_NonW(E):
             print('WARNING: TABULAR SPUTTERING FITTING PARAMETERS MISSING')
     return Esp, f, b, c, ThetaMax
 
+<<<<<<< HEAD
 def get_analytic_spyld(surfE, surfA, Z1=6, M1=12, Z2=74, M2=183.84, \
                        FitParam='N', Eth=45.3362, lam=0.0921, q=1.4389, mu=2.0225):
     #this entire function that is simply the Eckstein formula
     #defaults are for C on W but with fitting parameters, Eth, and Esp for N on W
     #energies are in eV and angles are in degrees
+=======
+
+def get_analytic_spyld(surfE, surfA, Z1=6, M1=12, Z2=74, M2=183.84, FitParam='N', Eth=45.3362, lam=0.0921, q=1.4389, mu=2.0225):
+    #this entire function that is simply the Eckstein formula
+    #defaults are for C on W but with fitting parameters, Eth, and Esp for N on W
+>>>>>>> 69cc0aee825703c268e66c320d067c36145e5763
     #M1, Z1 are for the projectile
     #M2, Z2 are for the target
     #Eth is the threshold energy for any sputtering to occur
@@ -611,12 +988,20 @@ def get_analytic_spyld(surfE, surfA, Z1=6, M1=12, Z2=74, M2=183.84, \
     snKrC = 0.5*np.log(1+1.2288*epsilon_L)/omega
     
     #spyld(E, angle = 0) normal incidence
+<<<<<<< HEAD
     Y_0 = np.zeros(len(surfE))
     for i,v in enumerate(surfE):
         if v>=Eth:
             Y_0[i] = q*snKrC[i]*(v/Eth-1)**mu / \
                 (lam/omega[i] + (v/Eth-1)**mu)
     
+=======
+    Y_0 = q*snKrC*(surfE/Eth-1)**mu / \
+        (lam/omega + (surfE/Eth-1)**mu)
+    
+    Y_0[np.where(surfE<Eth)[0]] = 0
+
+>>>>>>> 69cc0aee825703c268e66c320d067c36145e5763
     #choose basis for fitting parameters for different energies
     Esp, f, b, c, ThetaMax = FittingParameters_NonW(surfE)
 
@@ -630,6 +1015,7 @@ def get_analytic_spyld(surfE, surfA, Z1=6, M1=12, Z2=74, M2=183.84, \
 
 
 
+<<<<<<< HEAD
 if __name__ == "__main__":
     init()
     distributed_source(nP=int(1e5), surfW=np.arange(10,24), \
@@ -642,5 +1028,10 @@ if __name__ == "__main__":
                 ftCFile = 'assets/ftridynBackgroundC.nc', \
                 configuration = 'random', \
                 plot_variables = 1)
+=======
+
+
+
+>>>>>>> 69cc0aee825703c268e66c320d067c36145e5763
 
 

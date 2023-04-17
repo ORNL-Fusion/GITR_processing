@@ -3,6 +3,7 @@ sys.path.insert(0, os.path.abspath('../../../python/'))
 
 import shutil
 <<<<<<< HEAD
+<<<<<<< HEAD
 import numpy as np
 import solpsProcessing, makeGeom, makeParticleSource
 
@@ -48,6 +49,8 @@ makeParticleSource.distributed_source(nP, surfW = W_surface_indices, \
 
 shutil.move('particleSource.nc', '../input/particleSource.nc')
 =======
+=======
+>>>>>>> 69cc0aee825703c268e66c320d067c36145e5763
 import solpsProcessing
 import makeGeom
 import makeParticleSource
@@ -92,4 +95,7 @@ make_ParticleSource_sasvw.simple2D(nP = int(1e3), \
 
 shutil.move('particleSource.nc', '../input/particleSource.nc')
 '''
+<<<<<<< HEAD
 >>>>>>> made cfg geom for sasvw-pa-fav and added inputs in impacts_d3d
+=======
+>>>>>>> 69cc0aee825703c268e66c320d067c36145e5763
