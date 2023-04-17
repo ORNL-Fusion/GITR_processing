@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 import gitr
 import solps
-import particles
+import Particles
 import netCDF4
 
 def point_source(nP = int(2e2)):
@@ -43,7 +43,6 @@ def point_source(nP = int(2e2)):
 def simple2D(nP, \
             geom = '../input/gitrGeometry.cfg', \
             targFile = 'assets/rightTargOutput', \
-            coordsFile = 'right_target_coordinates.txt', \
             wallFile = 'assets/gitr_rz.txt', \
             surf_coarse = 'assets/surf_coarse.txt', \
             surf_ind = 'assets/surf_ind.txt', \
@@ -103,7 +102,7 @@ def simple2D(nP, \
     slope = slope[W_ind]
 
     #########################################
-    #get W/s sputtered by D, He flux to wall
+    #get W/s sputtered by D, He, C flux to wall
     #########################################
 
     
@@ -431,7 +430,6 @@ def midpoints(nP,pps_weights,adj,slope,Beta, r1,z1,r2,z2):
 
     return x,y,z
 
-
 def uniform(nP,pps_weights,adj,slope,Beta, r1,z1,r2,z2):
     x = np.zeros(nP)
     y = np.zeros(nP)
@@ -449,7 +447,6 @@ def uniform(nP,pps_weights,adj,slope,Beta, r1,z1,r2,z2):
             tally += pps_weights[i]
 
     return x,y,z
-
 
 def random(nP,pps_weights,adj,slope,Beta, r1,z1,r2,z2):
     x = np.zeros(nP)
@@ -552,11 +549,11 @@ def get_surf_profiles(profilesFile, r1, z1, r2, z2, q, plot_variables):
         AngleEst = ThetaMax
     else: AngleEst = (np.pi/2)*np.ones(len(SimpleEnergyEst))
 
-    if plot_variables == 1:
-        dist = np.sqrt((r1-r2)**2 + (z1-z2)**2)
-        rmrs = np.append(np.zeros(1), np.cumsum(dist))
-        rmrs_mid = np.average(np.array([rmrs[:-1],rmrs[1:]]),axis=0)
-        
+    dist = np.sqrt((r1-r2)**2 + (z1-z2)**2)
+    rmrs = np.append(np.zeros(1), np.cumsum(dist))
+    rmrs_mid = np.average(np.array([rmrs[:-1],rmrs[1:]]),axis=0)
+
+    if plot_variables == 1:        
         ls, fs = 5, 14
         #plot plasma parameters along the surface
         plt.close()
