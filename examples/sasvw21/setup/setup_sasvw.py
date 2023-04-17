@@ -25,7 +25,8 @@ solps.readEquilibrium(filename = 'assets/vertex_sasvw.eq', \
                                     r_wall = r, z_wall = z)
 
 shutil.move('bField.nc', '../input/bField.nc')
-
+'''
+'''
 solps.process_solps_output_for_gitr(dakota_filename = 'assets/dakota', \
                                    nR = 500, nZ = 1000, plot_variables = 0, \
                                    b2fstate_filename = 'assets/b2fstate', \
@@ -52,5 +53,5 @@ make_ParticleSource_sasvw.simple2D(nP = int(1e3), \
                                     configuration = 'random', \
                                     plot_variables = 0, \
                                     r_W=rW, z_W=zW, rCoarse=rCoarse, zCoarse=zCoarse, addedPoints=addedPoints)
-
+'''
 shutil.move('particleSource.nc', '../input/particleSource.nc')

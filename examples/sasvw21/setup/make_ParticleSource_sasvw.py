@@ -115,21 +115,23 @@ def simple2D(nP, \
     rmrs_mid, CsurfE5, CsurfA5 = get_surf_profiles(profilesFile, r1, z1, r2, z2, 5, plot_variables)
     rmrs_mid, CsurfE6, CsurfA6 = get_surf_profiles(profilesFile, r1, z1, r2, z2, 6, plot_variables)
     
+    plt.rcParams['lines.linewidth']=5
+    plt.rcParams['font.size']=14    
+    
     if plot_variables == 1:
-        ls, fs = 5, 14
         plt.close()
-        plt.plot(rmrs_mid, CsurfE1, 'red', linewidth=ls, label='C1+')
-        plt.plot(rmrs_mid, CsurfE2, 'darkorange', linewidth=ls, label='C2+')
-        plt.plot(rmrs_mid, CsurfE3, 'gold', linewidth=ls, label='C3+')
-        plt.plot(rmrs_mid, CsurfE4, 'green', linewidth=ls, label='C4+')
-        plt.plot(rmrs_mid, CsurfE5, 'blue', linewidth=ls, label='C5+')
-        plt.plot(rmrs_mid, CsurfE6, 'purple', linewidth=ls, label='C6+')
-        plt.xlabel('D-Dsep [m]',fontsize=fs)
-        plt.ylabel('energy [eV]',fontsize=fs)
-        plt.xticks(fontsize=fs)
-        plt.yticks(fontsize=fs)
-        plt.legend(fontsize=fs)
-        plt.title('Estimate of incoming Ion Eneries along the SAS-VW Divertor',fontsize=fs)
+        plt.plot(rmrs_mid, CsurfE1, 'red', label='C1+')
+        plt.plot(rmrs_mid, CsurfE2, 'darkorange', label='C2+')
+        plt.plot(rmrs_mid, CsurfE3, 'gold', label='C3+')
+        plt.plot(rmrs_mid, CsurfE4, 'green', label='C4+')
+        plt.plot(rmrs_mid, CsurfE5, 'blue', label='C5+')
+        plt.plot(rmrs_mid, CsurfE6, 'purple', label='C6+')
+        plt.xlabel('D-Dsep [m]')
+        plt.ylabel('energy [eV]')
+        plt.xticks()
+        plt.yticks()
+        plt.legend()
+        plt.title('Estimate of incoming Ion Eneries along the SAS-VW Divertor')
         plt.savefig('plots/surf_energyest')
 
     #get sputtering yields for D0 and D1+ on W from fractal tridyn tables
@@ -227,73 +229,67 @@ def simple2D(nP, \
         print('(x,y,z) configuration not set')
 
     if plot_variables == 1:
-        ls,fs = 5, 14
-        
         plt.close()
-        plt.rcParams.update({'font.size':fs})
-        plt.plot(rmrs_mid, Cflux1, 'red', linewidth=ls, label='C1+')
-        plt.plot(rmrs_mid, Cflux2, 'darkorange', linewidth=ls, label='C2+')
-        plt.plot(rmrs_mid, Cflux3, 'gold', linewidth=ls, label='C3+')
-        plt.plot(rmrs_mid, Cflux4, 'green', linewidth=ls, label='C4+')
-        plt.plot(rmrs_mid, Cflux5, 'blue', linewidth=ls, label='C5+')
-        plt.plot(rmrs_mid, Cflux6, 'purple', linewidth=ls, label='C6+')
-        plt.xlabel('D-Dsep [m]',fontsize=fs)
-        plt.ylabel('Flux [#/m2s]',fontsize=fs)
-        plt.xticks(fontsize=fs)
-        plt.yticks(fontsize=fs)
-        plt.legend(loc='upper right', fontsize=fs)
-        plt.title('Incoming C Ion Flux',fontsize=fs)
+        plt.plot(rmrs_mid, Cflux1, 'red', label='C1+')
+        plt.plot(rmrs_mid, Cflux2, 'darkorange', label='C2+')
+        plt.plot(rmrs_mid, Cflux3, 'gold', label='C3+')
+        plt.plot(rmrs_mid, Cflux4, 'green', label='C4+')
+        plt.plot(rmrs_mid, Cflux5, 'blue', label='C5+')
+        plt.plot(rmrs_mid, Cflux6, 'purple', label='C6+')
+        plt.xlabel('D-Dsep [m]')
+        plt.ylabel('Flux [#/m2s]')
+        plt.xticks()
+        plt.yticks()
+        plt.legend(loc='upper right')
+        plt.title('Incoming C Ion Flux')
         plt.savefig('plots/surf_Cflux.png')
 
         plt.close()
-        plt.rcParams.update({'font.size':fs})
-        plt.plot(rmrs_mid, Cspyld1, 'red', linewidth=ls, label='C1+')
-        plt.plot(rmrs_mid, Cspyld2, 'darkorange', linewidth=ls, label='C2+')
-        plt.plot(rmrs_mid, Cspyld3, 'gold', linewidth=ls, label='C3+')
-        plt.plot(rmrs_mid, Cspyld4, 'green', linewidth=ls, label='C4+')
-        plt.plot(rmrs_mid, Cspyld5, 'blue', linewidth=ls, label='C5+')
-        plt.plot(rmrs_mid, Cspyld6, 'purple', linewidth=ls, label='C6+')
-        plt.xlabel('D-Dsep [m]',fontsize=fs)
-        plt.ylabel('Yield',fontsize=fs)
-        plt.xticks(fontsize=fs)
-        plt.yticks(fontsize=fs-3)
-        plt.legend(loc='upper left', fontsize=fs)
-        plt.title('Average Sputtering Yield for C on W',fontsize=fs)
+        plt.plot(rmrs_mid, Cspyld1, 'red', label='C1+')
+        plt.plot(rmrs_mid, Cspyld2, 'darkorange', label='C2+')
+        plt.plot(rmrs_mid, Cspyld3, 'gold', label='C3+')
+        plt.plot(rmrs_mid, Cspyld4, 'green', label='C4+')
+        plt.plot(rmrs_mid, Cspyld5, 'blue', label='C5+')
+        plt.plot(rmrs_mid, Cspyld6, 'purple', label='C6+')
+        plt.xlabel('D-Dsep [m]')
+        plt.ylabel('Yield')
+        plt.xticks()
+        plt.yticks(fontsize=12)
+        plt.legend(loc='upper left')
+        plt.title('Average Sputtering Yield for C on W')
         plt.savefig('plots/Cspyld.png')
         
         plt.close()
-        plt.rcParams.update({'font.size':fs})
-        plt.plot(rmrs_mid, sputt_flux1, 'red', linewidth=ls, label='C1+')
-        plt.plot(rmrs_mid, sputt_flux2, 'darkorange', linewidth=ls, label='C2+')
-        plt.plot(rmrs_mid, sputt_flux3, 'gold', linewidth=ls, label='C3+')
-        plt.plot(rmrs_mid, sputt_flux4, 'green', linewidth=ls, label='C4+')
-        plt.plot(rmrs_mid, sputt_flux5, 'blue', linewidth=ls, label='C5+')
-        plt.plot(rmrs_mid, sputt_flux6, 'purple', linewidth=ls, label='C6+')
-        plt.xlabel('D-Dsep [m]',fontsize=fs)
-        plt.ylabel('Flux [#/m2s]',fontsize=fs)
-        plt.xticks(fontsize=fs)
-        plt.yticks(fontsize=fs-3)
-        plt.legend(loc='upper left', fontsize=fs)
-        plt.title('Flux of W Sputtered off Wall',fontsize=fs)
+        plt.plot(rmrs_mid, sputt_flux1, 'red', label='C1+')
+        plt.plot(rmrs_mid, sputt_flux2, 'darkorange', label='C2+')
+        plt.plot(rmrs_mid, sputt_flux3, 'gold', label='C3+')
+        plt.plot(rmrs_mid, sputt_flux4, 'green', label='C4+')
+        plt.plot(rmrs_mid, sputt_flux5, 'blue', label='C5+')
+        plt.plot(rmrs_mid, sputt_flux6, 'purple', label='C6+')
+        plt.xlabel('D-Dsep [m]')
+        plt.ylabel('Flux [#/m2s]')
+        plt.xticks()
+        plt.yticks(fontsize=12)
+        plt.legend(loc='upper left')
+        plt.title('Flux of W Sputtered off Wall')
         plt.savefig('plots/sputt_flux_charge_dependent.png')
 
         plt.close()
-        plt.plot(rmrs_mid, area[W_ind], linewidth=ls)
-        plt.xlabel('D-Dsep [m]',fontsize=fs)
-        plt.ylabel('Area [m2]',fontsize=fs)
-        plt.xticks(fontsize=fs)
-        plt.yticks(fontsize=fs-8)
-        plt.title('Area of each line segment',fontsize=fs)
+        plt.plot(rmrs_mid, area[W_ind])
+        plt.xlabel('D-Dsep [m]')
+        plt.ylabel('Area [m2]')
+        plt.xticks()
+        plt.yticks(fontsize=7)
+        plt.title('Area of each line segment')
         plt.savefig('plots/surf_area.png')
 
         plt.close()
-        plt.rcParams.update({'font.size':fs})
-        plt.plot(rmrs_mid, sputt_flux, linewidth=ls)
-        plt.xlabel('D-Dsep [m]',fontsize=fs)
-        plt.ylabel('Flux [#/m2s]',fontsize=fs)
-        plt.xticks(fontsize=fs)
-        plt.yticks(fontsize=fs)
-        plt.title('Flux of W Sputtered off Wall',fontsize=fs)
+        plt.plot(rmrs_mid, sputt_flux)
+        plt.xlabel('D-Dsep [m]')
+        plt.ylabel('Flux [#/m2s]')
+        plt.xticks()
+        plt.yticks()
+        plt.title('Flux of W Sputtered off Wall')
         plt.savefig('plots/sputt_flux.png')
 
     #########################################
@@ -344,7 +340,7 @@ def simple2D(nP, \
     
             #convert unit vectors to vx,vy,vz
             W_kg = 183.84 * 1.6605e-27 #mass of W in kg
-            vtot = np.sqrt(E*1.6022e-19/W_kg) #convert eV to m/s
+            vtot = np.sqrt(2*E*1.6022e-19/W_kg) #convert eV to m/s
             
             vx = np.append(vx, vtot*vx_lab)
             vy = np.append(vy, vtot*vy_lab)
@@ -575,7 +571,7 @@ def get_surf_profiles(profilesFile, r1, z1, r2, z2, q, plot_variables):
 
     return rmrs_mid, SimpleEnergyEst, AngleEst
 
-
+# Fractal Trinyd Surface Sputtering Yeild
 def get_ft_spyld(surfE, surfA, ftBFile):
     #import sputtering yield tables for D0 and D1+ on W
     ftB = netCDF4.Dataset(ftBFile, "r", format="NETCDF4")

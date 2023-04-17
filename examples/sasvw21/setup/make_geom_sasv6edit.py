@@ -81,13 +81,6 @@ def V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
     print('plotting correctly-ordered line segments to solps_wall.pdf')
     plt.close()
     plot(r_final, z_final,0.1,0.1,'DIII-D SAS-VW Geometry','W wall ID',1,1,0,'b',10)
-    # plt.plot(r_final, z_final, linewidth=0.1, label='V6e_v002')
-    # plt.scatter(r_final, z_final, s=0.1)
-    # plt.axis('scaled')
-    # plt.xlabel('r [mm]')
-    # plt.ylabel('z [mm]')
-    # plt.title('DIII-D SAS-VW Geometry')
-    # plt.savefig('plots/solps_final.pdf')
 
     #define interior side of each line segment in the geometry with inDir
     inDir = np.ones(len(r_final))
@@ -109,14 +102,6 @@ def V6e_v002(gitr_geometry_filename='gitrGeometry.cfg', \
     plot(r_final[W_indices], z_final[W_indices],8,0.6,'W','W wall ID',1,1,1,'purple',14)
     plt.xticks(fontsize=fs-3)
     plt.yticks(fontsize=fs)
-    # plt.plot(r_right_target, z_right_target, '-k', label='Target', linewidth=0.5)
-    # plt.plot(r_final[W_indices], z_final[W_indices], 'purple', label='W', linewidth=0.6)
-    # plt.scatter(r_final[W_indices], z_final[W_indices], color='purple', s=8)
-    # plt.legend()
-    # plt.xlabel('r [m]')
-    # plt.ylabel('z [m]')
-    # plt.title('W Part of Outer Divertor')
-    # plt.savefig('plots/W wall ID')
 
     Z[W_indices] = 74;
     surfaces[W_indices] = 1;
