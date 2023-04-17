@@ -881,8 +881,8 @@ def make_solps_targ_coord_file(gitr_geom_filename='/Users/Alyssa/Dev/GITR/west/h
 
     np.savetxt(coords_file,A,header='r,z,r_minus_r_sep,gitr_index,x1,x2,z1,z2,xmid,zmid')
 
-def make_solps_targ_file(solps_geom = '/Users/Alyssa/Dev/WEST/baserun/b2fgmtry', \
-    b_field_file = '/Users/Alyssa/Dev/WEST/baserun/west_54034_10p2s_mag.X4.equ', \
+def make_solps_targ_file(solps_geom = '/assets/baserun/b2fgmtry', \
+    b_field_file = '/assets/west_54034_10p2s_mag.X4.equ', \
     coords_file = '/Users/Alyssa/Dev/GITR/west/helium/input/right_target_coordinates.txt', \
     right_target_filename= '/Users/Alyssa/Dev/solps-iter-data/build/rightTargOutput'):
 

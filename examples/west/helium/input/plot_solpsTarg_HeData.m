@@ -1,4 +1,4 @@
-data = table2array(readtable('/Users/Alyssa/Dev/GITR/west/helium/output/solpsTarg.txt'));
+data = table2array(readtable('../output/solpsTarg.txt'));
 
 R_minus_Rsep = data(:,1)
 r = data(:,2)
@@ -47,6 +47,6 @@ plot(R_minus_Rsep, n)
 title('Densities')
 legend({'0','1','2'})
 
-% xlabel('R - R_{sep}') % x-axis label
-% ylabel('B [Tesla]') % y-axis label
-% set(gca,'fontsize',16)
+xlabel('R - R_{sep}') % x-axis label
+ylabel('B [Tesla]') % y-axis label
+set(gca,'fontsize',16)

@@ -3,8 +3,10 @@ import shutil
 import solps
 import hpic
 import gitrParticleSource
-
-gitr.make_gitr_geometry_from_solps_west(gitr_geometry_filename = 'gitrGeometry.cfg', \
+import make_ParticleSource_WEST
+import WEST_funcs
+'''
+WEST_funcs.make_gitr_geometry_from_solps_west(gitr_geometry_filename = 'gitrGeometry.cfg', \
                                     solps_mesh_extra = 'assets/mesh.extra', \
                                     solps_geom = 'assets/b2fgmtry')
 
@@ -36,5 +38,17 @@ gitrParticleSource.particleSource2d_west(nParticles = int(1e3), \
                                     geom = 'gitrGeometry.cfg', \
                                     targFile = 'assets/rightTargOutput', \
                                     coordsFile = 'assets/right_target_coordinates.txt')
+
+make_ParticleSource_WEST.point_source(nP=int(1e3),r=2.2,z=-0.5)
+'''
+make_ParticleSource_WEST.simple2D(nP=int(1e3), \
+                                part_type = 'helium', \
+                                targFile = 'assets/rightTargOutput', \
+                                wallFile = 'assets/gitr_rz.txt', \
+                                surf_coarse = 'assets/surf_coarse.txt', \
+                                surf_ind = 'assets/surf_ind.txt', \
+                                configuration = 'random', \
+                                plot_variables = 0, \
+                                r_W = None, z_W = None, rCoarse = None, zCoarse = None, addedPoints = 0)
 
 shutil.copyfile('particleSource.nc', '../helium/input/particleSource.nc')
