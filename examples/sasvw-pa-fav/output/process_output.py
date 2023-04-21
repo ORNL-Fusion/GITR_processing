@@ -25,9 +25,10 @@ def init(W_indices = np.arange(10,24)):
     plt.rcParams.update({'lines.markersize':1})
 
     return profiles, W_indices, r_inner_target, z_inner_target, rmrs
-profiles, W_indices, R, Z, rmrs = init()
 
 def plot_gitr_gridspace():
+    profiles, W_indices, R, Z, rmrs = init()
+    
     #import vars from plasmaProfiles.nc
     gridr = profiles.variables['gridr'][:]
     gridz = profiles.variables['gridz'][:]
@@ -51,6 +52,28 @@ def plot_gitr_gridspace():
     plt.xlim(1.4,1.55)
     plt.ylim(1.05,1.25)
     return
+
+def plot_particle_source():
+    particleSource = netCDF4.Dataset("../input/particleSource.nc", "r", format="NETCDF4")
+    
+    x = particleSource.variables['x'][:]
+    y = particleSource.variables['y'][:]
+    z = particleSource.variables['z'][:]
+    
+    plt.close()
+    plt.plot(R,Z,'-k',linewidth=0.7)
+    plt.scatter(x,z,marker='_',s=8)
+    plt.axis('scaled')
+    plt.xlabel('r [m]')
+    plt.ylabel('z [m]')
+    plt.title('Spatial Particle Source \n nP='+str(len(x)))
+    plt.savefig('plots/particleSource.png')
+    
+    plt.close()
+    plt.hist(z,bins=10)
+    plt.xlabel('z [m]')
+    plt.title('Spatial Distribution in Z \n nP='+str(len(x)))
+    plt.savefig('plots/zhist.png')
 
 def plot_history2D(history_file, basic=1, continuousChargeState=0, endChargeState=0):
     history = netCDF4.Dataset(history_file, "r", format="NETCDF4")
@@ -192,32 +215,35 @@ def plot_surf_nc(pps_per_nP, \
         plt.title('GITR Predicted Cumulative Sum of \n Erosion and Redeposition Profiles')
         plt.savefig('plots/surface_cumsum.pdf')
 
-def plot_particle_source():
-    particleSource = netCDF4.Dataset("../input/particleSource.nc", "r", format="NETCDF4")
+def spectroscopy(pps_per_nP, \
+                 spec_file='spec.nc'):
     
-    x = particleSource.variables['x'][:]
-    y = particleSource.variables['y'][:]
-    z = particleSource.variables['z'][:]
+    #spec = netCDF4.Dataset(spec_file, "r", format="NETCDF4")
+    profiles, W_indices, R, Z, rmrs = init()
     
-    plt.close()
-    plt.plot(R,Z,'-k',linewidth=0.7)
-    plt.scatter(x,z,marker='_',s=8)
-    plt.axis('scaled')
-    plt.xlabel('r [m]')
-    plt.ylabel('z [m]')
-    plt.title('Spatial Particle Source \n nP='+str(len(x)))
-    plt.savefig('plots/particleSource.png')
+    #calculate the volume element of each gridcell
+    gridz = profiles.variables['gridz'][:]
+    gridr = profiles.variables['gridr'][:]
+    zz, rr = np.meshgrid(gridz,gridr)
+    dz = zz[:,1:]-zz[:,:-1]
+    dr = rr[1:,:]-rr[:-1,:]
+    r_mid = dr/2 + rr[:-1,:]
+    dV = 2 * np.pi * r_mid[:,:-1] * dr[:,:-1] * dz[:-1,:]
+    '''
+    dt = spec.variables['dt'][:]
+    nP = spec.variables['nP'][:]
+    density_unitless = spec.variables['n'][:]
     
-    plt.close()
-    plt.hist(z,bins=10)
-    plt.xlabel('z [m]')
-    plt.title('Spatial Distribution in Z \n nP='+str(len(x)))
-    plt.savefig('plots/zhist.png')
-
+    density_volumetric = pps_per_nP * (dt/nP) * (density_unitless/dV)
+    
+    plt.pcolor(gridr,gridz,density_volumetric)
+    plt.savefig('plots/spec.png')
+    '''
 
 if __name__ == "__main__":
     #init()
     #plot_gitr_gridspace()
-    plot_history2D("history.nc")
-    #plot_surf_nc(37914807680566.16, "surfaces/nP5/surf-5-6.nc")
     #plot_particle_source()
+    #plot_history2D("history.nc")
+    #plot_surf_nc(37914807680566.16, "surfaces/nP5/surf-5-6.nc")
+    spectroscopy(37914807680566.16)
