@@ -76,6 +76,7 @@ def plot_particle_source():
     plt.savefig('plots/zhist.png')
 
 def plot_history2D(history_file, basic=1, continuousChargeState=0, endChargeState=0):
+    profiles, W_indices, R, Z, rmrs = init()
     history = netCDF4.Dataset(history_file, "r", format="NETCDF4")
 
     nP = len(history.dimensions['nP'])
