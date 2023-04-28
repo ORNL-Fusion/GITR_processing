@@ -19,4 +19,5 @@ setup/__pycache__/
 *.swp
 *.pyc
 *.fig
+*:Zone.Identifier
 examples/sasvw21/LcS.nc
