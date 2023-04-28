@@ -287,11 +287,13 @@ def add_points_divertor(r_final,z_final,W_indicesCoarse,numAddedPoints):
     W_indices = np.array(range(W_indicesCoarse[0], W_indicesCoarse[-1]+numAddedPoints))
     return r_final,z_final,W_indices
 
-def make_gitr_geometry_from_solps_west(gitr_geometry_filename='gitrGeometry.cfg', \
+def make_gitr_geometry_from_solps_west(gitr_geometry_filename='gitr_geometry.cfg', \
                                                solps_rz = 'assets/solps_rz.txt', \
                                                gitr_rz = 'assets/gitr_rz.txt', \
                                                solps_mesh_extra='assets/mesh.extra', \
                                                profiles_filename = '../input/plasmaProfiles.nc', \
+                                               rmrs_fine_file = 'assets/rmrs_fine.txt', \
+                                               W_fine_file = 'assets/W_fine.txt', \
                                                numAddedPoints = 50, \
                                                solps_geom = 'assets/b2fgmtry'):
     # This program uses the solps-west mesh.extra file in combination
@@ -411,6 +413,17 @@ def make_gitr_geometry_from_solps_west(gitr_geometry_filename='gitrGeometry.cfg'
     i_a, i_b = intersection(r_final, z_final, r_right_target, z_right_target)
     Z[i_b] = 74;
     surfaces[i_b] = 1;
+    
+    #save (r_final, z_final) and W indices to a file for pulling into the particle source
+    with open(gitr_rz, 'w') as f:
+        for i in range(0,len(r_final)):
+            f.write(str(r_final[i]) +' '+ str(z_final[i]) +'\n')
+    
+    W_indices=np.append(W_indices1,W_indices2)
+    with open(W_fine_file, 'w') as f:
+        for i in range(0,len(W_indices)):
+            f.write(str(W_indices[i])+'\n')
+
     
     #populate geometry input file to GITR
     lines_to_gitr_geometry(gitr_geometry_filename+'0', lines, Z, surfaces, inDir)
