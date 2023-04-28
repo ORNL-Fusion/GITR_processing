@@ -287,24 +287,27 @@ def add_points_divertor(r_final,z_final,W_indicesCoarse,numAddedPoints):
     W_indices = np.array(range(W_indicesCoarse[0], W_indicesCoarse[-1]+numAddedPoints))
     return r_final,z_final,W_indices
 
-def make_gitr_geometry_from_solps_west(gitr_geometry_filename='gitr_geometry.cfg', \
-                                               solps_rz = 'assets/solps_rz.txt', \
-                                               gitr_rz = 'assets/gitr_rz.txt', \
-                                               solps_mesh_extra='assets/mesh.extra', \
-                                               profiles_filename = '../input/plasmaProfiles.nc', \
-                                               rmrs_fine_file = 'assets/rmrs_fine.txt', \
-                                               W_fine_file = 'assets/W_fine.txt', \
-                                               numAddedPoints = 50, \
-                                               solps_geom = 'assets/b2fgmtry'):
+def main(gitr_geometry_filename='gitr_geometry.cfg', \
+            solps_rz = 'assets/solps_rz.txt', \
+            gitr_rz = 'assets/gitr_rz.txt', \
+            solps_mesh_extra='assets/mesh.extra', \
+            profiles_filename = '../input/plasmaProfiles.nc', \
+            rmrs_fine_file = 'assets/rmrs_fine.txt', \
+            W_fine_file = 'assets/W_fine.txt', \
+            numAddedPoints = 20, \
+            solps_geom = 'assets/b2fgmtry'):
     # This program uses the solps-west mesh.extra file in combination
     # with the inner and outer (left and right) divertor target
     # coordinates which come from the solps-west-data interpolation
     # program to create a 2d geometry for GITR in which
     # the solps plasma profiles properly match the divertor target
     # geometry.
-    #
+    # 4
     # This geometry is then written to a config (cfg) file for
     # use in GITR simulation
+    
+    if numAddedPoints >= 4 and numAddedPoints <= 10:
+        sys.exit('ERROR: numAddedPoints must be greater than 10 or less than 4')
 
     #get geometry from solps
     solps_mesh = np.loadtxt(solps_mesh_extra)
@@ -383,13 +386,11 @@ def make_gitr_geometry_from_solps_west(gitr_geometry_filename='gitr_geometry.cfg
     # Increase Fineness of W Divertor Surface
     ###################################################################
     W_indicesCoarse1 = np.array(range(99,136))
-    W_indicesCoarse2 = np.array(range(139,175))
+    W_indicesCoarse2 = np.array(range(139+numAddedPoints,175+numAddedPoints))
     
     r_final,z_final,W_indices1 = add_points_divertor(r_final,z_final,W_indicesCoarse1,numAddedPoints)
     r_final,z_final,W_indices2 = add_points_divertor(r_final,z_final,W_indicesCoarse2,numAddedPoints)
-    
-    ###################################################################
-    ###################################################################
+
     
     #define interior side of each line segment in the geometry with inDir
     inDir = np.ones(len(r_final))
@@ -402,17 +403,16 @@ def make_gitr_geometry_from_solps_west(gitr_geometry_filename='gitr_geometry.cfg
     plt.plot(r_final,z_final)
     plt.savefig('plots/inDir.png')
 
-
+    #give the divertor target segments, targ_indices, a material and an interactive surface
     Z = np.zeros(len(r_final)+1)
     surfaces = np.zeros(len(r_final)+1)
-
-    i_a, i_b = intersection(r_final, z_final, r_left_target, z_left_target)
-    Z[i_b] = 74;
-    surfaces[i_b] = 1;
-
-    i_a, i_b = intersection(r_final, z_final, r_right_target, z_right_target)
-    Z[i_b] = 74;
-    surfaces[i_b] = 1;
+    
+    # define target area as tungsten
+    W_indices = np.array(range(98,135+numAddedPoints-1))
+    W_indices = np.append(W_indices,np.array(range(138+numAddedPoints,173+numAddedPoints-1)))
+    
+    Z[W_indices] = 74;
+    surfaces[W_indices] = 1;
     
     #save (r_final, z_final) and W indices to a file for pulling into the particle source
     with open(gitr_rz, 'w') as f:
@@ -434,4 +434,4 @@ def make_gitr_geometry_from_solps_west(gitr_geometry_filename='gitr_geometry.cfg
     
     
 if __name__ == "__main__":
-    make_gitr_geometry_from_solps_west()
+    main()
