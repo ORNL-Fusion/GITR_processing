@@ -59,7 +59,6 @@ def gitr_lines_from_points(r,z):
     lines[:, 3] = z[1:];
 
     tol = 1e12;
-    tol_small = 1e-12;
 
     for i in range(nPoints):
         if (lines[i, 3] - lines[i, 1]) == 0:
@@ -84,8 +83,6 @@ def lines_to_vectors(lines, inDir, filename, plt):
     x2 = lines[:, 2]
     z2 = lines[:, 3]
     slope = lines[:, 4]
-    intercept = lines[:, 5]
-    line_length = lines[:, 6]
 
     for i in range(0,len(x1)):
         if slope[i]==0: 
@@ -140,6 +137,91 @@ def removeQuotes(infile='this.cfg',outfile='that.cfg'):
     with open(infile, 'r') as f, open(outfile, 'w') as fo:
         for line in f:
             fo.write(line.replace('"', ''))
+            
+def get_target_coordinates(solps_geometry_filename):
+
+    # Get number of mesh elements in x and y (SOLPS coordinates), nx, ny.
+    # As well as the coordinates of the corners, crx, cry, 
+    # and the region number from solps_geometry_filename
+    nx, ny, crx, cry, region = read_b2f_geometry(solps_geometry_filename)
+    print('Number of SOLPS gridpoints in x: ', nx)
+    print('Number of SOLPS gridpoints in y: ', ny)
+
+    bottom_left = 0
+    bottom_right = 1
+
+    r_inner_target = crx[0,1:,bottom_right]
+    z_inner_target = cry[0,1:,bottom_right]
+    r_outer_target = crx[-1,1:,bottom_left]
+    z_outer_target = cry[-1,1:,bottom_left]
+    print('Number of inner and outer target points (should be ny-1): ',r_inner_target.size)
+    # Therefore there should be ny-2 line segments from the solps mesh to
+    # be introduced to the gitr geometry
+
+    return r_inner_target,z_inner_target, \
+           r_outer_target,z_outer_target
+
+def read_b2f_variable(solps_geometry_filename, \
+                      field_name = 'crx'):
+    f = open(solps_geometry_filename, 'r')
+    txt = f.readlines()
+    f.close()
+
+    field_start = 0
+    field_end = 0
+    found = 0
+
+    for count, line in enumerate(txt):
+        if found == 0:
+            if '*cf' in line:
+                words = line.split()
+                if words[-1] == field_name:
+                    field_start = count+1
+                    found = 1;
+        elif found == 1:
+            if '*cf' in line:
+                field_end = count
+                found = 2
+        elif found == 2:
+            break
+
+    field = [];
+    txt_list = txt[field_start:field_end]
+    for sublist in txt_list:
+        split_sublist = sublist.split()
+        for element in split_sublist:
+            field.append(element)
+
+    field = np.array(field)
+    field = field.astype(np.float)
+
+    return field
+        
+def read_b2f_geometry(solps_geometry_filename):
+    nxny = read_b2f_variable(solps_geometry_filename= solps_geometry_filename, \
+                            field_name='nx,ny')
+    nx = int(nxny[0]+2)
+    ny = int(nxny[1]+2)
+    #print('nx,ny',nx,ny)
+    crx = np.zeros((nx, ny, 4))
+    cry = np.zeros((nx, ny, 4))
+
+    crx_long = read_b2f_variable(solps_geometry_filename= solps_geometry_filename, \
+                            field_name='crx')
+    cry_long = read_b2f_variable(solps_geometry_filename= solps_geometry_filename, \
+                            field_name='cry')
+
+    for i in range(4):
+        crx[:,:,i] = np.transpose(np.reshape(crx_long[i*nx*ny:(i+1)*nx*ny],(ny,nx)))
+        cry[:,:,i] = np.transpose(np.reshape(cry_long[i*nx*ny:(i+1)*nx*ny],(ny,nx)))
+
+    #print('crx shape',crx.shape)
+    region = read_b2f_variable(solps_geometry_filename, \
+                            field_name='region')
+    #print('firstwhatever',region[0:nx*ny])
+    region = np.transpose(np.reshape(region[0:nx*ny],(ny,nx)))
+
+    return nx,ny,crx,cry,region
 
 def V4e_v004(gitr_geometry_filename='gitrGeometry4v.cfg', \
                                     solps_geomfile = 'assets/sas-vw_v004.ogr', \
@@ -291,6 +373,3 @@ def V4e_v004(gitr_geometry_filename='gitrGeometry4v.cfg', \
 
 if __name__ == "__main__":
     V4e_v004()
-
-
-

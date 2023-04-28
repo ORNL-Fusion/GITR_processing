@@ -1,4 +1,4 @@
-data = table2array(readtable('/Users/Alyssa/Dev/GITR/west/helium/output/solpsTarg.txt'));
+data = table2array(readtable('../output/solpsTarg.txt'));
 
 R_minus_Rsep = data(:,1)
 r = data(:,2)
