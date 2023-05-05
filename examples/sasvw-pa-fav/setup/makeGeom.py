@@ -298,11 +298,15 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     
     W_indices = np.array(range(23,38+numAddedPoints-1))
     
+    #find strikepoint
+    strikepoint_index = np.where(rmrsFine==0)[0]
+    
     if plot_variables:
         plt.close()
         plt.plot(r_right_target, z_right_target, '-k', label='Carbon', linewidth=0.5)
         plt.plot(r_final[W_indices], z_final[W_indices], 'violet', label='Tungsten', linewidth=0.6)
         plt.scatter(r_final[W_indices], z_final[W_indices], marker='_', color='violet', s=8)
+        plt.scatter(rSurfFine[strikepoint_index], zSurfFine[strikepoint_index], marker='x', color='dodgerblue', s=30, zorder=5)
         plt.legend()
         plt.xlabel('r [m]')
         plt.ylabel('z [m]')
@@ -337,7 +341,7 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     return
 
 if __name__ == "__main__":
-    main()
+    main(plot_variables = 1)
 
 
 

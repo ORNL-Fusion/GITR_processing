@@ -129,6 +129,8 @@ def plot_surf_nc(pps_per_nP, \
                  rmrs_fine_file='../setup/assets/rmrs_fine.txt', \
                  plot_cumsum=0):
     
+    profiles, W_indices, r_inner_target, z_inner_target, rmrs = init()
+    sep = rmrs[5]
     surface = netCDF4.Dataset(surface_file, "r", format="NETCDF4")
     #print(surface.variables['grossErosion'][:])
     
@@ -305,6 +307,7 @@ def spectroscopy(pps_per_nP, \
     plt.title('Toroidal Slice of W0 Density')
     plt.savefig('plots/spec_filterscope.png')
     
+    # in units of m-3 s-1
     fscope[np.isnan(fscope)] = 0
     print('W0 Flux Density:', np.sum(fscope))
     
@@ -315,5 +318,5 @@ if __name__ == "__main__":
     #plot_gitr_gridspace()
     #plot_particle_source()
     #plot_history2D("history.nc")
-    #plot_surf_nc(37914807680566.16, "surfaces/nP5/surf-5-6.nc")
+    #plot_surf_nc(37914807680566.16, "/Users/Alyssa/Dev/SAS-VW-Data/netcdf_data/nP5/surf-5-6.nc")
     spectroscopy(37914807680566.16)
