@@ -166,8 +166,8 @@ def point_source(nP,r,z):
 
 def get_incoming_IEADs(q, profiles, surfW, rmrsCoarse, rmrsFine):
     #extract plasma parameters at the wall indices
-    teCoarse = profiles.variables['te_inner_target'][surfW]
-    tiCoarse = profiles.variables['ti_inner_target'][surfW]
+    teCoarse = profiles.variables['te_inner_target'][:]
+    tiCoarse = profiles.variables['ti_inner_target'][:]
     
     #get temp as a function of rmrsCoarse
     fte = scii.interp1d(rmrsCoarse, teCoarse, fill_value='extrapolate')
@@ -466,7 +466,7 @@ W_fine_file = 'assets/W_fine.txt'
 ftDFile = 'assets/ftridynBackgroundD.nc'
 ftCFile = 'assets/ftridynBackgroundC.nc'
 configuration = 'random'
-plot_variables = 0
+plot_variables = 1
     
 #import wall geometry to plot over
 with open(gitr_rz, 'r') as file:
@@ -475,14 +475,19 @@ with open(gitr_rz, 'r') as file:
     
 #import W surface indices
 with open(W_fine_file, 'r') as file:
-    surfW = file.readlines()
-surfW = np.array(surfW,dtype='int')
+    W_fine = file.readlines()
+W_fine = np.array(W_fine,dtype='int')
 
 #import coarse rmrs at W surface
 profiles = netCDF4.Dataset(profiles_file)
-r_right_target = profiles.variables['r_inner_target']
-z_right_target = profiles.variables['z_inner_target']
-rmrsCoarse = profiles.variables['rmrs_inner_target'][surfW]
+r_right_target = profiles.variables['r_inner_target'][:]
+z_right_target = profiles.variables['z_inner_target'][:]
+rmrsCoarse_in = profiles.variables['rmrs_inner_target'][:]
+r_left_target = profiles.variables['r_inner_target'][:]
+z_left_target = profiles.variables['z_inner_target'][:]
+rmrsCoarse_out = profiles.variables['rmrs_outer_target'][:]
+surfW_left = np.arange(99,99+len(rmrsCoarse_out))
+surfW_right = np.arange(137,137+len(rmrsCoarse_in))
 
 #import refined rmrs at the W surface
 with open(rmrs_fine_file, 'r') as file:
@@ -507,14 +512,14 @@ z2 = Z[1:]
 
 if plot_variables==1:
     plt.close()
-    plt.plot(r_right_target, z_right_target, '-k', label='Carbon', linewidth=0.5, zorder=0)
-   # plt.plot(r_right_target[surfW], z_right_target[surfW], 'purple', label='Profiles Tungsten', linewidth=3, zorder=1)
+    plt.plot(r_right_target, z_right_target, '-r', linewidth=0.5, zorder=0)
+    # plt.plot(r_right_target[surfW], z_right_target[surfW], 'purple', label='Profiles Tungsten', linewidth=3, zorder=1)
+    plt.plot(r_left_target, z_left_target, '-b', linewidth=0.5, zorder=0)
     plt.plot(R, Z, 'violet', label='Tungsten', linewidth=0.6, zorder=2)
     plt.scatter(R, Z, marker='_', color='violet', s=8, zorder=3)
-    plt.legend()
     plt.xlabel('r [m]')
     plt.ylabel('z [m]')
-    plt.title('Upper Outer SAS-VW Divertor in DIII-D \n makeParticleSource')
+    plt.title('Divertors in West \n makeParticleSource')
     plt.savefig('plots/makePSGeom.png')
 
 slope = np.zeros(len(r1))
@@ -537,15 +542,18 @@ area = np.pi*(r1+r2)*dist
 ##############################################
 #get W/s sputtered by D, C flux to wall
 ##############################################
-
+#%%
 #get incoming ion energy and angle estimations where the integer input is z
-energyD, angleD = get_incoming_IEADs(1, profiles, surfW, rmrsCoarse, rmrsFine)
-energyC1, angleC1 = get_incoming_IEADs(1, profiles, surfW, rmrsCoarse, rmrsFine)
-energyC2, angleC2 = get_incoming_IEADs(2, profiles, surfW, rmrsCoarse, rmrsFine)
-energyC3, angleC3 = get_incoming_IEADs(3, profiles, surfW, rmrsCoarse, rmrsFine)
-energyC4, angleC4 = get_incoming_IEADs(4, profiles, surfW, rmrsCoarse, rmrsFine)
-energyC5, angleC5 = get_incoming_IEADs(5, profiles, surfW, rmrsCoarse, rmrsFine)
-energyC6, angleC6 = get_incoming_IEADs(6, profiles, surfW, rmrsCoarse, rmrsFine)
+#using outer divertor since sputtering is greatest there
+surfW_left = surfW_left[:-1]
+rmrsCoarse_out = rmrsCoarse_out[:-1]
+energyD, angleD = get_incoming_IEADs(1, profiles, surfW_left, rmrsCoarse_out, rmrsFine)
+energyC1, angleC1 = get_incoming_IEADs(1, profiles, surfW_left, rmrsCoarse_out, rmrsFine)
+energyC2, angleC2 = get_incoming_IEADs(2, profiles, surfW_left, rmrsCoarse_out, rmrsFine)
+energyC3, angleC3 = get_incoming_IEADs(3, profiles, surfW_left, rmrsCoarse_out, rmrsFine)
+energyC4, angleC4 = get_incoming_IEADs(4, profiles, surfW_left, rmrsCoarse_out, rmrsFine)
+energyC5, angleC5 = get_incoming_IEADs(5, profiles, surfW_left, rmrsCoarse_out, rmrsFine)
+energyC6, angleC6 = get_incoming_IEADs(6, profiles, surfW_left, rmrsCoarse_out, rmrsFine)
 
 if plot_variables == 1:
     plt.close()
@@ -589,21 +597,21 @@ spyldC5 = get_ft_spyld(0, energyC5, angleC5, ftCFile)
 spyldC6 = get_ft_spyld(0, energyC6, angleC6, ftCFile)
 
 #get coarse flux profile from background D, C and refine to rmrsFine
-fluxCoarseD = np.abs(profiles.variables['flux_inner_target'][1][surfW])
-fluxCoarseC1 = np.abs(profiles.variables['flux_inner_target'][3][surfW])
-fluxCoarseC2 = np.abs(profiles.variables['flux_inner_target'][4][surfW])
-fluxCoarseC3 = np.abs(profiles.variables['flux_inner_target'][5][surfW])
-fluxCoarseC4 = np.abs(profiles.variables['flux_inner_target'][6][surfW])
-fluxCoarseC5 = np.abs(profiles.variables['flux_inner_target'][7][surfW])
-fluxCoarseC6 = np.abs(profiles.variables['flux_inner_target'][8][surfW])
+fluxCoarseD = np.abs(profiles.variables['flux_inner_target'][1][surfW_left])
+fluxCoarseC1 = np.abs(profiles.variables['flux_inner_target'][3][surfW_left])
+fluxCoarseC2 = np.abs(profiles.variables['flux_inner_target'][4][surfW_left])
+fluxCoarseC3 = np.abs(profiles.variables['flux_inner_target'][5][surfW_left])
+fluxCoarseC4 = np.abs(profiles.variables['flux_inner_target'][6][surfW_left])
+fluxCoarseC5 = np.abs(profiles.variables['flux_inner_target'][7][surfW_left])
+fluxCoarseC6 = np.abs(profiles.variables['flux_inner_target'][8][surfW_left])
 
-ffluxD = scii.interp1d(rmrsCoarse,fluxCoarseD,fill_value='extrapolate')
-ffluxC1 = scii.interp1d(rmrsCoarse,fluxCoarseC1,fill_value='extrapolate')
-ffluxC2 = scii.interp1d(rmrsCoarse,fluxCoarseC2,fill_value='extrapolate')
-ffluxC3 = scii.interp1d(rmrsCoarse,fluxCoarseC3,fill_value='extrapolate')
-ffluxC4 = scii.interp1d(rmrsCoarse,fluxCoarseC4,fill_value='extrapolate')
-ffluxC5 = scii.interp1d(rmrsCoarse,fluxCoarseC5,fill_value='extrapolate')
-ffluxC6 = scii.interp1d(rmrsCoarse,fluxCoarseC6,fill_value='extrapolate')
+ffluxD = scii.interp1d(rmrsCoarse_out,fluxCoarseD,fill_value='extrapolate')
+ffluxC1 = scii.interp1d(rmrsCoarse_out,fluxCoarseC1,fill_value='extrapolate')
+ffluxC2 = scii.interp1d(rmrsCoarse_out,fluxCoarseC2,fill_value='extrapolate')
+ffluxC3 = scii.interp1d(rmrsCoarse_out,fluxCoarseC3,fill_value='extrapolate')
+ffluxC4 = scii.interp1d(rmrsCoarse_out,fluxCoarseC4,fill_value='extrapolate')
+ffluxC5 = scii.interp1d(rmrsCoarse_out,fluxCoarseC5,fill_value='extrapolate')
+ffluxC6 = scii.interp1d(rmrsCoarse_out,fluxCoarseC6,fill_value='extrapolate')
 
 fluxD = ffluxD(rmrsFine)
 fluxC1 = ffluxC1(rmrsFine)

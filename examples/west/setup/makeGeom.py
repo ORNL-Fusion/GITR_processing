@@ -293,6 +293,39 @@ def add_points_divertor(r_final,z_final,W_indicesCoarse,numAddedPoints):
     W_indices = np.array(range(W_indicesCoarse[0], W_indicesCoarse[-1]+numAddedPoints))
     return r_final,z_final,W_indices
 
+def refine_target(rSurfCoarse, zSurfCoarse, rmrsCoarse, numAddedPoints=100):
+    dist = np.sqrt((rSurfCoarse[:-1]-rSurfCoarse[1:])**2 + (zSurfCoarse[:-1]-zSurfCoarse[1:])**2)
+    totalDist = np.sum(dist)
+    addedPoints = numAddedPoints*dist/totalDist
+    print('addedPoints',addedPoints)
+    for i,v in enumerate(addedPoints): addedPoints[i] = round(v)
+    addedPoints = np.array(addedPoints,dtype='int')
+    
+    #populate rSurfFine and zSurfFine with the added points
+    rSurfFine = rSurfCoarse[0]
+    zSurfFine = zSurfCoarse[0]
+    rmrsFine = rmrsCoarse[0]
+    for i,v in enumerate(addedPoints):
+        rBegin = rSurfCoarse[i]
+        zBegin = zSurfCoarse[i]
+        rmrsBegin = rmrsCoarse[i]
+        rEnd = rSurfCoarse[i+1]
+        zEnd = zSurfCoarse[i+1]
+        rmrsEnd = rmrsCoarse[i+1]
+        dr = (rEnd-rBegin)/(v+1)
+        dz = (zEnd-zBegin)/(v+1)
+        dd = (rmrsEnd-rmrsBegin)/(v+1)
+        for j in range(1,v+1):
+            rSurfFine = np.append(rSurfFine,rSurfCoarse[i]+j*dr)
+            zSurfFine = np.append(zSurfFine,zSurfCoarse[i]+j*dz)
+            rmrsFine = np.append(rmrsFine,rmrsCoarse[i]+j*dd)
+        
+        rSurfFine = np.append(rSurfFine,rSurfCoarse[i+1])
+        zSurfFine = np.append(zSurfFine,zSurfCoarse[i+1])
+        rmrsFine = np.append(rmrsFine,rmrsCoarse[i+1])
+    
+    return rSurfFine, zSurfFine, rmrsFine
+
 def main(gitr_geometry_filename='gitr_geometry.cfg', \
             solps_rz = 'assets/solps_rz.txt', \
             gitr_rz = 'assets/gitr_rz.txt', \
@@ -394,13 +427,35 @@ def main(gitr_geometry_filename='gitr_geometry.cfg', \
     # Increase Fineness of W Divertor Surface
     ###################################################################
     
-    rmrsCoarse = profiles.variables['rmrs_inner_target'][surfW]
-    
+    rmrsCoarse_in = profiles.variables['rmrs_inner_target'][:]
+    rmrsCoarse_out = profiles.variables['rmrs_outer_target'][:]
+
+    # 1 represents outer(left) and 2 represents inner(right)
     W_indicesCoarse1 = np.array(range(99,136))
     W_indicesCoarse2 = np.array(range(139+numAddedPoints,175+numAddedPoints))
     
     r_final,z_final,W_indices1 = add_points_divertor(r_final,z_final,W_indicesCoarse1,numAddedPoints)
     r_final,z_final,W_indices2 = add_points_divertor(r_final,z_final,W_indicesCoarse2,numAddedPoints)
+    W_indicesCoarse2 = np.array(range(139,175))
+
+    #set number of added points in a line segment to be proportional to the length of the segment
+    rSurfCoarse1 = r_final[W_indicesCoarse1]
+    zSurfCoarse1 = z_final[W_indicesCoarse1]
+    rSurfCoarse2 = r_final[W_indicesCoarse2]
+    zSurfCoarse2 = z_final[W_indicesCoarse2]
+
+    rSurfFine1, zSurfFine1, rmrsFine1 = refine_target(rSurfCoarse1,zSurfCoarse1,rmrsCoarse_out,numAddedPoints)
+    rSurfFine2, zSurfFine2, rmrsFine2 = refine_target(rSurfCoarse2,zSurfCoarse2,rmrsCoarse_in,numAddedPoints)
+    
+    rmrsMid1 = (rmrsFine1[:-1]+rmrsFine1[1:])/2
+    rmrsMid2 = (rmrsFine2[:-1]+rmrsFine2[1:])/2
+    rmrsMid = np.append(rmrsMid1,rmrsMid2)
+
+    r_final, z_final = replace_line_segment(rSurfFine1, zSurfFine1, r_final, z_final)
+    r_final, z_final = replace_line_segment(rSurfFine2, zSurfFine2, r_final, z_final)
+    
+    W_indices = np.array(range(W_indicesCoarse1[0], W_indicesCoarse1[-1]+numAddedPoints))
+    W_indices = np.append(W_indices,np.array(range(W_indicesCoarse2[0], W_indicesCoarse2[-1]+numAddedPoints)))
 
     
     #define interior side of each line segment in the geometry with inDir
@@ -417,10 +472,7 @@ def main(gitr_geometry_filename='gitr_geometry.cfg', \
     #give the divertor target segments, targ_indices, a material and an interactive surface
     Z = np.zeros(len(r_final)+1)
     surfaces = np.zeros(len(r_final)+1)
-    
-    # define target area as tungsten
-    W_indices = np.array(range(98,135+numAddedPoints-1))
-    W_indices = np.append(W_indices,np.array(range(138+numAddedPoints,173+numAddedPoints-1)))
+
     
     Z[W_indices] = 74;
     surfaces[W_indices] = 1;
@@ -430,11 +482,13 @@ def main(gitr_geometry_filename='gitr_geometry.cfg', \
         for i in range(0,len(r_final)):
             f.write(str(r_final[i]) +' '+ str(z_final[i]) +'\n')
     
-    W_indices=np.append(W_indices1,W_indices2)
     with open(W_fine_file, 'w') as f:
         for i in range(0,len(W_indices)):
             f.write(str(W_indices[i])+'\n')
 
+    with open(rmrs_fine_file, 'w') as f:
+        for i in range(0,len(rmrsMid)):
+            f.write(str(rmrsMid[i]) +'\n')
     
     #populate geometry input file to GITR
     lines_to_gitr_geometry(gitr_geometry_filename+'0', lines, Z, surfaces, inDir)
