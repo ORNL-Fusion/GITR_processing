@@ -75,9 +75,12 @@ def plot_particle_source():
     plt.title('Spatial Distribution in Z \n nP='+str(len(x)))
     plt.savefig('plots/zhist.png')
 
-def plot_history2D(history_file, basic=1, continuousChargeState=0, endChargeState=0):
+def plot_history2D(history_file, basic=0, continuousChargeState=1, endChargeState=0):
     profiles, W_indices, R, Z, rmrs = init()
     history = netCDF4.Dataset(history_file, "r", format="NETCDF4")
+
+    plt.rcParams.update({'lines.linewidth':0.1})
+    plt.rcParams.update({'lines.markersize':0})
 
     nP = len(history.dimensions['nP'])
     nT = len(history.dimensions['nT'])
@@ -102,18 +105,18 @@ def plot_history2D(history_file, basic=1, continuousChargeState=0, endChargeStat
             plt.plot(x[p][:],z[p][:])
     
     if continuousChargeState==1:
-        for p in range(15,16):
+        for p in np.arange(0,nP,5):
             print(p,'out of', nP)
-            for t in range(0,nT-1):
-                plt.plot(x[p][t:t+2],z[p][t:t+2], colors[charge[p][t]])
+            for t in np.arange(0,nT,100):
+                plt.plot(x[p][t:t+100],z[p][t:t+100], colors[charge[p][t]])
 
     if endChargeState==1:
         for p in range(0,nP):
             plt.plot(x[p][:],z[p][:], colors[charge[p][-1]])
         plt.title('Particle Tracks by End Charge State')
         
-    #plt.xlim(1.43, 1.56)
-    #plt.ylim(1.07, 1.25)
+    plt.xlim(1.44, 1.51)
+    plt.ylim(1.11, 1.23)
     plt.savefig('plots/history.pdf')
     plt.close()
 
@@ -217,29 +220,95 @@ def plot_surf_nc(pps_per_nP, \
         plt.savefig('plots/surface_cumsum.pdf')
 
 def spectroscopy(pps_per_nP, \
-                 spec_file='spec.nc'):
+                 specFile='spec.nc'):
     
-    #spec = netCDF4.Dataset(spec_file, "r", format="NETCDF4")
+    spec = netCDF4.Dataset(specFile, "r", format="NETCDF4")
     profiles, W_indices, R, Z, rmrs = init()
     
-    #calculate the volume element of each gridcell
-    gridz = profiles.variables['gridz'][:]
-    gridr = profiles.variables['gridr'][:]
-    zz, rr = np.meshgrid(gridz,gridr)
-    dz = zz[:,1:]-zz[:,:-1]
-    dr = rr[1:,:]-rr[:-1,:]
-    r_mid = dr/2 + rr[:-1,:]
-    dV = 2 * np.pi * r_mid[:,:-1] * dr[:,:-1] * dz[:-1,:]
-    '''
-    dt = spec.variables['dt'][:]
-    nP = spec.variables['nP'][:]
+    gridr = spec.variables['gridR'][:]
+    gridz = spec.variables['gridZ'][:]
+    dr = gridr[1]-gridr[0]
+    dz = gridz[1]-gridz[0]
+    gridr = np.append(gridr, gridr[-1]+dr)
+    gridz = np.append(gridz, gridz[-1]+dz)
+    rr, zz = np.meshgrid(gridr,gridz)
     density_unitless = spec.variables['n'][:]
+    density_neutrals = density_unitless[0]
     
-    density_volumetric = pps_per_nP * (dt/nP) * (density_unitless/dV)
+    plt.pcolor(gridr,gridz,density_neutrals)
+    plt.axis('Scaled')
+    plt.xlabel('r [m]')
+    plt.ylabel('z [m]')
+    plt.colorbar(label='# Computational Particles')
+    plt.title('Raw W0 Spec Output form GITR')
+    plt.savefig('plots/spec_compParticles.png')
     
+    r_mid = dr/2 + rr[:-1,:]
+    dV = 2 * np.pi * r_mid[:,:-1] * dr * dz
+    density_volumetric = pps_per_nP * (density_neutrals/dV) # W m-3 * s-1
+    
+    plt.close()
+    plt.plot(R,Z)
     plt.pcolor(gridr,gridz,density_volumetric)
-    plt.savefig('plots/spec.png')
-    '''
+    plt.axis('Scaled')
+    plt.xlabel('r [m]')
+    plt.ylabel('z [m]')
+    plt.colorbar(label='\n Density [m$^{-3}$ s$^{-1}$]')
+    plt.title('Toroidally Integrated W0 Density')
+    plt.savefig('plots/spec_density.png')
+
+    filterscope_diameter = np.sqrt(2)/200
+    tokamak_circumference = 2 * np.pi * 1.4925
+    toroidal_fraction = filterscope_diameter / tokamak_circumference
+    view_fraction = toroidal_fraction * np.pi/4
+    density_sliced = view_fraction * density_volumetric
+    
+    plt.close()
+    plt.plot(R,Z)
+    line1 = -0.15*gridr + 1.4178
+    line2 = -0.2*gridr + 1.4856
+    plt.plot(gridr,line1,'orange')
+    plt.plot(gridr,line2,'orange')
+    plt.pcolor(gridr,gridz,density_sliced)
+    plt.axis('Scaled')
+    plt.xlabel('r [m]')
+    plt.ylabel('z [m]')
+    plt.colorbar(label='\n Density [m$^{-3}$ s$^{-1}$]')
+    plt.title('Toroidal Slice of W0 Density')
+    plt.savefig('plots/spec_density_sliced.png')
+    
+    rstart, rend = 45, 80
+    zstart, zend = 67, 80
+    gridr = gridr[rstart:rend]
+    gridz = gridz[zstart:zend]
+    fscope = density_sliced[zstart:zend, rstart:rend]
+    
+    fscope[np.where(fscope==0)] = 'NaN'
+    fscope[-5:-1,23:] = 'NaN'
+    fscope[-6,26:31] = 'NaN'
+    fscope[0,:] = 'NaN'
+    fscope[1,25:29] = 'NaN'
+    
+    plt.close()
+    plt.plot(R,Z)
+    line1 = -0.15*gridr + 1.4178
+    line2 = -0.2*gridr + 1.4856
+    plt.plot(gridr,line1,'orange')
+    plt.plot(gridr,line2,'orange')
+    plt.pcolor(gridr,gridz,fscope,shading='auto')
+    plt.axis('Scaled')
+    plt.xlim(gridr[0],gridr[-1])
+    plt.ylim(gridz[0],gridz[-1])
+    plt.xlabel('r [m]')
+    plt.ylabel('z [m]')
+    plt.colorbar(label='\n Density [m$^{-3}$ s$^{-1}$]')
+    plt.title('Toroidal Slice of W0 Density')
+    plt.savefig('plots/spec_filterscope.png')
+    
+    fscope[np.isnan(fscope)] = 0
+    print('W0 Flux Density:', np.sum(fscope))
+    
+    
 
 if __name__ == "__main__":
     #init()
