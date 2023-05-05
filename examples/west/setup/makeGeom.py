@@ -14,6 +14,12 @@ import netCDF4
 import matplotlib.pyplot as plt
 import io, shutil, libconf
 
+def init():
+    #set plotting style defaults
+    plt.rcParams.update({'font.size':11.5})
+    plt.rcParams.update({'lines.linewidth':1.2})
+    plt.rcParams.update({'lines.markersize':1})
+
 def replace_line_segment(x_priority, y_priority, x_base, y_base):
     x_final = x_base;
     y_final = y_base;
@@ -290,6 +296,7 @@ def add_points_divertor(r_final,z_final,W_indicesCoarse,numAddedPoints):
 def main(gitr_geometry_filename='gitr_geometry.cfg', \
             solps_rz = 'assets/solps_rz.txt', \
             gitr_rz = 'assets/gitr_rz.txt', \
+            surfW = np.append(np.arange(99,136),np.arange(139,175)), \
             solps_mesh_extra='assets/mesh.extra', \
             profiles_filename = '../input/plasmaProfiles.nc', \
             rmrs_fine_file = 'assets/rmrs_fine.txt', \
@@ -362,6 +369,7 @@ def main(gitr_geometry_filename='gitr_geometry.cfg', \
     z_right_target = profiles.variables['z_inner_target'][:]
     r_left_target = profiles.variables['r_outer_target'][:]
     z_left_target = profiles.variables['z_outer_target'][:]
+    
     r_final, z_final = replace_line_segment(r_left_target, z_left_target, r_west, z_west)
     r_final, z_final = replace_line_segment(r_right_target, z_right_target, r_final, z_final)
 
@@ -385,6 +393,9 @@ def main(gitr_geometry_filename='gitr_geometry.cfg', \
     ###################################################################
     # Increase Fineness of W Divertor Surface
     ###################################################################
+    
+    rmrsCoarse = profiles.variables['rmrs_inner_target'][surfW]
+    
     W_indicesCoarse1 = np.array(range(99,136))
     W_indicesCoarse2 = np.array(range(139+numAddedPoints,175+numAddedPoints))
     

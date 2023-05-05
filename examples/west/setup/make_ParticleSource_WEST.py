@@ -13,6 +13,12 @@ import solps
 import Particles
 import netCDF4
 
+def init():
+    #set plotting style defaults
+    plt.rcParams.update({'font.size':11.5})
+    plt.rcParams.update({'lines.linewidth':1.2})
+    plt.rcParams.update({'lines.markersize':1})
+
 def line_source(nP, \
                 bField = '../input/bField.nc', \
                 part_type = 'helium', \
@@ -83,7 +89,7 @@ def line_source(nP, \
     vzz[:] = vz
     rootgrp.close()
     
-def halfsphere_source(nP):
+def conical_source(nP):
     
     # create random points on r axis for particles
     x = np.empty(nP)
@@ -160,13 +166,14 @@ def simple2D(nP, \
             part_type = 'helium', \
             targFile = 'assets/rightTargOutput', \
             wallFile = 'assets/gitr_rz.txt', \
+            W_fine_file = 'assets/W_fine.txt', \
             surf_coarse = 'assets/surf_coarse.txt', \
             surf_ind = 'assets/surf_ind.txt', \
             configuration = 'random', \
             plot_variables = 0, \
             r_W = None, z_W = None, rCoarse = None, zCoarse = None, addedPoints = 0):
     
-    # defined here since they depend on particle type
+    # plasma and geom parameters are seperated based on particle type
     geom = '../'+part_type+'/input/gitrGeometry.cfg'
     profilesFile = '../'+part_type+'/input/profiles.nc'
         
@@ -246,7 +253,7 @@ def simple2D(nP, \
         plt.xticks(fontsize=fs)
         plt.yticks(fontsize=fs)
         plt.legend(fontsize=fs)
-        plt.title('Estimate of incoming Ion Eneries along the SAS-VW Divertor',fontsize=fs)
+        plt.title('Estimate of incoming Ion Eneries',fontsize=fs)
         plt.savefig('plots/surf_energyest')
 
     #get sputtering yields for D0 and D1+ on W from fractal tridyn tables
@@ -797,6 +804,18 @@ def get_analytic_spyld(surfE, surfA, Z1=6, M1=12, Z2=74, M2=183.84, FitParam='N'
     return Y_0
 
 
+if __name__ == "__main__":
+    init()
+    simple2D(nP=1e5, \
+            part_type = 'helium', \
+            targFile = 'assets/rightTargOutput', \
+            wallFile = 'assets/gitr_rz.txt', \
+            W_fine_file = 'assets/W_fine.txt', \
+            surf_coarse = 'assets/surf_coarse.txt', \
+            surf_ind = 'assets/surf_ind.txt', \
+            configuration = 'random', \
+            plot_variables = 1, \
+            r_W = None, z_W = None, rCoarse = None, zCoarse = None, addedPoints = 0)
 
 
 
