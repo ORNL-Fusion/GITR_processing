@@ -130,7 +130,6 @@ def plot_surf_nc(pps_per_nP, \
                  plot_cumsum=0):
     
     profiles, W_indices, r_inner_target, z_inner_target, rmrs = init()
-    sep = rmrs[5]
     surface = netCDF4.Dataset(surface_file, "r", format="NETCDF4")
     #print(surface.variables['grossErosion'][:])
     
@@ -194,6 +193,21 @@ def plot_surf_nc(pps_per_nP, \
     grossDep_cumsum = np.cumsum(grossDep)
     netEro_cumsum = np.cumsum(netEro)
     
+    #take gross erosion of a slice in the filterscope range
+    r_sp, z_sp = 1.49814916, 1.19640505
+    r_start, z_start = 1.492, 1.194
+    r_end, z_end = 1.493	, 1.187
+    rmrs_start = np.sqrt((z_start-z_sp)**2 + (r_start-r_sp)**2)
+    rmrs_end = np.sqrt((z_end-z_sp)**2 + (r_end-r_sp)**2)
+    
+    V2_grossEro = 0
+    for i,v in enumerate(rmrsFine):
+        if v >= rmrs_start and v <= rmrs_end:
+            V2_grossEro += grossEro[i]
+    
+    print('gross erosion in View 2:', V2_grossEro)
+    
+    
     plt.close()
     plt.plot(rmrsFine,grossEro,'r', label='Gross Erosion')
     plt.plot(rmrsFine,grossDep,'g', label='Redeposition')
@@ -203,6 +217,8 @@ def plot_surf_nc(pps_per_nP, \
     plt.axvline(x=rmrs[10], color='k', linestyle='dotted')
     plt.axvline(x=rmrs[11], color='k', linestyle='dotted')
     plt.axvline(x=rmrs[12], color='k', linestyle='dotted')
+    plt.axvline(x=rmrs_start, color='orange', linestyle='dashed')
+    plt.axvline(x=rmrs_end, color='orange', linestyle='dashed')
     plt.xlabel('D-Dsep [m]')
     plt.ylabel('Flux [#/m2s]')
     plt.legend()#loc='upper left')
@@ -220,6 +236,7 @@ def plot_surf_nc(pps_per_nP, \
         plt.legend(loc='upper left')
         plt.title('GITR Predicted Cumulative Sum of \n Erosion and Redeposition Profiles')
         plt.savefig('plots/surface_cumsum.pdf')
+    
 
 def spectroscopy(pps_per_nP, \
                  specFile='spec.nc'):
@@ -318,5 +335,5 @@ if __name__ == "__main__":
     #plot_gitr_gridspace()
     #plot_particle_source()
     #plot_history2D("history.nc")
-    #plot_surf_nc(37914807680566.16, "/Users/Alyssa/Dev/SAS-VW-Data/netcdf_data/nP5/surf-5-6.nc")
-    spectroscopy(37914807680566.16)
+    plot_surf_nc(37914807680566.16, "/Users/Alyssa/Dev/SAS-VW-Data/netcdf_data/nP5/surf-5-6.nc")
+    #spectroscopy(37914807680566.16)

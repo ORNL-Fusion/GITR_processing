@@ -300,6 +300,7 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     
     #find strikepoint
     strikepoint_index = np.where(rmrsFine==0)[0]
+    print('Strikepoint Coords:', rSurfFine[strikepoint_index], zSurfFine[strikepoint_index])
     
     if plot_variables:
         plt.close()
