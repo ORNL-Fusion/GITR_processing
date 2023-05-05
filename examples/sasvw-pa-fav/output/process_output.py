@@ -284,7 +284,7 @@ def spectroscopy(pps_per_nP, \
     fscope = density_sliced[zstart:zend, rstart:rend]
     
     fscope[np.where(fscope==0)] = 'NaN'
-    fscope[-5:-1,23:] = 'NaN'
+    fscope[-5:,23:] = 'NaN'
     fscope[-6,26:31] = 'NaN'
     fscope[0,:] = 'NaN'
     fscope[1,25:29] = 'NaN'
