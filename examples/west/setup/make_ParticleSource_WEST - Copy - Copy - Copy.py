@@ -163,8 +163,8 @@ def point_source(nP,r,z):
 
 def get_incoming_IEADs(q, profiles, surfW, rmrsCoarse, rmrsFine):
     #extract plasma parameters at the wall indices
-    teCoarse = profiles.variables['te_inner_target'][:]
-    tiCoarse = profiles.variables['ti_inner_target'][:]
+    teCoarse = profiles.variables['te_inner_target'][surfW]
+    tiCoarse = profiles.variables['ti_inner_target'][surfW]
     
     #get temp as a function of rmrsCoarse
     fte = scii.interp1d(rmrsCoarse, teCoarse, fill_value='extrapolate')
@@ -455,6 +455,7 @@ if __name__ == "__main__":
     
 
 nP=1e5
+surfW=np.arange(0,17)
 geom = '../input/gitrGeometry.cfg'
 profiles_file = '../input/plasmaProfiles.nc'
 gitr_rz = 'assets/gitr_rz.txt'
@@ -464,7 +465,7 @@ ftDFile = 'assets/ftridynBackgroundD.nc'
 ftCFile = 'assets/ftridynBackgroundC.nc'
 configuration = 'random'
 plot_variables = 1
-    
+
 #import wall geometry to plot over
 with open(gitr_rz, 'r') as file:
     wall = file.readlines()
@@ -481,20 +482,9 @@ W_fine = np.array(W_fine,dtype='int')
 
 #import coarse rmrs at W surface
 profiles = netCDF4.Dataset(profiles_file)
-r_right_target = profiles.variables['r_inner_target'][:]
-z_right_target = profiles.variables['z_inner_target'][:]
-rmrsCoarse_in = profiles.variables['rmrs_inner_target'][:]
-r_left_target = profiles.variables['r_inner_target'][:]
-z_left_target = profiles.variables['z_inner_target'][:]
-rmrsCoarse_out = profiles.variables['rmrs_outer_target'][:]
-surfW_left = np.arange(99,99+len(rmrsCoarse_out))
-surfW_right = np.arange(137,137+len(rmrsCoarse_in))
-
-#import refined rmrs at the W surface
-with open(rmrs_fine_file, 'r') as file:
-    rmrs_fine = file.readlines()   
-rmrsFine = np.array(rmrs_fine,dtype='float')
-
+r_right_target = profiles.variables['r_inner_target']
+z_right_target = profiles.variables['z_inner_target']
+rmrsCoarse = profiles.variables['rmrs_inner_target'][surfW]
 
 R = np.zeros(len(wall))
 Z = np.zeros(len(wall))
@@ -513,14 +503,14 @@ z2 = Z[1:]
 
 if plot_variables==1:
     plt.close()
-    plt.plot(r_right_target, z_right_target, '-r', linewidth=0.5, zorder=0)
-    # plt.plot(r_right_target[surfW], z_right_target[surfW], 'purple', label='Profiles Tungsten', linewidth=3, zorder=1)
-    plt.plot(r_left_target, z_left_target, '-b', linewidth=0.5, zorder=0)
+    plt.plot(r_right_target, z_right_target, '-k', label='Carbon', linewidth=0.5, zorder=0)
+   # plt.plot(r_right_target[surfW], z_right_target[surfW], 'purple', label='Profiles Tungsten', linewidth=3, zorder=1)
     plt.plot(R, Z, 'violet', label='Tungsten', linewidth=0.6, zorder=2)
     plt.scatter(R, Z, marker='_', color='violet', s=8, zorder=3)
+    plt.legend()
     plt.xlabel('r [m]')
     plt.ylabel('z [m]')
-    plt.title('Divertors in West \n makeParticleSource')
+    plt.title('Upper Outer SAS-VW Divertor in DIII-D \n makeParticleSource')
     plt.savefig('plots/makePSGeom.png')
 
 slope = np.zeros(len(r1))
@@ -545,28 +535,11 @@ area = np.pi*(r1+r2)*dist
 ##############################################
 
 #get incoming ion energy and angle estimations where the integer input is z
-#using outer divertor since sputtering is greatest there
-
-# include helium
-surfW_left = surfW_left[:-1]
-rmrsCoarse_out = rmrsCoarse_out[:-1]
-energyD, angleD = get_incoming_IEADs(1, profiles, surfW_left, rmrsCoarse_out, rmrsFine)
-energyC1, angleC1 = get_incoming_IEADs(1, profiles, surfW_left, rmrsCoarse_out, rmrsFine)
-energyC2, angleC2 = get_incoming_IEADs(2, profiles, surfW_left, rmrsCoarse_out, rmrsFine)
-energyC3, angleC3 = get_incoming_IEADs(3, profiles, surfW_left, rmrsCoarse_out, rmrsFine)
-energyC4, angleC4 = get_incoming_IEADs(4, profiles, surfW_left, rmrsCoarse_out, rmrsFine)
-energyC5, angleC5 = get_incoming_IEADs(5, profiles, surfW_left, rmrsCoarse_out, rmrsFine)
-energyC6, angleC6 = get_incoming_IEADs(6, profiles, surfW_left, rmrsCoarse_out, rmrsFine)
+energyD, angleD = get_incoming_IEADs(1, profiles, surfW, rmrsCoarse, rmrsFine)
 
 if plot_variables == 1:
     plt.close()
     plt.plot(rmrsFine, energyD, 'black', label='D1+')
-    plt.plot(rmrsFine, energyC1, 'red', label='C1+')
-    plt.plot(rmrsFine, energyC2, 'darkorange', label='C2+')
-    plt.plot(rmrsFine, energyC3, 'gold', label='C3+')
-    plt.plot(rmrsFine, energyC4, 'green', label='C4+')
-    plt.plot(rmrsFine, energyC5, 'blue', label='C5+')
-    plt.plot(rmrsFine, energyC6, 'purple', label='C6+')
     plt.plot(rmrsFine, 45.3362*np.ones(len(rmrsFine)), 'gray', label='W Eth')
     plt.legend()
     plt.xlabel('D-Dsep [m]')
@@ -575,13 +548,7 @@ if plot_variables == 1:
     plt.savefig('plots/particle-source/incident_energy')
     
     plt.close()
-    plt.plot(rmrsFine, angleD, 'black', label='D1+')
-    plt.plot(rmrsFine, angleC1, 'red', label='C1+')
-    plt.plot(rmrsFine, angleC2, 'darkorange', label='C2+')
-    plt.plot(rmrsFine, angleC3, 'gold', label='C3+')
-    plt.plot(rmrsFine, angleC4, 'green', label='C4+')
-    plt.plot(rmrsFine, angleC5, 'blue', label='C5+')
-    plt.plot(rmrsFine, angleC6, 'purple', label='C6+')        
+    plt.plot(rmrsFine, angleD, 'black', label='D1+')      
     plt.legend()
     plt.xlabel('z [m]')
     plt.ylabel('angle [degrees]')
@@ -591,48 +558,20 @@ if plot_variables == 1:
 
 #get sputtering yields for D0 and D1+ on W from fractal tridyn tables
 #Cspyld = get_ft_spyld(CsurfE, CsurfA, ftCFile)[0]
-spyldD = get_ft_spyld(1, energyD, angleD, ftDFile) #file input includes He, which we aren't using
-spyldC1 = get_ft_spyld(0, energyC1, angleC1, ftCFile)
-spyldC2 = get_ft_spyld(0, energyC2, angleC2, ftCFile)
-spyldC3 = get_ft_spyld(0, energyC3, angleC3, ftCFile)
-spyldC4 = get_ft_spyld(0, energyC4, angleC4, ftCFile)
-spyldC5 = get_ft_spyld(0, energyC5, angleC5, ftCFile)
-spyldC6 = get_ft_spyld(0, energyC6, angleC6, ftCFile)
+spyldD = get_ft_spyld(2, energyD, angleD, ftDFile) #file input includes He, which we aren't using
+
 
 #get coarse flux profile from background D, C and refine to rmrsFine
-fluxCoarseD = np.abs(profiles.variables['flux_inner_target'][1][surfW_left])
-fluxCoarseC1 = np.abs(profiles.variables['flux_inner_target'][3][surfW_left])
-fluxCoarseC2 = np.abs(profiles.variables['flux_inner_target'][4][surfW_left])
-fluxCoarseC3 = np.abs(profiles.variables['flux_inner_target'][5][surfW_left])
-fluxCoarseC4 = np.abs(profiles.variables['flux_inner_target'][6][surfW_left])
-fluxCoarseC5 = np.abs(profiles.variables['flux_inner_target'][7][surfW_left])
-fluxCoarseC6 = np.abs(profiles.variables['flux_inner_target'][8][surfW_left])
+fluxCoarseD = np.abs(profiles.variables['flux_inner_target'][1][surfW])
 
-ffluxD = scii.interp1d(rmrsCoarse_out,fluxCoarseD,fill_value='extrapolate')
-ffluxC1 = scii.interp1d(rmrsCoarse_out,fluxCoarseC1,fill_value='extrapolate')
-ffluxC2 = scii.interp1d(rmrsCoarse_out,fluxCoarseC2,fill_value='extrapolate')
-ffluxC3 = scii.interp1d(rmrsCoarse_out,fluxCoarseC3,fill_value='extrapolate')
-ffluxC4 = scii.interp1d(rmrsCoarse_out,fluxCoarseC4,fill_value='extrapolate')
-ffluxC5 = scii.interp1d(rmrsCoarse_out,fluxCoarseC5,fill_value='extrapolate')
-ffluxC6 = scii.interp1d(rmrsCoarse_out,fluxCoarseC6,fill_value='extrapolate')
+ffluxD = scii.interp1d(rmrsCoarse,fluxCoarseD,fill_value='extrapolate')
 
 fluxD = ffluxD(rmrsFine)
-fluxC1 = ffluxC1(rmrsFine)
-fluxC2 = ffluxC2(rmrsFine)
-fluxC3 = ffluxC3(rmrsFine)
-fluxC4 = ffluxC4(rmrsFine)
-fluxC5 = ffluxC5(rmrsFine)
-fluxC6 = ffluxC6(rmrsFine)
+
 
 #multiply incoming ion flux by Y_s to get sputtered W flux by each species
 sputt_fluxD = spyldD*fluxD
-sputt_fluxC1 = spyldC1*fluxC1
-sputt_fluxC2 = spyldC2*fluxC2
-sputt_fluxC3 = spyldC3*fluxC3
-sputt_fluxC4 = spyldC4*fluxC4
-sputt_fluxC5 = spyldC5*fluxC5
-sputt_fluxC6 = spyldC6*fluxC6
-sputt_flux = sputt_fluxD + sputt_fluxC1 + sputt_fluxC2 + sputt_fluxC3 + sputt_fluxC4 + sputt_fluxC5 + sputt_fluxC6
+sputt_flux = sputt_fluxD
 print('SPUTT FLUX',len(sputt_flux),'\n',sputt_flux)
 
 #multiply by area to get the outgoing particles per second
@@ -642,12 +581,6 @@ pps_weights = nP*pps/np.sum(pps)
 if plot_variables == 1:        
     plt.close()
     plt.plot(rmrsFine, fluxD, 'black', label='D1+')
-    plt.plot(rmrsFine, fluxC1, 'red', label='C1+')
-    plt.plot(rmrsFine, fluxC2, 'darkorange', label='C2+')
-    plt.plot(rmrsFine, fluxC3, 'gold', label='C3+')
-    plt.plot(rmrsFine, fluxC4, 'green', label='C4+')
-    plt.plot(rmrsFine, fluxC5, 'blue', label='C5+')
-    plt.plot(rmrsFine, fluxC6, 'purple', label='C6+')
     plt.yscale('log')
     plt.xlabel('D-Dsep [m]')
     plt.ylabel('Flux [#/m2s]')
@@ -657,12 +590,6 @@ if plot_variables == 1:
 
     plt.close()
     plt.plot(rmrsFine, spyldD, 'black', label='D1+')
-    plt.plot(rmrsFine, spyldC1, 'red', label='C1+')
-    plt.plot(rmrsFine, spyldC2, 'darkorange', label='C2+')
-    plt.plot(rmrsFine, spyldC3, 'gold', label='C3+')
-    plt.plot(rmrsFine, spyldC4, 'green', label='C4+')
-    plt.plot(rmrsFine, spyldC5, 'blue', label='C5+')
-    plt.plot(rmrsFine, spyldC6, 'purple', label='C6+')
     plt.legend()
     plt.xlabel('D-Dsep [m]')
     plt.ylabel('Sputtering Yield')
@@ -671,12 +598,6 @@ if plot_variables == 1:
     
     plt.close()
     plt.plot(rmrsFine, sputt_fluxD, 'black', label='D1+')
-    plt.plot(rmrsFine, sputt_fluxC1, 'red', label='C1+')
-    plt.plot(rmrsFine, sputt_fluxC2, 'darkorange', label='C2+')
-    plt.plot(rmrsFine, sputt_fluxC3, 'gold', label='C3+')
-    plt.plot(rmrsFine, sputt_fluxC4, 'green', label='C4+')
-    plt.plot(rmrsFine, sputt_fluxC5, 'blue', label='C5+')
-    plt.plot(rmrsFine, sputt_fluxC6, 'purple', label='C6+')
     plt.xlabel('D-Dsep [m]')
     plt.ylabel('Flux [#/m2s]')
     plt.legend(loc='upper left')
@@ -753,7 +674,7 @@ else:
 #########################################
 
 #use PyGITR to set up vx,vy,vz,E,theta,psi distributions
-PartDist = Particles.ParticleDistribution(nP, ListAttr=['vx','vy','vz'])
+PartDist = ParticleDistribution(nP, ListAttr=['vx','vy','vz'])
 
 vx = np.zeros(1)
 vy = np.zeros(1)
@@ -852,10 +773,3 @@ vxx[:] = vx
 vyy[:] = vy
 vzz[:] = vz
 rootgrp.close()
-
-
-
-
-
-
-

@@ -454,6 +454,7 @@ def main(gitr_geometry_filename='gitr_geometry.cfg', \
     r_final, z_final = replace_line_segment(rSurfFine1, zSurfFine1, r_final, z_final)
     r_final, z_final = replace_line_segment(rSurfFine2, zSurfFine2, r_final, z_final)
     
+    W_indicesCoarse2 = np.array(range(139+numAddedPoints,175+numAddedPoints))
     W_indices = np.array(range(W_indicesCoarse1[0], W_indicesCoarse1[-1]+numAddedPoints))
     W_indices = np.append(W_indices,np.array(range(W_indicesCoarse2[0], W_indicesCoarse2[-1]+numAddedPoints)))
 
