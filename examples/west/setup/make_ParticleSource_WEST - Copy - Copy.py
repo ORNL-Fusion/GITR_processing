@@ -542,9 +542,11 @@ area = np.pi*(r1+r2)*dist
 ##############################################
 #get W/s sputtered by D, C flux to wall
 ##############################################
-#%%
+
 #get incoming ion energy and angle estimations where the integer input is z
 #using outer divertor since sputtering is greatest there
+
+# include helium
 surfW_left = surfW_left[:-1]
 rmrsCoarse_out = rmrsCoarse_out[:-1]
 energyD, angleD = get_incoming_IEADs(1, profiles, surfW_left, rmrsCoarse_out, rmrsFine)
