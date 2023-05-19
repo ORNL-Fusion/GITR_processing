@@ -201,6 +201,7 @@ def distributed_source(nP, surfW=np.arange(10,24), \
     fluxC4 = ffluxC4(rmrsFine)
     fluxC5 = ffluxC5(rmrsFine)
     fluxC6 = ffluxC6(rmrsFine)
+    fluxC = fluxC1 + fluxC2 + fluxC3 + fluxC4 + fluxC5 + fluxC6
 
     #multiply incoming ion flux by Y_s to get sputtered W flux by each species
     sputt_fluxD = spyldD*fluxD
@@ -212,6 +213,7 @@ def distributed_source(nP, surfW=np.arange(10,24), \
     sputt_fluxC6 = spyldC6*fluxC6
     sputt_flux = sputt_fluxD + sputt_fluxC1 + sputt_fluxC2 + sputt_fluxC3 + sputt_fluxC4 + sputt_fluxC5 + sputt_fluxC6
     print('SPUTT FLUX',len(sputt_flux),'\n',sputt_flux)
+    print('Total C Flux to the Surface:', np.sum(fluxC), 'm-2 s-1')
     print('W eroded flux per nP:', np.sum(sputt_flux)/nP, 'm-2 s-1')
 
 

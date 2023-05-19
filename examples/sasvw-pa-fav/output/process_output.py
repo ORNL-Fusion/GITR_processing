@@ -183,63 +183,85 @@ def plot_surf_nc(pps_per_nP, \
     print(grossEro)
     grossDep = (surface.variables['grossDeposition'][:])
     print(grossDep)
-    netEro = (grossEro-grossDep)
+    netDep = (grossDep-grossEro)
     
     print('total gross eroded comp particles',sum(grossEro))
     print('total redeposited comp particles',sum(grossDep))
-    print('total net eroded comp particles',sum(netEro))
-    print('ghost cells',grossEro[-1],grossDep[-1],netEro[-1])
+    print('total net deposited comp particles',sum(netDep))
+    print('ghost cells',grossEro[-1],grossDep[-1],netDep[-1])
     
     #grossEro = np.average([grossEro[:-1], grossEro[1:]],axis=0)*pps_per_nP/area
     #grossDep = np.average([grossDep[:-1], grossDep[1:]],axis=0)*pps_per_nP/area
     grossEro = grossEro[:-1]*pps_per_nP/area
     grossDep = grossDep[:-1]*pps_per_nP/area
-    netEro = netEro[:-1]*pps_per_nP/area
+    netDep = netDep[:-1]*pps_per_nP/area
     
     print('rmrs length',len(rmrsFine))
     print('surf length',len(grossEro))
     print('total gross eroded flux',sum(grossEro))
     print('total redeposited flux',sum(grossDep))
-    print('total net eroded flux',sum(netEro))
+    print('total net deposited flux',sum(netDep))
+    
+    fluxC = 2.22351742230795e22
+    grossEro_norm = grossEro/fluxC
+    grossDep_norm = grossDep/fluxC
+    netDep_norm = netDep/fluxC
     
     grossEro_cumsum = np.cumsum(grossEro)
     grossDep_cumsum = np.cumsum(grossDep)
-    netEro_cumsum = np.cumsum(netEro)
+    netDep_cumsum = np.cumsum(netDep)
     
     #take gross erosion of a slice in the filterscope range
     r_sp, z_sp = 1.49814916, 1.19640505
-    r_start, z_start = 1.490, 1.1552
-    r_end, z_end = 1.493	, 1.162
-    rmrs_start = np.sqrt((z_start-z_sp)**2 + (r_start-r_sp)**2)
-    rmrs_end = np.sqrt((z_end-z_sp)**2 + (r_end-r_sp)**2)
     
-    V2_grossEro = 0
-    V2_area = 0
+    r1_start, z1_start = 1.491288, 1.21629
+    r1_end, z1_end = 1.49274, 1.22149
+    rmrs1_start = -1*np.sqrt((z1_start-z_sp)**2 + (r1_start-r_sp)**2)
+    rmrs1_end = -1*np.sqrt((z1_end-z_sp)**2 + (r1_end-r_sp)**2)
+    
+    r3_start, z3_start = 1.493556, 1.16204
+    r3_end, z3_end = 1.490536, 1.1552 
+    rmrs3_start = np.sqrt((z3_start-z_sp)**2 + (r3_start-r_sp)**2)
+    rmrs3_end = np.sqrt((z3_end-z_sp)**2 + (r3_end-r_sp)**2)
+    
+    V1_grossEro = 0
+    V1_area = 0
+    V3_grossEro = 0
+    V3_area = 0
     for i,v in enumerate(rmrsFine):
-        if v >= rmrs_start and v <= rmrs_end:
-            V2_grossEro += grossEro[i] * (rmrsFine[i+1] - rmrsFine[i])
-            V2_area += rmrsFine[i+1] - rmrsFine[i]
-    #V2_grossEro = V2_grossEro / V2_area
+        if v >= rmrs1_end and v <= rmrs1_start:
+            V1_grossEro += grossEro[i] * (rmrsFine[i+1] - rmrsFine[i])
+            V1_area += rmrsFine[i+1] - rmrsFine[i]
+        elif v >= rmrs3_start and v <= rmrs3_end:
+            V3_grossEro += grossEro[i] * (rmrsFine[i+1] - rmrsFine[i])
+            V3_area += rmrsFine[i+1] - rmrsFine[i]
+    V1_grossEro = V1_grossEro / V1_area
+    V3_grossEro = V3_grossEro / V3_area
     
-    print('gross erosion in View 2:', V2_grossEro)
+    print('gross erosion in View 1:', V1_grossEro)
+    print('gross erosion in View 3:', V3_grossEro)
     
+    plt.rcParams.update({'font.size':16})
+    plt.rcParams.update({'lines.linewidth':3}) 
     
     plt.close()
-    plt.plot(rmrsFine,grossEro,'r', label='Gross Erosion')
-    plt.plot(rmrsFine,grossDep,'g', label='Redeposition')
-    plt.plot(rmrsFine,netEro,'k', label='Net Erosion')
     plt.plot(rmrsFine,np.zeros(len(rmrsFine)),'gray')
-    
-    plt.axvline(x=rmrs_start, color='orange', linestyle='dashed', label='Spec View 2')
-    plt.axvline(x=rmrs_end, color='orange', linestyle='dashed')
-    
-    plt.axvline(x=rmrs[4], color='k', linestyle='dotted', label='Change in \n B-Field Angle')
+    plt.axvline(x=rmrs[4], color='k', linestyle='dotted', label='\u0394\u03A8$_B$')
     plt.axvline(x=rmrs[10], color='k', linestyle='dotted')
     plt.axvline(x=rmrs[11], color='k', linestyle='dotted')
     plt.axvline(x=rmrs[12], color='k', linestyle='dotted')
+    plt.axvline(x=rmrs1_start, color='lightsalmon', linestyle='dashed', label='Spec View 1')
+    plt.axvline(x=rmrs1_end, color='lightsalmon', linestyle='dashed')
+    plt.axvline(x=rmrs3_start, color='chocolate', linestyle='dashed', label='Spec View 3')
+    plt.axvline(x=rmrs3_end, color='chocolate', linestyle='dashed')
+    
+    plt.plot(rmrsFine,grossEro_norm,'r', label='Gross Erosion')
+    plt.plot(rmrsFine,grossDep_norm,'g', label='Redeposition')
+    plt.plot(rmrsFine,netDep_norm,'k', label='Net Deposition')
     
     plt.xlabel('D-Dsep [m]')
-    plt.ylabel('Flux [#/m2s]')
+    plt.ylabel('\u0393$_{W,outgoing}$ / \u0393$_{C,incoming}$')
+    plt.ticklabel_format(axis='y',style='sci',scilimits=(-2,2))
     plt.legend(fontsize=10)#loc='upper left')
     plt.title('GITR Predicted Erosion and \n Redeposition Profiles, nP=1e6, nT=1e6')
     plt.savefig('plots/surface.png')
@@ -248,12 +270,12 @@ def plot_surf_nc(pps_per_nP, \
         plt.close()
         plt.plot(rmrsFine,grossEro_cumsum,'r', label='Gross Erosion')
         plt.plot(rmrsFine,grossDep_cumsum,'g', label='Redeposition')
-        plt.plot(rmrsFine,netEro_cumsum,'k', label='Net Erosion')
+        plt.plot(rmrsFine,netDep_cumsum,'k', label='Net Erosion')
         plt.yscale('log')
         plt.xlabel('D-Dsep [m]')
-        plt.ylabel('Flux [#/m2s]')
+        plt.ylabel('Flux [m$^{-2}$s$^{-1}$]')
         plt.legend(loc='upper left')
-        plt.title('GITR Predicted Cumulative Sum of \n Erosion and Redeposition Profiles')
+        plt.title('GITR Predicted Cumulative Sum of \n Erosion and Redeposition Profiles',fontsize=20)
         plt.savefig('plots/surface_cumsum.pdf')
     
 
@@ -363,7 +385,7 @@ if __name__ == "__main__":
     #init()
     #plot_gitr_gridspace()
     #plot_particle_source()
-    plot_history2D("../../../../GITR/scratch/output/history.nc")
-    #plot_surf_nc(3791480768056.615, "surfaceP6T6.nc")
+    #plot_history2D("../../../../GITR/scratch/output/history.nc")
+    plot_surf_nc(3791480768056.615, "surfaceP6T6.nc")
     #plot_surf_nc(37914807680566.16, "/Users/Alyssa/Dev/SAS-VW-Data/netcdf_data/nP5/surf-5-6.nc")
     #spectroscopy(3791480768056.615,specFile='specP6T6.nc')
