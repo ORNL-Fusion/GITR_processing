@@ -54,6 +54,7 @@ def plot_gitr_gridspace():
     return
 
 def plot_particle_source():
+    profiles, W_indices, R, Z, rmrs = init()
     particleSource = netCDF4.Dataset("../input/particleSource.nc", "r", format="NETCDF4")
     
     x = particleSource.variables['x'][:]
@@ -115,8 +116,8 @@ def plot_history2D(history_file, basic=0, continuousChargeState=1, endChargeStat
             plt.plot(x[p][:],z[p][:], colors[charge[p][-1]])
         plt.title('Particle Tracks by End Charge State')
         
-    plt.xlim(1.44, 1.51)
-    plt.ylim(1.11, 1.23)
+    plt.xlim(1.3, 1.6)
+    plt.ylim(1, 1.3)
     plt.savefig('plots/history.pdf')
     plt.close()
 
@@ -195,15 +196,18 @@ def plot_surf_nc(pps_per_nP, \
     
     #take gross erosion of a slice in the filterscope range
     r_sp, z_sp = 1.49814916, 1.19640505
-    r_start, z_start = 1.492, 1.194
-    r_end, z_end = 1.493	, 1.187
+    r_start, z_start = 1.490, 1.1552
+    r_end, z_end = 1.493	, 1.162
     rmrs_start = np.sqrt((z_start-z_sp)**2 + (r_start-r_sp)**2)
     rmrs_end = np.sqrt((z_end-z_sp)**2 + (r_end-r_sp)**2)
     
     V2_grossEro = 0
+    V2_area = 0
     for i,v in enumerate(rmrsFine):
         if v >= rmrs_start and v <= rmrs_end:
-            V2_grossEro += grossEro[i]
+            V2_grossEro += grossEro[i] * (rmrsFine[i+1] - rmrsFine[i])
+            V2_area += rmrsFine[i+1] - rmrsFine[i]
+    #V2_grossEro = V2_grossEro / V2_area
     
     print('gross erosion in View 2:', V2_grossEro)
     
@@ -213,16 +217,19 @@ def plot_surf_nc(pps_per_nP, \
     plt.plot(rmrsFine,grossDep,'g', label='Redeposition')
     plt.plot(rmrsFine,netEro,'k', label='Net Erosion')
     plt.plot(rmrsFine,np.zeros(len(rmrsFine)),'gray')
-    plt.axvline(x=rmrs[4], color='k', linestyle='dotted')
+    
+    plt.axvline(x=rmrs_start, color='orange', linestyle='dashed', label='Spec View 2')
+    plt.axvline(x=rmrs_end, color='orange', linestyle='dashed')
+    
+    plt.axvline(x=rmrs[4], color='k', linestyle='dotted', label='Change in \n B-Field Angle')
     plt.axvline(x=rmrs[10], color='k', linestyle='dotted')
     plt.axvline(x=rmrs[11], color='k', linestyle='dotted')
     plt.axvline(x=rmrs[12], color='k', linestyle='dotted')
-    plt.axvline(x=rmrs_start, color='orange', linestyle='dashed')
-    plt.axvline(x=rmrs_end, color='orange', linestyle='dashed')
+    
     plt.xlabel('D-Dsep [m]')
     plt.ylabel('Flux [#/m2s]')
-    plt.legend()#loc='upper left')
-    plt.title('GITR Predicted Erosion and \n Redeposition Profiles, nP=1e5, nT=1e6')
+    plt.legend(fontsize=10)#loc='upper left')
+    plt.title('GITR Predicted Erosion and \n Redeposition Profiles, nP=1e6, nT=1e6')
     plt.savefig('plots/surface.png')
     
     if plot_cumsum:
@@ -238,7 +245,7 @@ def plot_surf_nc(pps_per_nP, \
         plt.savefig('plots/surface_cumsum.pdf')
     
 
-def spectroscopy(pps_per_nP, \
+def spectroscopy(pps_per_nP, View=3, \
                  specFile='spec.nc'):
     
     spec = netCDF4.Dataset(specFile, "r", format="NETCDF4")
@@ -253,6 +260,7 @@ def spectroscopy(pps_per_nP, \
     rr, zz = np.meshgrid(gridr,gridz)
     density_unitless = spec.variables['n'][:]
     density_neutrals = density_unitless[0]
+    #density_neutrals = np.sum(density_unitless, axis=0)
     
     plt.pcolor(gridr,gridz,density_neutrals)
     plt.axis('Scaled')
@@ -262,78 +270,88 @@ def spectroscopy(pps_per_nP, \
     plt.title('Raw W0 Spec Output form GITR')
     plt.savefig('plots/spec_compParticles.png')
     
+    filterscope_diameter = 0.00702068
+    tokamak_circumference = 2 * np.pi * 1.4925
+    toroidal_fraction = filterscope_diameter / tokamak_circumference
+    
     r_mid = dr/2 + rr[:-1,:]
-    dV = 2 * np.pi * r_mid[:,:-1] * dr * dz
-    density_volumetric = pps_per_nP * (density_neutrals/dV) # W m-3 * s-1
+    dV = 2 * np.pi * r_mid[:,:-1] * dr * dz * toroidal_fraction
+    # dA = np.pi * (0.00702068/2)**2
+    density_volumetric = pps_per_nP * (density_neutrals/dV) * 1e-8 * 3e3 # W0 m-2 s-1
+    #neutral_flux = density_volumetric * 3e3 # W0 m-2 s-1
+    #print('TESTTT',neutral_flux)
     
     plt.close()
     plt.plot(R,Z)
     plt.pcolor(gridr,gridz,density_volumetric)
     plt.axis('Scaled')
+    plt.xlim(min(R),max(R))
+    plt.ylim(min(Z),max(Z))
     plt.xlabel('r [m]')
     plt.ylabel('z [m]')
     plt.colorbar(label='\n Density [m$^{-3}$ s$^{-1}$]')
     plt.title('Toroidally Integrated W0 Density')
     plt.savefig('plots/spec_density.png')
 
-    filterscope_diameter = np.sqrt(2)/200
-    tokamak_circumference = 2 * np.pi * 1.4925
-    toroidal_fraction = filterscope_diameter / tokamak_circumference
     view_fraction = toroidal_fraction * np.pi/4
     density_sliced = view_fraction * density_volumetric
     
-    plt.close()
-    plt.plot(R,Z)
-    line1 = -0.15*gridr + 1.4178
-    line2 = -0.2*gridr + 1.4856
-    plt.plot(gridr,line1,'orange')
-    plt.plot(gridr,line2,'orange')
-    plt.pcolor(gridr,gridz,density_sliced)
-    plt.axis('Scaled')
-    plt.xlabel('r [m]')
-    plt.ylabel('z [m]')
-    plt.colorbar(label='\n Density [m$^{-3}$ s$^{-1}$]')
-    plt.title('Toroidal Slice of W0 Density')
-    plt.savefig('plots/spec_density_sliced.png')
+    if View==3:
+        line1 = -0.97*gridr + 2.600823
+        line2 = -0.906*gridr + 2.515464
+        
+        if True:
+            plt.close()
+            plt.plot(R,Z)
+            plt.plot(gridr,line1,'orange')
+            plt.plot(gridr,line2,'orange')
+            plt.pcolor(gridr,gridz,density_sliced)
+            plt.axis('Scaled')
+            plt.xlim(gridr[0],gridr[-1])
+            plt.ylim(gridz[0],gridz[-1])
+            plt.xlabel('r [m]')
+            plt.ylabel('z [m]')
+            plt.colorbar(label='\n Density [m$^{-3}$ s$^{-1}$]')
+            plt.title('Toroidal Slice of W0 Density')
+            plt.savefig('plots/spec_density_sliced.png')
+        
+        rstart, rend = 39, 72
+        zstart, zend = 40, 80
+        gridr = gridr[rstart:rend]
+        gridz = gridz[zstart:zend]
+        fscope = density_sliced[zstart:zend, rstart:rend]
+        
+        fscope[np.where(fscope==0)] = 'NaN'
+        #fscope[-5:,23:] = 'NaN'
     
-    rstart, rend = 45, 80
-    zstart, zend = 67, 80
-    gridr = gridr[rstart:rend]
-    gridz = gridz[zstart:zend]
-    fscope = density_sliced[zstart:zend, rstart:rend]
+        line1 = -0.97*gridr + 2.600823
+        line2 = -0.906*gridr + 2.515464
+        
+        if True:
+            plt.close()
+            plt.plot(R,Z)
+            line1 = -0.97*gridr + 2.600823
+            line2 = -0.906*gridr + 2.515464    
+            plt.plot(gridr,line1,'orange')
+            plt.plot(gridr,line2,'orange')
+            plt.pcolor(gridr,gridz,fscope,shading='auto')
+            plt.axis('Scaled')
+            plt.xlim(gridr[0],gridr[-1])
+            plt.ylim(gridz[0],gridz[-1])
+            plt.xlabel('r [m]')
+            plt.ylabel('z [m]')
+            plt.colorbar(label='\n Density [m$^{-3}$ s$^{-1}$]')
     
-    fscope[np.where(fscope==0)] = 'NaN'
-    fscope[-5:,23:] = 'NaN'
-    fscope[-6,26:31] = 'NaN'
-    fscope[0,:] = 'NaN'
-    fscope[1,25:29] = 'NaN'
-    
-    plt.close()
-    plt.plot(R,Z)
-    line1 = -0.15*gridr + 1.4178
-    line2 = -0.2*gridr + 1.4856
-    plt.plot(gridr,line1,'orange')
-    plt.plot(gridr,line2,'orange')
-    plt.pcolor(gridr,gridz,fscope,shading='auto')
-    plt.axis('Scaled')
-    plt.xlim(gridr[0],gridr[-1])
-    plt.ylim(gridz[0],gridz[-1])
-    plt.xlabel('r [m]')
-    plt.ylabel('z [m]')
-    plt.colorbar(label='\n Density [m$^{-3}$ s$^{-1}$]')
-    plt.title('Toroidal Slice of W0 Density')
+    fscope[np.isnan(fscope)] = 0
+    print('W0 Neutral Flux:', np.sum(fscope)) # in units of m-3 s-1
+    plt.title('Toroidal Slice of W0 Density \n W0: %10e' %np.sum(fscope))
     plt.savefig('plots/spec_filterscope.png')
     
-    # in units of m-3 s-1
-    fscope[np.isnan(fscope)] = 0
-    print('W0 Flux Density:', np.sum(fscope))
-    
-    
-
 if __name__ == "__main__":
     #init()
     #plot_gitr_gridspace()
     #plot_particle_source()
-    #plot_history2D("history.nc")
-    plot_surf_nc(37914807680566.16, "/Users/Alyssa/Dev/SAS-VW-Data/netcdf_data/nP5/surf-5-6.nc")
-    #spectroscopy(37914807680566.16)
+    #plot_history2D("../../../../GITR/scratch/output/history.nc")
+    plot_surf_nc(3791480768056.615, "surfaceP6T6.nc")
+    #plot_surf_nc(37914807680566.16, "/Users/Alyssa/Dev/SAS-VW-Data/netcdf_data/nP5/surf-5-6.nc")
+    #spectroscopy(3791480768056.615,specFile='specP6T6.nc')

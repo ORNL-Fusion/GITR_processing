@@ -83,7 +83,7 @@ legend('wall','hasHit','notHit')
 
 plot_tracks = 1;
 if plot_tracks
-    file = strcat('~/Dev/GITR/scratch/output/history.nc');
+    file = strcat(pwd,'../../../../GITR/scratch/output/history.nc');
     x = ncread(file,'x');
     y = ncread(file,'y');
     z = ncread(file,'z');
