@@ -94,9 +94,9 @@ def plot_history2D(history_file, basic=0, continuousChargeState=1, endChargeStat
     plt.close()
     plt.plot(R,Z,'-k',linewidth=0.7)
     plt.axis('scaled')
-    plt.xlabel('r [m]')
+    plt.xlabel('x [m]')
     plt.ylabel('z [m]')
-    plt.title('Particle Trajectories', fontsize=20)
+    plt.title('W Impurity Trajectories', fontsize=20)
         
     #define charge state to color mapping
     colors = {0:'black', 1:'firebrick', 2:'darkorange', 3:'gold', 4:'limegreen', 5:'dodgerblue', \

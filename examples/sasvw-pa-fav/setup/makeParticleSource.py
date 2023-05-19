@@ -18,7 +18,7 @@ def init():
     plt.rcParams.update({'lines.markersize':1})
 
 def point_source(nP = int(2e2)):
-    x = 1.44*np.ones(nP)
+    x = 1.49*np.ones(nP)
     y = np.zeros(nP)
     z = 1.15*np.ones(nP)
     vx = 500*np.zeros(nP)

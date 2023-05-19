@@ -100,7 +100,7 @@ if plot_tracks
     plot3(R,T,Z, 'LineWidth',2)
     hold on
 
-    for i=1:1:(length(x/100))
+    for i=1:1:(length(x)/10)
     plot3(x(:,i),y(:,i),z(:,i))
     end
 
