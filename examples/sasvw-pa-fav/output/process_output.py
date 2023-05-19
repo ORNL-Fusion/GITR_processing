@@ -3,6 +3,7 @@ sys.path.insert(0, os.path.abspath('../../../python/'))
 
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 import netCDF4
 import solps
 
@@ -80,8 +81,9 @@ def plot_history2D(history_file, basic=0, continuousChargeState=1, endChargeStat
     profiles, W_indices, R, Z, rmrs = init()
     history = netCDF4.Dataset(history_file, "r", format="NETCDF4")
 
-    plt.rcParams.update({'lines.linewidth':0.1})
+    plt.rcParams.update({'lines.linewidth':0.2})
     plt.rcParams.update({'lines.markersize':0})
+    plt.rcParams.update({'font.size':16})
 
     nP = len(history.dimensions['nP'])
     nT = len(history.dimensions['nT'])
@@ -94,11 +96,11 @@ def plot_history2D(history_file, basic=0, continuousChargeState=1, endChargeStat
     plt.axis('scaled')
     plt.xlabel('r [m]')
     plt.ylabel('z [m]')
-    plt.title('Particle Tracks')
+    plt.title('Particle Trajectories', fontsize=20)
         
     #define charge state to color mapping
-    colors = {0:'black', 1:'red', 2:'orange', 3:'olive', 4:'green', 5:'cyan', \
-              6:'purple', 7:'darkmagenta', 8:'pink', 9:'deep pink', 10:'gray'}
+    colors = {0:'black', 1:'firebrick', 2:'darkorange', 3:'gold', 4:'limegreen', 5:'dodgerblue', \
+              6:'mediumpurple', 7:'darkviolet', 8:'darkmagenta', 9:'deep pink', 10:'gray'}
     
     # all particle source vars ordered as (nP, nT)
     if basic==1:
@@ -115,9 +117,19 @@ def plot_history2D(history_file, basic=0, continuousChargeState=1, endChargeStat
         for p in range(0,nP):
             plt.plot(x[p][:],z[p][:], colors[charge[p][-1]])
         plt.title('Particle Tracks by End Charge State')
-        
+    
+    legend_dict = {'+0':'black', '+1':'firebrick', '+2':'darkorange', '+3':'gold', '+4':'limegreen', '+5':'dodgerblue', \
+              '+6':'mediumpurple', '+7':'darkviolet', '+8':'darkmagenta', '+9':'deeppink', '+10':'gray'}
+    patchList = []
+    for key in legend_dict:
+        data_key = mpatches.Patch(color=legend_dict[key], label=key)
+        patchList.append(data_key)
+
+    plt.legend(handles=patchList, fontsize=12)
+    
     plt.xlim(1.3, 1.6)
     plt.ylim(1, 1.3)
+    plt.show(block=True)
     plt.savefig('plots/history.pdf')
     plt.close()
 
@@ -351,7 +363,7 @@ if __name__ == "__main__":
     #init()
     #plot_gitr_gridspace()
     #plot_particle_source()
-    #plot_history2D("../../../../GITR/scratch/output/history.nc")
-    plot_surf_nc(3791480768056.615, "surfaceP6T6.nc")
+    plot_history2D("../../../../GITR/scratch/output/history.nc")
+    #plot_surf_nc(3791480768056.615, "surfaceP6T6.nc")
     #plot_surf_nc(37914807680566.16, "/Users/Alyssa/Dev/SAS-VW-Data/netcdf_data/nP5/surf-5-6.nc")
     #spectroscopy(3791480768056.615,specFile='specP6T6.nc')

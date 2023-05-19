@@ -83,7 +83,7 @@ legend('wall','hasHit','notHit')
 
 plot_tracks = 1;
 if plot_tracks
-    file = strcat('~/Dev/GITR/scratch/output/history.nc');
+    file = strcat('history.nc');
     x = ncread(file,'x');
     y = ncread(file,'y');
     z = ncread(file,'z');
@@ -100,7 +100,7 @@ if plot_tracks
     plot3(R,T,Z, 'LineWidth',2)
     hold on
 
-    for i=1:1:(length(x))
+    for i=1:1:(length(x/100))
     plot3(x(:,i),y(:,i),z(:,i))
     end
 
