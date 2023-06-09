@@ -18,10 +18,10 @@ def init():
     plt.rcParams.update({'lines.markersize':1})
 
 def point_source(nP = int(2e2)):
-    x = 1.44*np.ones(nP)
+    x = 1.49*np.ones(nP)
     y = np.zeros(nP)
     z = 1.15*np.ones(nP)
-    vx = 500*np.ones(nP)
+    vx = 500*np.zeros(nP)
     vy = 5000*np.zeros(nP)
     vz = 100*np.zeros(nP)
 
@@ -173,9 +173,14 @@ def distributed_source(nP, surfW=np.arange(10,24), \
     spyldC4 = get_ft_spyld(0, energyC4, angleC4, ftCFile)
     spyldC5 = get_ft_spyld(0, energyC5, angleC5, ftCFile)
     spyldC6 = get_ft_spyld(0, energyC6, angleC6, ftCFile)
+    ftWFile = '../input/ftridynSelf.nc'
+    spyldW1 = get_ft_spyld(0, energyC1, angleC1, ftWFile)
+    spyldW2 = get_ft_spyld(0, energyC2, angleC2, ftWFile)
     
     #get coarse flux profile from background D, C and refine to rmrsFine
+    fluxCoarseD0 = np.abs(profiles.variables['flux_inner_target'][0][surfW])
     fluxCoarseD = np.abs(profiles.variables['flux_inner_target'][1][surfW])
+    fluxCoarseC0 = np.abs(profiles.variables['flux_inner_target'][3][surfW])
     fluxCoarseC1 = np.abs(profiles.variables['flux_inner_target'][3][surfW])
     fluxCoarseC2 = np.abs(profiles.variables['flux_inner_target'][4][surfW])
     fluxCoarseC3 = np.abs(profiles.variables['flux_inner_target'][5][surfW])
@@ -183,7 +188,9 @@ def distributed_source(nP, surfW=np.arange(10,24), \
     fluxCoarseC5 = np.abs(profiles.variables['flux_inner_target'][7][surfW])
     fluxCoarseC6 = np.abs(profiles.variables['flux_inner_target'][8][surfW])
     
+    ffluxD0 = scii.interp1d(rmrsCoarse,fluxCoarseD0,fill_value='extrapolate')
     ffluxD = scii.interp1d(rmrsCoarse,fluxCoarseD,fill_value='extrapolate')
+    ffluxC0 = scii.interp1d(rmrsCoarse,fluxCoarseC0,fill_value='extrapolate')
     ffluxC1 = scii.interp1d(rmrsCoarse,fluxCoarseC1,fill_value='extrapolate')
     ffluxC2 = scii.interp1d(rmrsCoarse,fluxCoarseC2,fill_value='extrapolate')
     ffluxC3 = scii.interp1d(rmrsCoarse,fluxCoarseC3,fill_value='extrapolate')
@@ -191,13 +198,20 @@ def distributed_source(nP, surfW=np.arange(10,24), \
     ffluxC5 = scii.interp1d(rmrsCoarse,fluxCoarseC5,fill_value='extrapolate')
     ffluxC6 = scii.interp1d(rmrsCoarse,fluxCoarseC6,fill_value='extrapolate')
     
+    fluxD0 = ffluxD0(rmrsFine)
     fluxD = ffluxD(rmrsFine)
+    fluxC0 = ffluxC0(rmrsFine)
     fluxC1 = ffluxC1(rmrsFine)
     fluxC2 = ffluxC2(rmrsFine)
     fluxC3 = ffluxC3(rmrsFine)
     fluxC4 = ffluxC4(rmrsFine)
     fluxC5 = ffluxC5(rmrsFine)
     fluxC6 = ffluxC6(rmrsFine)
+    fluxC = fluxC1 + fluxC2 + fluxC3 + fluxC4 + fluxC5 + fluxC6
+    totalflux = fluxD0 + fluxD + fluxC0 + fluxC
+    Cfraction = np.sum(fluxC0 + fluxC) / np.sum(totalflux)
+    print('Total C Flux to the Surface:', np.sum(fluxC), 'm-2 s-1')
+    print('C Fraction of Total Incoming Flux:', Cfraction)
 
     #multiply incoming ion flux by Y_s to get sputtered W flux by each species
     sputt_fluxD = spyldD*fluxD
@@ -208,10 +222,13 @@ def distributed_source(nP, surfW=np.arange(10,24), \
     sputt_fluxC5 = spyldC5*fluxC5
     sputt_fluxC6 = spyldC6*fluxC6
     sputt_flux = sputt_fluxD + sputt_fluxC1 + sputt_fluxC2 + sputt_fluxC3 + sputt_fluxC4 + sputt_fluxC5 + sputt_fluxC6
-    print('SPUTT FLUX',len(sputt_flux),'\n',sputt_flux)
+    #print('SPUTT FLUX',len(sputt_flux),'\n',sputt_flux)
+    print('W eroded flux per nP:', np.sum(sputt_flux)/nP, 'm-2 s-1')
+
 
     #multiply by area to get the outgoing particles per second
     pps = np.multiply(sputt_flux,area)
+    print('Total actual W eroded per second:', np.sum(pps), 's-1')
     pps_weights = nP*pps/np.sum(pps)
 
     if plot_variables == 1:        
@@ -223,7 +240,11 @@ def distributed_source(nP, surfW=np.arange(10,24), \
         plt.plot(rmrsFine, fluxC4, 'green', label='C4+')
         plt.plot(rmrsFine, fluxC5, 'blue', label='C5+')
         plt.plot(rmrsFine, fluxC6, 'purple', label='C6+')
-        plt.yscale('log')
+        plt.axvline(x=rmrsCoarse[4], color='k', linestyle='dotted')
+        plt.axvline(x=rmrsCoarse[10], color='k', linestyle='dotted')
+        plt.axvline(x=rmrsCoarse[11], color='k', linestyle='dotted')
+        plt.axvline(x=rmrsCoarse[12], color='k', linestyle='dotted')
+        #plt.yscale('log')
         plt.xlabel('D-Dsep [m]')
         plt.ylabel('Flux [#/m2s]')
         plt.legend(loc='upper right')
@@ -231,31 +252,42 @@ def distributed_source(nP, surfW=np.arange(10,24), \
         plt.savefig('plots/particle-source/incident_flux.png')
 
         plt.close()
-        plt.plot(rmrsFine, spyldD, 'black', label='D1+')
-        plt.plot(rmrsFine, spyldC1, 'red', label='C1+')
-        plt.plot(rmrsFine, spyldC2, 'darkorange', label='C2+')
-        plt.plot(rmrsFine, spyldC3, 'gold', label='C3+')
-        plt.plot(rmrsFine, spyldC4, 'green', label='C4+')
-        plt.plot(rmrsFine, spyldC5, 'blue', label='C5+')
-        plt.plot(rmrsFine, spyldC6, 'purple', label='C6+')
+        plt.rcParams.update({'font.size':16})
+        plt.rcParams.update({'lines.linewidth':3})
+        
+        plt.plot(rmrsFine, spyldD, 'black', label='D$^{1+}$')
+        plt.plot(rmrsFine, spyldC1, 'firebrick', label='C$^{1+}$')
+        plt.plot(rmrsFine, spyldC2, 'darkorange', label='C$^{2+}$')
+        plt.plot(rmrsFine, spyldC3, 'gold', label='C$^{3+}$')
+        plt.plot(rmrsFine, spyldC4, 'limegreen', label='C$^{4+}$')
+        plt.plot(rmrsFine, spyldC5, 'dodgerblue', label='C$^{5+}$')
+        plt.plot(rmrsFine, spyldC6, 'mediumpurple', label='C$^{6+}$')
+        plt.plot(rmrsFine, spyldW1, 'rosybrown', label='W$^{1+}$')
+        plt.plot(rmrsFine, spyldW2, 'burlywood', label='W$^{2+}$')
         plt.legend()
         plt.xlabel('D-Dsep [m]')
         plt.ylabel('Sputtering Yield')
-        plt.title('W Sputtering Yield by Incident D and C')
+        plt.title('W Sputtering Yield by Incident Ions',fontsize=20)
+        plt.show(block=True)
         plt.savefig('plots/particle-source/spyld.png')
         
         plt.close()
-        plt.plot(rmrsFine, sputt_fluxD, 'black', label='D1+')
-        plt.plot(rmrsFine, sputt_fluxC1, 'red', label='C1+')
-        plt.plot(rmrsFine, sputt_fluxC2, 'darkorange', label='C2+')
-        plt.plot(rmrsFine, sputt_fluxC3, 'gold', label='C3+')
-        plt.plot(rmrsFine, sputt_fluxC4, 'green', label='C4+')
-        plt.plot(rmrsFine, sputt_fluxC5, 'blue', label='C5+')
-        plt.plot(rmrsFine, sputt_fluxC6, 'purple', label='C6+')
+        plt.axvline(x=rmrsCoarse[4], color='k', linestyle='dotted', label='\u0394\u03A8$_B$')
+        plt.axvline(x=rmrsCoarse[10], color='k', linestyle='dotted')
+        plt.axvline(x=rmrsCoarse[11], color='k', linestyle='dotted')
+        plt.axvline(x=rmrsCoarse[12], color='k', linestyle='dotted')
+        
+        plt.plot(rmrsFine, sputt_fluxD, 'black', label='D$^{1+}$')
+        plt.plot(rmrsFine, sputt_fluxC1, 'firebrick', label='C$^{1+}$')
+        plt.plot(rmrsFine, sputt_fluxC2, 'darkorange', label='C$^{2+}$')
+        plt.plot(rmrsFine, sputt_fluxC3, 'gold', label='C$^{3+}$')
+        plt.plot(rmrsFine, sputt_fluxC4, 'limegreen', label='C$^{4+}$')
+        plt.plot(rmrsFine, sputt_fluxC5, 'dodgerblue', label='C$^{5+}$')
+        plt.plot(rmrsFine, sputt_fluxC6, 'mediumpurple', label='C$^{6+}$')
         plt.xlabel('D-Dsep [m]')
-        plt.ylabel('Flux [#/m2s]')
+        plt.ylabel('Flux [m$^{-2}$s$^{-1}$]')
         plt.legend(loc='upper left')
-        plt.title('Flux of W Sputtered off Wall')
+        plt.title('Flux of W Sputtered off Wall', fontsize=20)
         plt.savefig('plots/particle-source/sputt_flux_charge_dependent.png')
 
         plt.close()
@@ -530,11 +562,20 @@ def get_incoming_IEADs(q, profiles, surfW, rmrsCoarse, rmrsFine):
 def get_ft_spyld(S, surfE, surfA, ftBFile):
     #import sputtering yield tables for incident ions on W
     ftB = netCDF4.Dataset(ftBFile, "r", format="NETCDF4")
-    spyld = ftB.variables['spyld'][S][:]
-    ftE = ftB.variables['E'][:]
-    ftA = ftB.variables['A'][:]
     
-    surfY = scii.interpn((ftE,ftA), spyld, (surfE,surfA))
+    try: 
+        spyld = ftB.variables['spyld'][S][:]
+        ftE = ftB.variables['E'][:]
+        ftA = ftB.variables['A'][:]
+        
+        surfY = scii.interpn((ftE,ftA), spyld, (surfE,surfA))
+        
+    except: 
+        spyld = ftB.variables['spyld'][:]
+        ftE = ftB.variables['E'][:]
+        ftA = ftB.variables['A'][:]
+        
+        surfY = scii.interpn((ftE,ftA), spyld, (surfE,surfA))
     
     return surfY
 
@@ -632,7 +673,7 @@ def get_analytic_spyld(surfE, surfA, Z1=6, M1=12, Z2=74, M2=183.84, \
 
 if __name__ == "__main__":
     init()
-    distributed_source(nP=int(1e5), surfW=np.arange(10,24), \
+    distributed_source(nP=int(1), surfW=np.arange(10,24), \
                 geom = '../input/gitrGeometry.cfg', \
                 profiles_file = '../input/plasmaProfiles.nc', \
                 gitr_rz = 'assets/gitr_rz.txt', \

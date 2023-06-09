@@ -252,7 +252,7 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
         plt.close()
         plt.plot(r_right_target, z_right_target, '-k', label='Carbon', linewidth=0.5)
         plt.plot(r_final[W_indicesCoarse], z_final[W_indicesCoarse], 'violet', label='Tungsten', linewidth=0.6)
-        #plt.scatter(r_final[W_indicesCoarse], z_final[W_indicesCoarse], marker='_', color='violet', s=8)
+        plt.scatter(r_final[W_indicesCoarse], z_final[W_indicesCoarse], marker='_', color='violet', s=8)
         plt.scatter
         plt.legend()
         plt.xlabel('r [m]')
@@ -298,15 +298,22 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     
     W_indices = np.array(range(23,38+numAddedPoints-1))
     
+    #find strikepoint
+    strikepoint_index = np.where(rmrsFine==0)[0]
+    print('Strikepoint Coords:', rSurfFine[strikepoint_index], zSurfFine[strikepoint_index])
+    
     if plot_variables:
         plt.close()
-        plt.plot(r_right_target, z_right_target, '-k', label='Carbon', linewidth=0.5)
-        plt.plot(r_final[W_indices], z_final[W_indices], 'violet', label='Tungsten', linewidth=0.6)
-        plt.scatter(r_final[W_indices], z_final[W_indices], marker='_', color='violet', s=8)
+        plt.rcParams.update({'font.size':16})
+        plt.plot(r_right_target, z_right_target, '-k', label='Carbon', linewidth=3)
+        plt.plot(r_final[W_indices], z_final[W_indices], 'violet', label='Tungsten', linewidth=3)
+        #plt.scatter(r_final[W_indices], z_final[W_indices], marker='_', color='violet', s=8)
+        plt.scatter(rSurfFine[strikepoint_index], zSurfFine[strikepoint_index], label='Strikepoint', marker='x', color='k', s=350, zorder=5)
         plt.legend()
         plt.xlabel('r [m]')
         plt.ylabel('z [m]')
-        plt.title('Upper Outer SAS-VW Divertor in DIII-D \n makeGeom')
+        plt.axis('scaled')
+        plt.title('Upper Outer SAS-VW Divertor', fontsize=20)
         plt.savefig('plots/makeGeom.png')
     
     Z[W_indices] = 74;
@@ -337,7 +344,7 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     return
 
 if __name__ == "__main__":
-    main()
+    main(plot_variables = 1)
 
 
 

@@ -83,7 +83,7 @@ legend('wall','hasHit','notHit')
 
 plot_tracks = 1;
 if plot_tracks
-    file = strcat(pwd,'/history.nc');
+    file = strcat('history.nc');
     x = ncread(file,'x');
     y = ncread(file,'y');
     z = ncread(file,'z');
@@ -100,8 +100,8 @@ if plot_tracks
     plot3(R,T,Z, 'LineWidth',2)
     hold on
 
-    for i=1:1:(length(x))
-    plot3(x(:length(x)-1,i),y(:length(y)-1,i),z(:length,i))
+    for i=1:1:(length(x)/10)
+    plot3(x(:,i),y(:,i),z(:,i))
     end
 
     axis equal
