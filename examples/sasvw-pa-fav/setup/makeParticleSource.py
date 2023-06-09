@@ -178,7 +178,9 @@ def distributed_source(nP, surfW=np.arange(10,24), \
     spyldW2 = get_ft_spyld(0, energyC2, angleC2, ftWFile)
     
     #get coarse flux profile from background D, C and refine to rmrsFine
+    fluxCoarseD0 = np.abs(profiles.variables['flux_inner_target'][0][surfW])
     fluxCoarseD = np.abs(profiles.variables['flux_inner_target'][1][surfW])
+    fluxCoarseC0 = np.abs(profiles.variables['flux_inner_target'][3][surfW])
     fluxCoarseC1 = np.abs(profiles.variables['flux_inner_target'][3][surfW])
     fluxCoarseC2 = np.abs(profiles.variables['flux_inner_target'][4][surfW])
     fluxCoarseC3 = np.abs(profiles.variables['flux_inner_target'][5][surfW])
@@ -186,7 +188,9 @@ def distributed_source(nP, surfW=np.arange(10,24), \
     fluxCoarseC5 = np.abs(profiles.variables['flux_inner_target'][7][surfW])
     fluxCoarseC6 = np.abs(profiles.variables['flux_inner_target'][8][surfW])
     
+    ffluxD0 = scii.interp1d(rmrsCoarse,fluxCoarseD0,fill_value='extrapolate')
     ffluxD = scii.interp1d(rmrsCoarse,fluxCoarseD,fill_value='extrapolate')
+    ffluxC0 = scii.interp1d(rmrsCoarse,fluxCoarseC0,fill_value='extrapolate')
     ffluxC1 = scii.interp1d(rmrsCoarse,fluxCoarseC1,fill_value='extrapolate')
     ffluxC2 = scii.interp1d(rmrsCoarse,fluxCoarseC2,fill_value='extrapolate')
     ffluxC3 = scii.interp1d(rmrsCoarse,fluxCoarseC3,fill_value='extrapolate')
@@ -194,7 +198,9 @@ def distributed_source(nP, surfW=np.arange(10,24), \
     ffluxC5 = scii.interp1d(rmrsCoarse,fluxCoarseC5,fill_value='extrapolate')
     ffluxC6 = scii.interp1d(rmrsCoarse,fluxCoarseC6,fill_value='extrapolate')
     
+    fluxD0 = ffluxD0(rmrsFine)
     fluxD = ffluxD(rmrsFine)
+    fluxC0 = ffluxC0(rmrsFine)
     fluxC1 = ffluxC1(rmrsFine)
     fluxC2 = ffluxC2(rmrsFine)
     fluxC3 = ffluxC3(rmrsFine)
@@ -202,6 +208,10 @@ def distributed_source(nP, surfW=np.arange(10,24), \
     fluxC5 = ffluxC5(rmrsFine)
     fluxC6 = ffluxC6(rmrsFine)
     fluxC = fluxC1 + fluxC2 + fluxC3 + fluxC4 + fluxC5 + fluxC6
+    totalflux = fluxD0 + fluxD + fluxC0 + fluxC
+    Cfraction = np.sum(fluxC0 + fluxC) / np.sum(totalflux)
+    print('Total C Flux to the Surface:', np.sum(fluxC), 'm-2 s-1')
+    print('C Fraction of Total Incoming Flux:', Cfraction)
 
     #multiply incoming ion flux by Y_s to get sputtered W flux by each species
     sputt_fluxD = spyldD*fluxD
@@ -212,8 +222,7 @@ def distributed_source(nP, surfW=np.arange(10,24), \
     sputt_fluxC5 = spyldC5*fluxC5
     sputt_fluxC6 = spyldC6*fluxC6
     sputt_flux = sputt_fluxD + sputt_fluxC1 + sputt_fluxC2 + sputt_fluxC3 + sputt_fluxC4 + sputt_fluxC5 + sputt_fluxC6
-    print('SPUTT FLUX',len(sputt_flux),'\n',sputt_flux)
-    print('Total C Flux to the Surface:', np.sum(fluxC), 'm-2 s-1')
+    #print('SPUTT FLUX',len(sputt_flux),'\n',sputt_flux)
     print('W eroded flux per nP:', np.sum(sputt_flux)/nP, 'm-2 s-1')
 
 

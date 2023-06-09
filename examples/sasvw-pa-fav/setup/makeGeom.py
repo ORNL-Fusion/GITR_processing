@@ -252,7 +252,7 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
         plt.close()
         plt.plot(r_right_target, z_right_target, '-k', label='Carbon', linewidth=0.5)
         plt.plot(r_final[W_indicesCoarse], z_final[W_indicesCoarse], 'violet', label='Tungsten', linewidth=0.6)
-        #plt.scatter(r_final[W_indicesCoarse], z_final[W_indicesCoarse], marker='_', color='violet', s=8)
+        plt.scatter(r_final[W_indicesCoarse], z_final[W_indicesCoarse], marker='_', color='violet', s=8)
         plt.scatter
         plt.legend()
         plt.xlabel('r [m]')

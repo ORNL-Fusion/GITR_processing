@@ -219,6 +219,11 @@ def plot_surf_nc(pps_per_nP, \
     rmrs1_start = -1*np.sqrt((z1_start-z_sp)**2 + (r1_start-r_sp)**2)
     rmrs1_end = -1*np.sqrt((z1_end-z_sp)**2 + (r1_end-r_sp)**2)
     
+    r2_start, z2_start = 1.492041, 1.19418 
+    r2_end, z2_end = 1.492716, 1.18709 
+    rmrs2_start = 1*np.sqrt((z2_start-z_sp)**2 + (r2_start-r_sp)**2)
+    rmrs2_end = 1*np.sqrt((z2_end-z_sp)**2 + (r2_end-r_sp)**2)
+    
     r3_start, z3_start = 1.493556, 1.16204
     r3_end, z3_end = 1.490536, 1.1552 
     rmrs3_start = np.sqrt((z3_start-z_sp)**2 + (r3_start-r_sp)**2)
@@ -226,34 +231,41 @@ def plot_surf_nc(pps_per_nP, \
     
     V1_grossEro = 0
     V1_area = 0
+    V2_grossEro = 0
+    V2_area = 0
     V3_grossEro = 0
     V3_area = 0
     for i,v in enumerate(rmrsFine):
         if v >= rmrs1_end and v <= rmrs1_start:
             V1_grossEro += grossEro[i] * (rmrsFine[i+1] - rmrsFine[i])
             V1_area += rmrsFine[i+1] - rmrsFine[i]
+        elif v >= rmrs2_start and v <= rmrs2_end:
+            V2_grossEro += grossEro[i] * (rmrsFine[i+1] - rmrsFine[i])
+            V2_area += rmrsFine[i+1] - rmrsFine[i]
         elif v >= rmrs3_start and v <= rmrs3_end:
             V3_grossEro += grossEro[i] * (rmrsFine[i+1] - rmrsFine[i])
             V3_area += rmrsFine[i+1] - rmrsFine[i]
     V1_grossEro = V1_grossEro / V1_area
+    V2_grossEro = V2_grossEro / V2_area
     V3_grossEro = V3_grossEro / V3_area
     
     print('gross erosion in View 1:', V1_grossEro)
+    print('gross erosion in View 2:', V2_grossEro)
     print('gross erosion in View 3:', V3_grossEro)
     
     plt.rcParams.update({'font.size':16})
     plt.rcParams.update({'lines.linewidth':3}) 
     
     plt.close()
+    plt.axvspan(rmrs1_start, rmrs1_end, color='#f7bc00', alpha=0.5)
+    plt.axvspan(rmrs2_start, rmrs2_end, color='lightsalmon', alpha=0.5)
+    plt.axvspan(rmrs3_start, rmrs3_end, color='#f99301', alpha=0.5)
+    
     plt.plot(rmrsFine,np.zeros(len(rmrsFine)),'gray')
     plt.axvline(x=rmrs[4], color='k', linestyle='dotted', label='\u0394\u03A8$_B$')
     plt.axvline(x=rmrs[10], color='k', linestyle='dotted')
     plt.axvline(x=rmrs[11], color='k', linestyle='dotted')
     plt.axvline(x=rmrs[12], color='k', linestyle='dotted')
-    plt.axvline(x=rmrs1_start, color='lightsalmon', linestyle='dashed', label='Spec View 1')
-    plt.axvline(x=rmrs1_end, color='lightsalmon', linestyle='dashed')
-    plt.axvline(x=rmrs3_start, color='chocolate', linestyle='dashed', label='Spec View 3')
-    plt.axvline(x=rmrs3_end, color='chocolate', linestyle='dashed')
     
     plt.plot(rmrsFine,grossEro_norm,'r', label='Gross Erosion')
     plt.plot(rmrsFine,grossDep_norm,'g', label='Redeposition')
@@ -262,7 +274,7 @@ def plot_surf_nc(pps_per_nP, \
     plt.xlabel('D-Dsep [m]')
     plt.ylabel('\u0393$_{W,outgoing}$ / \u0393$_{C,incoming}$')
     plt.ticklabel_format(axis='y',style='sci',scilimits=(-2,2))
-    plt.legend(fontsize=10)#loc='upper left')
+    plt.legend()#loc='upper left')
     plt.title('GITR Predicted Erosion and \n Redeposition Profiles, nP=1e6, nT=1e6')
     plt.savefig('plots/surface.png')
     
@@ -386,6 +398,7 @@ if __name__ == "__main__":
     #plot_gitr_gridspace()
     #plot_particle_source()
     #plot_history2D("../../../../GITR/scratch/output/history.nc")
-    plot_surf_nc(3791480768056.615, "surfaceP6T6.nc")
+    plot_history2D("history_nP5e2_nT1e5.nc")
+    #plot_surf_nc(3791480768056.615, "surfaceP6T6.nc")
     #plot_surf_nc(37914807680566.16, "/Users/Alyssa/Dev/SAS-VW-Data/netcdf_data/nP5/surf-5-6.nc")
     #spectroscopy(3791480768056.615,specFile='specP6T6.nc')
