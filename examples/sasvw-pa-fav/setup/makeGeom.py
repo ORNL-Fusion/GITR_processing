@@ -10,7 +10,7 @@ def init():
     #set plotting style defaults
     plt.rcParams.update({'font.size':11.5})
     plt.rcParams.update({'lines.linewidth':1.2})
-    plt.rcParams.update({'lines.markersize':1})
+    plt.rcParams.update({'lines.markersize':5})
 
 def replace_line_segment(x_priority, y_priority, x_base, y_base):
     x_final = x_base;
@@ -47,11 +47,11 @@ def replace_line_segment(x_priority, y_priority, x_base, y_base):
 
     # Insert the prioritized points into the proper place in the array
     x_final = np.append(x_base[0:(remove_indices[0])], x_priority)
-    x_final = np.append(x_final, x_base[(remove_indices[-1]):]);
+    x_final = np.append(x_final, x_base[(remove_indices[-1] + 1):]);
     y_final = np.append(y_base[0:(remove_indices[0])], y_priority)
-    y_final = np.append(y_final, y_base[(remove_indices[-1]):]);
+    y_final = np.append(y_final, y_base[(remove_indices[-1] + 1):]);
     
-    # pretty sure this is wrong, but don't yet want to delete in case it's not
+    # removes boundary points from base x,y if they fall inside priority x,y
     # x_final = np.append(x_base[0:(remove_indices[0] - 1)], x_priority)
     # x_final = np.append(x_final, x_base[(remove_indices[-1] + 1):]);
     # y_final = np.append(y_base[0:(remove_indices[0] - 1)], y_priority)
@@ -87,7 +87,7 @@ def gitr_lines_from_points(r,z):
 
     return lines
 
-def lines_to_vectors(lines, inDir, filename, plt, plot_variables, shouldBlock):
+def lines_to_vectors(lines, inDir, plt, plot_variables, shouldBlock):
 
     x1 = lines[:, 0]
     z1 = lines[:, 1]
@@ -108,9 +108,9 @@ def lines_to_vectors(lines, inDir, filename, plt, plot_variables, shouldBlock):
         plt.quiver([x1[i] + (x2[i]-x1[i])/2], [z1[i] + (z2[i]-z1[i])/2], [rPerp/10], [zPerp/10], width=0.0015, scale=5, headwidth=4)
 
     if plot_variables:
-        plt.title(filename)
+        plt.title('inDir')
         plt.show(block=shouldBlock)
-        plt.savefig('plots/'+filename+'.pdf')
+        plt.savefig('plots/geom/inDir.png')
     
 def lines_to_gitr_geometry(filename, lines, Z, surface, inDir):
 
@@ -157,7 +157,7 @@ def refine_target(rSurfCoarse, zSurfCoarse, rmrsCoarse, numAddedPoints=100):
     dist = np.sqrt((rSurfCoarse[:-1]-rSurfCoarse[1:])**2 + (zSurfCoarse[:-1]-zSurfCoarse[1:])**2)
     totalDist = np.sum(dist)
     addedPoints = numAddedPoints*dist/totalDist
-    print('addedPoints',addedPoints)
+    print('addedPoints:',addedPoints)
     for i,v in enumerate(addedPoints): addedPoints[i] = round(v)
     addedPoints = np.array(addedPoints,dtype='int')
     
@@ -183,14 +183,17 @@ def refine_target(rSurfCoarse, zSurfCoarse, rmrsCoarse, numAddedPoints=100):
         rSurfFine = np.append(rSurfFine,rSurfCoarse[i+1])
         zSurfFine = np.append(zSurfFine,zSurfCoarse[i+1])
         rmrsFine = np.append(rmrsFine,rmrsCoarse[i+1])
+        
+    rSurfFine = np.delete(rSurfFine,-1)
+    zSurfFine = np.delete(zSurfFine,-1)
     
-    return rSurfFine, zSurfFine, rmrsFine
+    return rSurfFine, zSurfFine, rmrsFine, sum(addedPoints)
 
 def main(gitr_geometry_filename='gitrGeometry.cfg', \
              solps_geomfile = 'assets/sas-vw_v005_mod.ogr', \
              solps_targfile = 'assets/b2fgmtry', \
              profiles_file = '../input/plasmaProfiles.nc', \
-             W_indices_profiles = np.arange(10,24), \
+             W_indices_profiles = np.arange(11,22), \
              solps_rz = 'assets/solps_rz.txt', \
              gitr_rz = 'assets/gitr_rz.txt', \
              rmrs_fine_file = 'assets/rmrs_fine.txt', \
@@ -233,25 +236,22 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
         if j%2 == 0:
             manual_indices[i] = j
             i+=1
-    
-    #manual_indices = np.append(manual_indices, range(113,114))
-    
+        
     r_wall = r_ogr[manual_indices]/1000 #mm->m
     z_wall = z_ogr[manual_indices]/1000 #mm->m
     
     #get target geometry from b2fgmtry and stitch to wall geometry
     profiles = netCDF4.Dataset(profiles_file)
-    r_right_target = profiles.variables['r_inner_target']
-    z_right_target = profiles.variables['z_inner_target']
-    r_left_target = profiles.variables['r_outer_target']
-    z_left_target = profiles.variables['z_outer_target']
+    r_right_target = profiles.variables['r_inner_target'][:]
+    z_right_target = profiles.variables['z_inner_target'][:]
+    r_left_target = profiles.variables['r_outer_target'][:]
+    z_left_target = profiles.variables['z_outer_target'][:]
     
     r_final, z_final = replace_line_segment(r_left_target, z_left_target, r_wall, z_wall)
     r_final, z_final = replace_line_segment(r_right_target, z_right_target, r_final, z_final)
     
     if plot_variables:
         #plot correctly-ordered line segments
-        print('plotting correctly-ordered line segments to solps_wall.pdf')
         plt.close()
         plt.plot(r_final, z_final)
         plt.plot(r_left_target, z_left_target, 'green')
@@ -261,7 +261,8 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
         plt.xlabel('r [m]')
         plt.ylabel('z [m]')
         plt.title('DIII-D SAS-VW Geometry')
-        plt.savefig('plots/solps_final.pdf')
+        plt.savefig('plots/geom/solps_final.pdf')
+        plt.show(block=False)
     
     ###################################################################
     # Increase Fineness of W Divertor Surface
@@ -269,34 +270,36 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     
     rmrsCoarse = profiles.variables['rmrs_inner_target'][W_indices_profiles]
     
-    W_indicesCoarse = np.array(range(70,84))
+    W_indicesCoarse = np.array(range(69,80)) #80?
+    print('length Coarse W_indices + numAddedPoints =',\
+          len(W_indicesCoarse), '+', numAddedPoints, '=',len(W_indicesCoarse)+numAddedPoints)
     
     # find what W_indices (gitrGeometry) and W_indices_profiles (plasmaProfiles) 
     # should be along the plasmaProfiles.nc targets
     if plot_variables:
         plt.close()
         plt.plot(r_right_target, z_right_target, '-k', label='Carbon', linewidth=5)
-        #plt.plot(r_final[W_indicesCoarse], z_final[W_indicesCoarse], 'violet', label='Tungsten', linewidth=2)
-        #plt.scatter(r_final[W_indicesCoarse], z_final[W_indicesCoarse], marker='_', color='violet', s=8)
-        plt.plot(r_right_target[W_indices_profiles], z_right_target[W_indices_profiles], 'violet', label='Tungsten', linewidth=2)
-        plt.scatter
+        plt.plot(r_final[W_indicesCoarse], z_final[W_indicesCoarse], 'violet', label='Tungsten', linewidth=3)
+        plt.scatter(r_final[W_indicesCoarse], z_final[W_indicesCoarse], marker='_', color='violet')
+        plt.plot(r_right_target[W_indices_profiles], z_right_target[W_indices_profiles], 'c', label='Tungsten', linewidth=1)
         plt.legend()
+        plt.axis('scaled')
         plt.xlabel('r [m]')
         plt.ylabel('z [m]')
         plt.title('Upper Outer SAS-VW Divertor in DIII-D \n makeGeom')
-        plt.show(block=True)
-        plt.savefig('plots/makeGeomCoarse.pdf')
+        plt.savefig('plots/geom/makeGeomCoarse.png')
+        plt.show(block=False)
     
     #set number of added points in a line segment to be proportional to the length of the segment
     rSurfCoarse = r_final[W_indicesCoarse]
     zSurfCoarse = z_final[W_indicesCoarse]
 
-    rSurfFine, zSurfFine, rmrsFine = refine_target(rSurfCoarse,zSurfCoarse,rmrsCoarse,numAddedPoints)
+    rSurfFine, zSurfFine, rmrsFine, numAddedPoints = refine_target(rSurfCoarse,zSurfCoarse,rmrsCoarse,numAddedPoints)
     
     rmrsMid = (rmrsFine[:-1]+rmrsFine[1:])/2
     r_final, z_final = replace_line_segment(rSurfFine, zSurfFine, r_final, z_final)
-    W_indicesCoarse = np.append(W_indicesCoarse[0], W_indicesCoarse)
-    W_indices = np.array(range(W_indicesCoarse[0], W_indicesCoarse[-1]+numAddedPoints))
+    W_indices = np.array(range(W_indicesCoarse[0], W_indicesCoarse[-1]+numAddedPoints+1)) #+1 may need to be added because range function is exclusive
+    print('length Fine W_indices:',len(W_indices))
     
     #find strikepoint
     strikepoint_index = np.where(rmrsFine==0)[0]
@@ -307,19 +310,19 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
         plt.rcParams.update({'font.size':16})
         plt.plot(r_right_target, z_right_target, '-k', label='Carbon', linewidth=1)
         plt.plot(r_final[W_indices], z_final[W_indices], 'violet', label='Tungsten', linewidth=1)
-        #plt.scatter(r_final[W_indices], z_final[W_indices], marker='_', color='violet', s=8)
+        plt.scatter(r_final[W_indices], z_final[W_indices], marker='_', color='violet')
         plt.scatter(rSurfFine[strikepoint_index], zSurfFine[strikepoint_index], label='Strikepoint', marker='x', color='k', s=350, zorder=5)
         plt.legend()
+        plt.axis('scaled')
         plt.xlabel('r [m]')
         plt.ylabel('z [m]')
         plt.axis('scaled')
         plt.title('Upper Outer SAS-VW Divertor', fontsize=20)
+        plt.savefig('plots/geom/makeGeom.png')
         plt.show(block=False)
-        plt.savefig('plots/makeGeom.png')
     
     if plot_variables:
         #plot correctly-ordered line segments
-        print('plotting correctly-ordered line segments to solps_wall.pdf')
         plt.close()
         plt.plot(r_final, z_final, linewidth=0.5)
         plt.scatter(r_final, z_final, s=1)
@@ -327,16 +330,16 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
         plt.xlabel('r [m]')
         plt.ylabel('z [m]')
         plt.title('DIII-D SAS-VW Geometry')
-        plt.savefig('plots/gitr_final.png')
+        plt.savefig('plots/geom/gitr_final.png')
     
     #define interior side of each line segment in the geometry with inDir
     inDir = np.ones(len(r_final))
-    inDir[:35] = inDir[38:49] = inDir[52] = inDir[59:66] = -1
-    #inDir[189] = inDir[192] = inDir[200] = inDir[209] = inDir[213] = inDir[-5:] = -1
+    inDir[:35] = inDir[38:49] = inDir[52] = inDir[59:68] = -1
+    inDir[190] = inDir[193] = inDir[201] = inDir[210] = inDir[214] = inDir[223] = inDir[-5:] = -1
     
     #populate lines and check that vectors point inward
     lines = gitr_lines_from_points(r_final, z_final)
-    lines_to_vectors(lines, inDir, 'inDir', plt, plot_variables, False)
+    lines_to_vectors(lines, inDir, plt, plot_variables, False)
     
     #give the divertor target segments, targ_indices, a material and an interactive surface
     Z = np.zeros(len(r_final))

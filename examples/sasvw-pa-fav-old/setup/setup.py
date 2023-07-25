@@ -5,7 +5,7 @@ import shutil
 import numpy as np
 import solpsProcessing, makeGeom, makeParticleSource
 
-nP = int(5e2)
+nP = int(5)
 W_surface_indices = np.arange(10,24)
 
 makeGeom.main(gitr_geometry_filename='gitrGeometry.cfg', \
@@ -31,7 +31,7 @@ solpsProcessing.readEquilibrium(equilibrium_filename = 'assets/dg.equ', \
 shutil.move('bField.nc', '../input/bField.nc')
 '''
 solpsProcessing.plot_surf_plasma_params(W_surf = W_surface_indices)
-'''
+
 makeParticleSource.point_source(nP)
 '''
 makeParticleSource.distributed_source(nP, surfW = W_surface_indices, \
@@ -44,5 +44,5 @@ makeParticleSource.distributed_source(nP, surfW = W_surface_indices, \
                     ftCFile = 'assets/ftridynBackgroundC.nc', \
                     configuration = 'random', \
                     plot_variables = 0)
-'''
+
 shutil.move('particleSource.nc', '../input/particleSource.nc')

@@ -5,7 +5,7 @@ close all
 A = dlmread('gitr_rz.txt');
 A = A(1:end-1,:);
 stop = length(A);
-ind = zeros(stop/2,1);
+ind = zeros(int8(floor(stop))/2,1);
 i = 0;
 for j = [1:stop]
     %if rem(j,2) ~= 0

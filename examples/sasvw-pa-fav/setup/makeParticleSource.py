@@ -45,7 +45,7 @@ def point_source(nP = int(2e2)):
     vzz[:] = vz
     rootgrp.close()
 
-def distributed_source(nP, surfW=np.arange(10,24), \
+def distributed_source(nP, surfW, \
             geom = '../input/gitrGeometry.cfg', \
             profiles_file = '../input/plasmaProfiles.nc', \
             gitr_rz = 'assets/gitr_rz.txt', \
@@ -101,7 +101,7 @@ def distributed_source(nP, surfW=np.arange(10,24), \
         plt.xlabel('r [m]')
         plt.ylabel('z [m]')
         plt.title('Upper Outer SAS-VW Divertor in DIII-D \n makeParticleSource')
-        plt.savefig('plots/makePSGeom.png')
+        plt.savefig('plots/geom/makePSGeom.png')
 
     slope = np.zeros(len(r1))
     Alpha = np.zeros(len(r1))
@@ -242,8 +242,8 @@ def distributed_source(nP, surfW=np.arange(10,24), \
         plt.plot(rmrsFine, fluxC6, 'purple', label='C6+')
         plt.axvline(x=rmrsCoarse[4], color='k', linestyle='dotted')
         plt.axvline(x=rmrsCoarse[10], color='k', linestyle='dotted')
-        plt.axvline(x=rmrsCoarse[11], color='k', linestyle='dotted')
-        plt.axvline(x=rmrsCoarse[12], color='k', linestyle='dotted')
+        #plt.axvline(x=rmrsCoarse[11], color='k', linestyle='dotted')
+        #plt.axvline(x=rmrsCoarse[12], color='k', linestyle='dotted')
         #plt.yscale('log')
         plt.xlabel('D-Dsep [m]')
         plt.ylabel('Flux [#/m2s]')
@@ -252,8 +252,8 @@ def distributed_source(nP, surfW=np.arange(10,24), \
         plt.savefig('plots/particle-source/incident_flux.png')
 
         plt.close()
-        plt.rcParams.update({'font.size':16})
-        plt.rcParams.update({'lines.linewidth':3})
+        #plt.rcParams.update({'font.size':16})
+        #plt.rcParams.update({'lines.linewidth':3})
         
         plt.plot(rmrsFine, spyldD, 'black', label='D$^{1+}$')
         plt.plot(rmrsFine, spyldC1, 'firebrick', label='C$^{1+}$')
@@ -268,14 +268,14 @@ def distributed_source(nP, surfW=np.arange(10,24), \
         plt.xlabel('D-Dsep [m]')
         plt.ylabel('Sputtering Yield')
         plt.title('W Sputtering Yield by Incident Ions',fontsize=20)
-        plt.show(block=True)
+        plt.show(block=False)
         plt.savefig('plots/particle-source/spyld.png')
         
         plt.close()
         plt.axvline(x=rmrsCoarse[4], color='k', linestyle='dotted', label='\u0394\u03A8$_B$')
         plt.axvline(x=rmrsCoarse[10], color='k', linestyle='dotted')
-        plt.axvline(x=rmrsCoarse[11], color='k', linestyle='dotted')
-        plt.axvline(x=rmrsCoarse[12], color='k', linestyle='dotted')
+        #plt.axvline(x=rmrsCoarse[11], color='k', linestyle='dotted')
+        #plt.axvline(x=rmrsCoarse[12], color='k', linestyle='dotted')
         
         plt.plot(rmrsFine, sputt_fluxD, 'black', label='D$^{1+}$')
         plt.plot(rmrsFine, sputt_fluxC1, 'firebrick', label='C$^{1+}$')
@@ -408,7 +408,7 @@ def distributed_source(nP, surfW=np.arange(10,24), \
     if plot_variables == 1:
         #plot Thomson E dist
         plt.close()
-        plt.hist(E,bins=50)
+        plt.hist(E,bins=54)
         plt.xlabel('Energy Bins [eV]')
         plt.ylabel('Histogram')
         plt.title('Thomson Energy Distribution \n nP='+str(int_weights[-1]))
@@ -673,7 +673,7 @@ def get_analytic_spyld(surfE, surfA, Z1=6, M1=12, Z2=74, M2=183.84, \
 
 if __name__ == "__main__":
     init()
-    distributed_source(nP=int(1), surfW=np.arange(10,24), \
+    distributed_source(nP=int(10000), surfW=np.arange(10,24), \
                 geom = '../input/gitrGeometry.cfg', \
                 profiles_file = '../input/plasmaProfiles.nc', \
                 gitr_rz = 'assets/gitr_rz.txt', \

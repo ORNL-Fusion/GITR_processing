@@ -63,19 +63,19 @@ def plot_particle_source():
     z = particleSource.variables['z'][:]
     
     plt.close()
+    plt.hist(z,bins=10)
+    plt.xlabel('z [m]')
+    plt.title('Spatial Distribution in Z \n nP='+str(len(x)))
+    plt.savefig('plots/zhist.png')
+    
+    plt.close()
     plt.plot(R,Z,'-k',linewidth=0.7)
-    plt.scatter(x,z,marker='_',s=8)
+    plt.scatter(x,z,marker='_')
     plt.axis('scaled')
     plt.xlabel('r [m]')
     plt.ylabel('z [m]')
     plt.title('Spatial Particle Source \n nP='+str(len(x)))
     plt.savefig('plots/particleSource.png')
-    
-    plt.close()
-    plt.hist(z,bins=10)
-    plt.xlabel('z [m]')
-    plt.title('Spatial Distribution in Z \n nP='+str(len(x)))
-    plt.savefig('plots/zhist.png')
 
 def plot_history2D(history_file='history.nc', \
                    basic=1, continuousChargeState=0, endChargeState=0, \
@@ -277,7 +277,7 @@ def plot_surf_nc(pps_per_nP, \
     plt.axvline(x=rmrs[4], color='k', linestyle='dotted', label='\u0394\u03A8$_B$')
     plt.axvline(x=rmrs[10], color='k', linestyle='dotted')
     plt.axvline(x=rmrs[11], color='k', linestyle='dotted')
-    plt.axvline(x=rmrs[12], color='k', linestyle='dotted')
+    #plt.axvline(x=rmrs[12], color='k', linestyle='dotted')
     
     plt.plot(rmrsFine,grossEro_norm,'r', label='Gross Erosion', linewidth=10)
     plt.plot(rmrsFine,grossDep_norm,'g', label='Redeposition')
@@ -408,11 +408,11 @@ def spectroscopy(pps_per_nP, View=3, \
 if __name__ == "__main__":
     #init()
     #plot_gitr_gridspace()
-    #plot_particle_source()
+    plot_particle_source()
     #plot_history2D('history-alpine.nc', plot_particle_source=1, markersize=2)
     #plot_history2D("../../../../GITR/scratch/output/history.nc")
     #plot_history2D("history_nP5e2_nT1e5.nc")
-    plot_surf_nc(7.582961536113231e+17, 'surface-alpine.nc')
+    #plot_surf_nc(7.582961536113231e+17, 'surface-alpine.nc')
     #plot_surf_nc(3791480768056.615, "surfaceP6T6.nc")
     #plot_surf_nc(37914807680566.16, "/Users/Alyssa/Dev/SAS-VW-Data/netcdf_data/nP5/surf-5-6.nc")
     #spectroscopy(3791480768056.615,specFile='specP6T6.nc')
