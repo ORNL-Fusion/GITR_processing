@@ -45,7 +45,7 @@ def point_source(nP = int(2e2)):
     vzz[:] = vz
     rootgrp.close()
 
-def distributed_source(nP, surfW, \
+def distributed_source(nP, surfW, Bangle_shift_indices=[], \
             geom = '../input/gitrGeometry.cfg', \
             profiles_file = '../input/plasmaProfiles.nc', \
             gitr_rz = 'assets/gitr_rz.txt', \
@@ -97,6 +97,7 @@ def distributed_source(nP, surfW, \
        # plt.plot(r_right_target[surfW], z_right_target[surfW], 'purple', label='Profiles Tungsten', linewidth=3, zorder=1)
         plt.plot(R, Z, 'violet', label='Tungsten', linewidth=0.6, zorder=2)
         plt.scatter(R, Z, marker='_', color='violet', s=8, zorder=3)
+        plt.axis('scaled')
         plt.legend()
         plt.xlabel('r [m]')
         plt.ylabel('z [m]')
@@ -119,6 +120,7 @@ def distributed_source(nP, surfW, \
 
     dist = np.sqrt(np.power(r1-r2,2) + np.power(z1-z2,2))
     area = np.pi*(r1+r2)*dist
+    
 
     ##############################################
     #get W/s sputtered by D, C flux to wall
@@ -233,6 +235,10 @@ def distributed_source(nP, surfW, \
 
     if plot_variables == 1:        
         plt.close()
+        if Bangle_shift_indices != []:
+            for i in Bangle_shift_indices:
+                plt.axvline(x=rmrsCoarse[i], color='k', linestyle='dotted')
+        
         plt.plot(rmrsFine, fluxD, 'black', label='D1+')
         plt.plot(rmrsFine, fluxC1, 'red', label='C1+')
         plt.plot(rmrsFine, fluxC2, 'darkorange', label='C2+')
@@ -240,10 +246,6 @@ def distributed_source(nP, surfW, \
         plt.plot(rmrsFine, fluxC4, 'green', label='C4+')
         plt.plot(rmrsFine, fluxC5, 'blue', label='C5+')
         plt.plot(rmrsFine, fluxC6, 'purple', label='C6+')
-        plt.axvline(x=rmrsCoarse[4], color='k', linestyle='dotted')
-        plt.axvline(x=rmrsCoarse[10], color='k', linestyle='dotted')
-        #plt.axvline(x=rmrsCoarse[11], color='k', linestyle='dotted')
-        #plt.axvline(x=rmrsCoarse[12], color='k', linestyle='dotted')
         #plt.yscale('log')
         plt.xlabel('D-Dsep [m]')
         plt.ylabel('Flux [#/m2s]')
@@ -272,10 +274,9 @@ def distributed_source(nP, surfW, \
         plt.savefig('plots/particle-source/spyld.png')
         
         plt.close()
-        plt.axvline(x=rmrsCoarse[4], color='k', linestyle='dotted', label='\u0394\u03A8$_B$')
-        plt.axvline(x=rmrsCoarse[10], color='k', linestyle='dotted')
-        #plt.axvline(x=rmrsCoarse[11], color='k', linestyle='dotted')
-        #plt.axvline(x=rmrsCoarse[12], color='k', linestyle='dotted')
+        if Bangle_shift_indices != []:
+            for i in Bangle_shift_indices:
+                plt.axvline(x=rmrsCoarse[i], color='k', linestyle='dotted')
         
         plt.plot(rmrsFine, sputt_fluxD, 'black', label='D$^{1+}$')
         plt.plot(rmrsFine, sputt_fluxC1, 'firebrick', label='C$^{1+}$')
@@ -673,7 +674,7 @@ def get_analytic_spyld(surfE, surfA, Z1=6, M1=12, Z2=74, M2=183.84, \
 
 if __name__ == "__main__":
     init()
-    distributed_source(nP=int(10000), surfW=np.arange(10,24), \
+    distributed_source(nP=int(10000), surfW=np.arange(11,22), \
                 geom = '../input/gitrGeometry.cfg', \
                 profiles_file = '../input/plasmaProfiles.nc', \
                 gitr_rz = 'assets/gitr_rz.txt', \

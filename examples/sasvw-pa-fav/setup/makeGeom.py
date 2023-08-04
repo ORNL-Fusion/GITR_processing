@@ -8,8 +8,8 @@ import io, libconf, netCDF4
 
 def init():
     #set plotting style defaults
-    plt.rcParams.update({'font.size':11.5})
-    plt.rcParams.update({'lines.linewidth':1.2})
+    plt.rcParams.update({'font.size':10})
+    plt.rcParams.update({'lines.linewidth':2.5})
     plt.rcParams.update({'lines.markersize':5})
 
 def replace_line_segment(x_priority, y_priority, x_base, y_base):
@@ -278,6 +278,10 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     # should be along the plasmaProfiles.nc targets
     if plot_variables:
         plt.close()
+        tile_shift_indices = [1,9]
+        if tile_shift_indices != []:
+            for i in tile_shift_indices:
+                plt.axhline(y=z_right_target[W_indices_profiles][i], color='k', linestyle='dotted')
         plt.plot(r_right_target, z_right_target, '-k', label='Carbon', linewidth=5)
         plt.plot(r_final[W_indicesCoarse], z_final[W_indicesCoarse], 'violet', label='Tungsten', linewidth=3)
         plt.scatter(r_final[W_indicesCoarse], z_final[W_indicesCoarse], marker='_', color='violet')
@@ -288,7 +292,7 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
         plt.ylabel('z [m]')
         plt.title('Upper Outer SAS-VW Divertor in DIII-D \n makeGeom')
         plt.savefig('plots/geom/makeGeomCoarse.png')
-        plt.show(block=False)
+        plt.show(block=True)
     
     #set number of added points in a line segment to be proportional to the length of the segment
     rSurfCoarse = r_final[W_indicesCoarse]
@@ -307,30 +311,31 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     
     if plot_variables:
         plt.close()
-        plt.rcParams.update({'font.size':16})
-        plt.plot(r_right_target, z_right_target, '-k', label='Carbon', linewidth=1)
-        plt.plot(r_final[W_indices], z_final[W_indices], 'violet', label='Tungsten', linewidth=1)
-        plt.scatter(r_final[W_indices], z_final[W_indices], marker='_', color='violet')
-        plt.scatter(rSurfFine[strikepoint_index], zSurfFine[strikepoint_index], label='Strikepoint', marker='x', color='k', s=350, zorder=5)
+        plt.plot(r_right_target, z_right_target, '-k', label='Carbon', linewidth=0.5)
+        plt.plot(r_final[W_indices], z_final[W_indices], 'violet', label='Tungsten', linewidth=0.5)
+        plt.scatter(r_final[W_indices], z_final[W_indices], marker='.', s=1.5, color='violet')
+        plt.scatter(rSurfFine[strikepoint_index], zSurfFine[strikepoint_index], label='Strikepoint', marker='x', color='k', s=150, zorder=5)
         plt.legend()
         plt.axis('scaled')
         plt.xlabel('r [m]')
         plt.ylabel('z [m]')
-        plt.axis('scaled')
-        plt.title('Upper Outer SAS-VW Divertor', fontsize=20)
+        plt.title('Cross Section of SAS-VW Divertor')
         plt.savefig('plots/geom/makeGeom.png')
         plt.show(block=False)
     
     if plot_variables:
         #plot correctly-ordered line segments
         plt.close()
-        plt.plot(r_final, z_final, linewidth=0.5)
-        plt.scatter(r_final, z_final, s=1)
+        plt.plot(r_final, z_final, 'k', label='Carbon')
+        #plt.scatter(r_final, z_final, s=1)
+        plt.plot(r_final[W_indices], z_final[W_indices], 'orchid', label='Tungsten')
         plt.axis('scaled')
         plt.xlabel('r [m]')
         plt.ylabel('z [m]')
-        plt.title('DIII-D SAS-VW Geometry')
+        plt.title('Cross Section of DIII-D Geometry')
+        plt.legend()
         plt.savefig('plots/geom/gitr_final.png')
+        plt.show(block=False)
     
     #define interior side of each line segment in the geometry with inDir
     inDir = np.ones(len(r_final))

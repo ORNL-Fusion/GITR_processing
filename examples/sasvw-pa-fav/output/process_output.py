@@ -408,11 +408,12 @@ def spectroscopy(pps_per_nP, View=3, \
 if __name__ == "__main__":
     #init()
     #plot_gitr_gridspace()
-    plot_particle_source()
+    #plot_particle_source()
     #plot_history2D('history-alpine.nc', plot_particle_source=1, markersize=2)
     #plot_history2D("../../../../GITR/scratch/output/history.nc")
     #plot_history2D("history_nP5e2_nT1e5.nc")
     #plot_surf_nc(7.582961536113231e+17, 'surface-alpine.nc')
     #plot_surf_nc(3791480768056.615, "surfaceP6T6.nc")
+    plot_surf_nc(1063289762078132.4, "surface.nc")
     #plot_surf_nc(37914807680566.16, "/Users/Alyssa/Dev/SAS-VW-Data/netcdf_data/nP5/surf-5-6.nc")
     #spectroscopy(3791480768056.615,specFile='specP6T6.nc')

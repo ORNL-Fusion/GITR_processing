@@ -22,20 +22,22 @@ shutil.move('gitrGeometry.cfg', '../input/gitrGeometry.cfg')
 solpsProcessing.readEquilibrium(equilibrium_filename = 'assets/dg.equ', \
                     W_indices = W_indices, \
                     solps_geom = 'assets/b2fgmtry', \
-                    plot_variables = 1)
+                    plot_variables = 0)
 
 shutil.move('bField.nc', '../input/bField.nc')
 
-solpsProcessing.plot_surf_plasma_params(W_surf = W_indices)
+solpsProcessing.plot_surf_plasma_params(W_surf = W_indices, \
+                    Bangle_shift_indices = [3,8,9])
 '''
 makeParticleSource.point_source(nP)
 '''
 makeParticleSource.distributed_source(nP, surfW = W_indices, \
+                    Bangle_shift_indices = [3,8,9], \
                     geom = '../input/gitrGeometry.cfg', \
                     profiles_file = '../input/plasmaProfiles.nc', \
                     ftDFile = 'assets/ftridynBackgroundD.nc', \
                     ftCFile = 'assets/ftridynBackgroundC.nc', \
                     configuration = 'random', \
-                    plot_variables = 1)
+                    plot_variables = 0)
 
 shutil.move('particleSource.nc', '../input/particleSource.nc')

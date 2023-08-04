@@ -42,27 +42,37 @@ for i=1:nx+2
 end
 %print 'plotted b2fgmtry'
 
-%%
+
 %get from gitrGeometry.cfg
 
 fid = fopen('gitrGeometry.cfg');
 
 tline = fgetl(fid);
-
 tline = fgetl(fid);
 
+W_indices = [70:70+110];
+
 for i=1:2
-
     tline = fgetl(fid);
-
+    
     evalc(tline);
-
 end
-hold on
-gitr = plot(x1,z1,'m');
 
-legend([ogr,b2f,gitr], 'ogr wall','b2fgmtry target','GITR boundary')
+hold on
+gitr = plot(x1,z1,'c','linewidth',1);
+W = plot(x1(W_indices),z1(W_indices),'m','linewidth',1);
+scatter(x1(W_indices),z1(W_indices),50,'.','m');
+strikepoint = plot([1.49829829],[1.19672716],'pentagram');
+strikepoint.MarkerFaceColor = [1 0.5 0];
+strikepoint.MarkerSize = 20;
+%legend([ogr,b2f,gitr], 'ogr wall','b2fgmtry target','GITR boundary')
+[h, icons] = legend([gitr,W,strikepoint],'Carbon','Tungsten','Strikepoint','fontsize',30);
+
 axis equal
+title('Cross Section of SAS-VW Geometry and SOLPS-ITER Grid','fontsize',30)
+xlabel('r [m]','fontsize',30)
+ylabel('z [m]','fontsize',30)
+
 
 %%
 topcut =  read_b2f_variable("b2fgmtry", "topcut")+2;
