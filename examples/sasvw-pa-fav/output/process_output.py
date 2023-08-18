@@ -115,9 +115,9 @@ def plot_history2D(history_file='history.nc', \
     
     # all particle source vars ordered as (nP, nT)
     if basic==1:
-        for p in range(0,nP):
+        for p in range(0,nP,100):
             plt.plot(x[p][:],z[p][:])
-            plt.scatter(x[p][:],z[p][:],marker='_',s=50,c='k')
+            #plt.scatter(x[p][:],z[p][:],marker='_',s=50,c='k')
     
     if continuousChargeState==1:
         for p in np.arange(0,nP,1):
@@ -224,7 +224,7 @@ def plot_surf_nc(pps_per_nP, \
     netDep_cumsum = np.cumsum(netDep)
     
     #take gross erosion of a slice in the filterscope range
-    r_sp, z_sp = 1.49814916, 1.19640505
+    r_sp, z_sp = 1.49829829, 1.19672716
     
     r1_start, z1_start = 1.491288, 1.21629
     r1_end, z1_end = 1.49274, 1.22149
@@ -409,11 +409,12 @@ if __name__ == "__main__":
     #init()
     #plot_gitr_gridspace()
     #plot_particle_source()
+    plot_history2D('history.nc')
     #plot_history2D('history-alpine.nc', plot_particle_source=1, markersize=2)
     #plot_history2D("../../../../GITR/scratch/output/history.nc")
     #plot_history2D("history_nP5e2_nT1e5.nc")
     #plot_surf_nc(7.582961536113231e+17, 'surface-alpine.nc')
     #plot_surf_nc(3791480768056.615, "surfaceP6T6.nc")
-    plot_surf_nc(1063289762078132.4, "surface.nc")
+    #plot_surf_nc(1063289762078132.4, "surface.nc")
     #plot_surf_nc(37914807680566.16, "/Users/Alyssa/Dev/SAS-VW-Data/netcdf_data/nP5/surf-5-6.nc")
     #spectroscopy(3791480768056.615,specFile='specP6T6.nc')

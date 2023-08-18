@@ -64,7 +64,7 @@ def distributed_source(nP, surfW, Bangle_shift_indices=[], \
     profiles = netCDF4.Dataset(profiles_file)
     r_right_target = profiles.variables['r_inner_target']
     z_right_target = profiles.variables['z_inner_target']
-    rmrsCoarse = profiles.variables['rmrs_inner_target'][surfW]
+    rmrsCoarse = profiles.variables['rmrs_inner_target_midpoints'][surfW]
 
     #import refined rmrs at the W surface
     with open(rmrs_fine_file, 'r') as file:
@@ -138,12 +138,12 @@ def distributed_source(nP, surfW, Bangle_shift_indices=[], \
     if plot_variables == 1:
         plt.close()
         plt.plot(rmrsFine, energyD, 'black', label='D1+')
-        plt.plot(rmrsFine, energyC1, 'red', label='C1+')
+        plt.plot(rmrsFine, energyC1, 'firebrick', label='C1+')
         plt.plot(rmrsFine, energyC2, 'darkorange', label='C2+')
         plt.plot(rmrsFine, energyC3, 'gold', label='C3+')
-        plt.plot(rmrsFine, energyC4, 'green', label='C4+')
-        plt.plot(rmrsFine, energyC5, 'blue', label='C5+')
-        plt.plot(rmrsFine, energyC6, 'purple', label='C6+')
+        plt.plot(rmrsFine, energyC4, 'limegreen', label='C4+')
+        plt.plot(rmrsFine, energyC5, 'dodgerblue', label='C5+')
+        plt.plot(rmrsFine, energyC6, 'mediumpurple', label='C6+')
         plt.plot(rmrsFine, 45.3362*np.ones(len(rmrsFine)), 'gray', label='W Eth')
         plt.legend()
         plt.xlabel('D-Dsep [m]')
@@ -153,12 +153,12 @@ def distributed_source(nP, surfW, Bangle_shift_indices=[], \
         
         plt.close()
         plt.plot(rmrsFine, angleD, 'black', label='D1+')
-        plt.plot(rmrsFine, angleC1, 'red', label='C1+')
+        plt.plot(rmrsFine, angleC1, 'firebrick', label='C1+')
         plt.plot(rmrsFine, angleC2, 'darkorange', label='C2+')
         plt.plot(rmrsFine, angleC3, 'gold', label='C3+')
-        plt.plot(rmrsFine, angleC4, 'green', label='C4+')
-        plt.plot(rmrsFine, angleC5, 'blue', label='C5+')
-        plt.plot(rmrsFine, angleC6, 'purple', label='C6+')        
+        plt.plot(rmrsFine, angleC4, 'limegreen', label='C4+')
+        plt.plot(rmrsFine, angleC5, 'dodgerblue', label='C5+')
+        plt.plot(rmrsFine, angleC6, 'mediumpurple', label='C6+')        
         plt.legend()
         plt.xlabel('z [m]')
         plt.ylabel('angle [degrees]')
@@ -182,7 +182,7 @@ def distributed_source(nP, surfW, Bangle_shift_indices=[], \
     #get coarse flux profile from background D, C and refine to rmrsFine
     fluxCoarseD0 = np.abs(profiles.variables['flux_inner_target'][0][surfW])
     fluxCoarseD = np.abs(profiles.variables['flux_inner_target'][1][surfW])
-    fluxCoarseC0 = np.abs(profiles.variables['flux_inner_target'][3][surfW])
+    fluxCoarseC0 = np.abs(profiles.variables['flux_inner_target'][2][surfW])
     fluxCoarseC1 = np.abs(profiles.variables['flux_inner_target'][3][surfW])
     fluxCoarseC2 = np.abs(profiles.variables['flux_inner_target'][4][surfW])
     fluxCoarseC3 = np.abs(profiles.variables['flux_inner_target'][5][surfW])
@@ -239,18 +239,18 @@ def distributed_source(nP, surfW, Bangle_shift_indices=[], \
             for i in Bangle_shift_indices:
                 plt.axvline(x=rmrsCoarse[i], color='k', linestyle='dotted')
         
-        plt.plot(rmrsFine, fluxD, 'black', label='D1+')
-        plt.plot(rmrsFine, fluxC1, 'red', label='C1+')
-        plt.plot(rmrsFine, fluxC2, 'darkorange', label='C2+')
-        plt.plot(rmrsFine, fluxC3, 'gold', label='C3+')
-        plt.plot(rmrsFine, fluxC4, 'green', label='C4+')
-        plt.plot(rmrsFine, fluxC5, 'blue', label='C5+')
-        plt.plot(rmrsFine, fluxC6, 'purple', label='C6+')
+        plt.plot(rmrsFine, fluxC1, 'firebrick', label='fine C1+', linewidth=0.6)
+        plt.plot(rmrsFine, fluxC2, 'darkorange', label='fine C2+', linewidth=0.6)
+        plt.plot(rmrsFine, fluxC3, 'gold', label='fine C3+', linewidth=0.6)
+        plt.plot(rmrsFine, fluxC4, 'limegreen', label='fine C4+', linewidth=0.6)
+        plt.plot(rmrsFine, fluxC5, 'dodgerblue', label='fine C5+', linewidth=0.6)
+        plt.plot(rmrsFine, fluxC6, 'mediumpurple', label='fine C6+', linewidth=0.6)
         #plt.yscale('log')
         plt.xlabel('D-Dsep [m]')
-        plt.ylabel('Flux [#/m2s]')
+        plt.ylabel('Flux [m$^{-2}$s$^{-1}$]')
         plt.legend(loc='upper right')
         plt.title('Incident Ion Flux')
+        plt.show(block=True)
         plt.savefig('plots/particle-source/incident_flux.png')
 
         plt.close()
@@ -289,6 +289,7 @@ def distributed_source(nP, surfW, Bangle_shift_indices=[], \
         plt.ylabel('Flux [m$^{-2}$s$^{-1}$]')
         plt.legend(loc='upper left')
         plt.title('Flux of W Sputtered off Wall', fontsize=20)
+        plt.show(block=False)
         plt.savefig('plots/particle-source/sputt_flux_charge_dependent.png')
 
         plt.close()

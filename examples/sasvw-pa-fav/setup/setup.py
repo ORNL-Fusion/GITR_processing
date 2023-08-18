@@ -25,10 +25,10 @@ solpsProcessing.readEquilibrium(equilibrium_filename = 'assets/dg.equ', \
                     plot_variables = 0)
 
 shutil.move('bField.nc', '../input/bField.nc')
-
+'''
 solpsProcessing.plot_surf_plasma_params(W_surf = W_indices, \
                     Bangle_shift_indices = [3,8,9])
-'''
+
 makeParticleSource.point_source(nP)
 '''
 makeParticleSource.distributed_source(nP, surfW = W_indices, \

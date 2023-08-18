@@ -58,15 +58,20 @@ for i=1:2
     evalc(tline);
 end
 
+%set real wall coords for adjusted 3rd leg
+r_real = [1502, 1485.5, 1491.05, 1499.909817]/1000;
+z_real = [1163, 1123, 1112.75, 1110.921234]/1000;
+
 hold on
 gitr = plot(x1,z1,'c','linewidth',1);
 W = plot(x1(W_indices),z1(W_indices),'m','linewidth',1);
 scatter(x1(W_indices),z1(W_indices),50,'.','m');
+real_leg = plot(r_real, z_real, 'color', "#77AC30", 'linewidth',2);
 strikepoint = plot([1.49829829],[1.19672716],'pentagram');
 strikepoint.MarkerFaceColor = [1 0.5 0];
 strikepoint.MarkerSize = 20;
 %legend([ogr,b2f,gitr], 'ogr wall','b2fgmtry target','GITR boundary')
-[h, icons] = legend([gitr,W,strikepoint],'Carbon','Tungsten','Strikepoint','fontsize',30);
+[h, icons] = legend([gitr,W,real_leg,strikepoint],'Carbon','Tungsten','Real W 3rd Leg','Strikepoint','fontsize',30);
 
 axis equal
 title('Cross Section of SAS-VW Geometry and SOLPS-ITER Grid','fontsize',30)
