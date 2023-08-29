@@ -32,6 +32,24 @@ crx(:,:,3) = crx0(:,:,4);
 cry(:,:,3) = cry0(:,:,4);
 %print 'got corners'
 %print 'plotting b2fgmtry'
+
+%% plot GITR grid
+profilesFile = strcat('../../input/plasmaProfiles.nc');
+r = ncread(profilesFile,'gridr');
+z = ncread(profilesFile,'gridz');
+nr = length(r);
+nz = length(z);
+dr = r(4)-r(3);
+dz = z(4)-z(3);
+
+figure(10)
+xticks(1.4:dr:1.52);
+yticks(1.08:dz:1.24);
+ax = gca;
+ax.GridColor = [0 0 0];
+grid on
+hold on
+
 %%
 %figure(2)
 hold on
@@ -121,6 +139,7 @@ rmrs_edges = [0; cumsum(segment_length)] - sum(segment_length(1:topcut-1));
 
 te =  read_b2f_variable("b2fstate", "te");
 ti =  read_b2f_variable("b2fstate", "ti");
+gradTit = read_b2f_variable("b2fstate", "gradTit");
 bb =  read_b2f_variable("b2fgmtry", "bb");
 bb = reshape(bb,nx+2,ny+2,4);
 
@@ -135,7 +154,7 @@ end
 
 %% plot te over the b2fgmtry grid
 
-te = reshape(te,nx+2,ny+2);
+gradTi = reshape(gradTi,nx+2,ny+2);
 % ti = reshape(ti,nx+2,ny+2);
 figure(5)
 for i=1:nx+2
@@ -160,7 +179,6 @@ te_surface = (te_cells1.*0.5.*hx_cells2 + te_cells2.*0.5.*hx_cells1)./(0.5*(hx_c
 
 figure(6)
 plot(rmrs_center,te_surface)
-
 %%
 function field =  read_b2f_variable(solps_geometry_filename, field_name)
 %     f = fopen(solps_geometry_filename, 'r')

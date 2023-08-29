@@ -239,18 +239,26 @@ def distributed_source(nP, surfW, Bangle_shift_indices=[], \
             for i in Bangle_shift_indices:
                 plt.axvline(x=rmrsCoarse[i], color='k', linestyle='dotted')
         
-        plt.plot(rmrsFine, fluxC1, 'firebrick', label='fine C1+', linewidth=0.6)
-        plt.plot(rmrsFine, fluxC2, 'darkorange', label='fine C2+', linewidth=0.6)
-        plt.plot(rmrsFine, fluxC3, 'gold', label='fine C3+', linewidth=0.6)
-        plt.plot(rmrsFine, fluxC4, 'limegreen', label='fine C4+', linewidth=0.6)
-        plt.plot(rmrsFine, fluxC5, 'dodgerblue', label='fine C5+', linewidth=0.6)
-        plt.plot(rmrsFine, fluxC6, 'mediumpurple', label='fine C6+', linewidth=0.6)
+        plt.plot(rmrsFine, fluxC1, 'firebrick', label='C$^{1+}$')
+        plt.plot(rmrsFine, fluxC2, 'darkorange', label='C$^{2+}$')
+        plt.plot(rmrsFine, fluxC3, 'gold', label='C$^{3+}$')
+        plt.plot(rmrsFine, fluxC4, 'limegreen', label='C$^{4+}$')
+        plt.plot(rmrsFine, fluxC5, 'dodgerblue', label='C$^{5+}$')
+        plt.plot(rmrsFine, fluxC6, 'mediumpurple', label='C$^{6+}$')
+        '''
+        plt.plot(rmrsCoarse, fluxCoarseC1, 'firebrick', linestyle='dotted', label='C$^{1+}$')
+        plt.plot(rmrsCoarse, fluxCoarseC2, 'darkorange', linestyle='dotted', label='C$^{2+}$')
+        plt.plot(rmrsCoarse, fluxCoarseC3, 'gold', linestyle='dotted', label='C$^{3+}$')
+        plt.plot(rmrsCoarse, fluxCoarseC4, 'limegreen', linestyle='dotted', label='C$^{4+}$')
+        plt.plot(rmrsCoarse, fluxCoarseC5, 'dodgerblue', linestyle='dotted', label='C$^{5+}$')
+        plt.plot(rmrsCoarse, fluxCoarseC6, 'mediumpurple', linestyle='dotted', label='C$^{6+}$')
+        '''
         #plt.yscale('log')
         plt.xlabel('D-Dsep [m]')
         plt.ylabel('Flux [m$^{-2}$s$^{-1}$]')
-        plt.legend(loc='upper right')
-        plt.title('Incident Ion Flux')
-        plt.show(block=True)
+        plt.legend()
+        plt.title('C ion flux to W surface', fontsize=20)
+        plt.show(block=False)
         plt.savefig('plots/particle-source/incident_flux.png')
 
         plt.close()
@@ -269,7 +277,7 @@ def distributed_source(nP, surfW, Bangle_shift_indices=[], \
         plt.legend()
         plt.xlabel('D-Dsep [m]')
         plt.ylabel('Sputtering Yield')
-        plt.title('W Sputtering Yield by Incident Ions',fontsize=20)
+        plt.title('W sputtering yield by incident ions',fontsize=20)
         plt.show(block=False)
         plt.savefig('plots/particle-source/spyld.png')
         
@@ -288,7 +296,7 @@ def distributed_source(nP, surfW, Bangle_shift_indices=[], \
         plt.xlabel('D-Dsep [m]')
         plt.ylabel('Flux [m$^{-2}$s$^{-1}$]')
         plt.legend(loc='upper left')
-        plt.title('Flux of W Sputtered off Wall', fontsize=20)
+        plt.title('Flux of W sputtered off wall', fontsize=20)
         plt.show(block=False)
         plt.savefig('plots/particle-source/sputt_flux_charge_dependent.png')
 
@@ -296,7 +304,7 @@ def distributed_source(nP, surfW, Bangle_shift_indices=[], \
         plt.plot(rmrsFine, sputt_flux)
         plt.xlabel('D-Dsep [m]')
         plt.ylabel('Flux [#/m2s]')
-        plt.title('Flux of W Sputtered off Wall')
+        plt.title('Flux of W sputtered off wall')
         plt.savefig('plots/particle-source/sputt_flux.png') 
 
         plt.close()
@@ -676,6 +684,7 @@ def get_analytic_spyld(surfE, surfA, Z1=6, M1=12, Z2=74, M2=183.84, \
 if __name__ == "__main__":
     init()
     distributed_source(nP=int(10000), surfW=np.arange(11,22), \
+                Bangle_shift_indices = [3,8,9], \
                 geom = '../input/gitrGeometry.cfg', \
                 profiles_file = '../input/plasmaProfiles.nc', \
                 gitr_rz = 'assets/gitr_rz.txt', \

@@ -283,9 +283,9 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
             for i in tile_shift_indices:
                 plt.axhline(y=z_right_target[W_indices_profiles][i], color='k', linestyle='dotted')
         plt.plot(r_right_target, z_right_target, '-k', label='Carbon', linewidth=5)
-        plt.plot(r_final[W_indicesCoarse], z_final[W_indicesCoarse], 'violet', label='Tungsten', linewidth=3)
+        plt.plot(r_final[W_indicesCoarse], z_final[W_indicesCoarse], 'violet', label='W Indices Relative to Full Wall', linewidth=3)
         plt.scatter(r_final[W_indicesCoarse], z_final[W_indicesCoarse], marker='_', color='violet')
-        plt.plot(r_right_target[W_indices_profiles], z_right_target[W_indices_profiles], 'c', label='Tungsten', linewidth=1)
+        plt.plot(r_right_target[W_indices_profiles], z_right_target[W_indices_profiles], 'c', label='W Indices Relative to InterpValues.nc', linewidth=1)
         plt.legend()
         plt.axis('scaled')
         plt.xlabel('r [m]')
@@ -305,6 +305,25 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     W_indices = np.array(range(W_indicesCoarse[0], W_indicesCoarse[-1]+numAddedPoints+1)) #+1 may need to be added because range function is exclusive
     print('length Fine W_indices:',len(W_indices))
     
+    #test to check that the refined rmrsMid fall between the matching coarse rmrs midpoint values
+    print('\n')
+    print('TEST')
+    rmrsMidCoarse = profiles.variables['rmrs_inner_target_midpoints'][W_indices_profiles]
+    #print(rmrsMidCoarse)
+    #print(rmrsMid)
+    rmrsTestCoarse = np.ones(len(rmrsMidCoarse))
+    rmrsTestFine = np.ones(len(rmrsMid))
+    plt.close()
+    plt.scatter(rmrsMidCoarse, rmrsTestCoarse, s=5, color='orange', label='Coarse')
+    plt.scatter(rmrsMid, rmrsTestFine, s=1, color='cyan', label='Fine')
+    plt.title('Ones plotted rmrs values')
+    plt.xlabel('rmrs a.k.a. D-Dsep [m]')
+    plt.legend()
+    plt.show(block=True)
+    plt.close()
+    print('TEST')
+    print('\n')
+    
     #find strikepoint
     strikepoint_index = np.where(rmrsFine==0)[0]
     print('Strikepoint Coords:', rSurfFine[strikepoint_index], zSurfFine[strikepoint_index])
@@ -313,7 +332,8 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
         plt.close()
         plt.plot(r_right_target, z_right_target, '-k', label='Carbon', linewidth=0.5)
         plt.plot(r_final[W_indices], z_final[W_indices], 'violet', label='Tungsten', linewidth=0.5)
-        plt.scatter(r_final[W_indices], z_final[W_indices], marker='.', s=1.5, color='violet')
+        plt.scatter(rSurfCoarse, zSurfCoarse, marker='.', s=20, color='green')
+        plt.scatter(r_final[W_indices], z_final[W_indices], marker='.', s=10, color='violet')
         plt.scatter(rSurfFine[strikepoint_index], zSurfFine[strikepoint_index], label='Strikepoint', marker='x', color='k', s=150, zorder=5)
         plt.legend()
         plt.axis('scaled')
@@ -321,7 +341,7 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
         plt.ylabel('z [m]')
         plt.title('Cross Section of SAS-VW Divertor')
         plt.savefig('plots/geom/makeGeom.png')
-        plt.show(block=False)
+        plt.show(block=True)
     
     if plot_variables:
         #plot correctly-ordered line segments

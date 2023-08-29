@@ -22,7 +22,8 @@ shutil.move('gitrGeometry.cfg', '../input/gitrGeometry.cfg')
 solpsProcessing.readEquilibrium(equilibrium_filename = 'assets/dg.equ', \
                     W_indices = W_indices, \
                     solps_geom = 'assets/b2fgmtry', \
-                    plot_variables = 0)
+                    flip_Bt = True, \
+                    plot_variables = 1)
 
 shutil.move('bField.nc', '../input/bField.nc')
 '''

@@ -7,7 +7,7 @@ import matplotlib.patches as mpatches
 import netCDF4
 import solps
 
-def init(W_indices = np.arange(10,24)):
+def init(W_indices = np.arange(11,22)):
     profilesFile = '../input/plasmaProfiles.nc'
     profiles = netCDF4.Dataset(profilesFile)
     
@@ -89,7 +89,7 @@ def plot_history2D(history_file='history.nc', \
     profiles, W_indices, R, Z, rmrs = init()
     history = netCDF4.Dataset(history_file, "r", format="NETCDF4")
 
-    plt.rcParams.update({'lines.linewidth':0.2})
+    plt.rcParams.update({'lines.linewidth':1})
     plt.rcParams.update({'lines.markersize':markersize})
     plt.rcParams.update({'font.size':16})
 
@@ -147,7 +147,8 @@ def plot_history2D(history_file='history.nc', \
 
     return
 
-def plot_surf_nc(pps_per_nP, \
+def plot_surf_nc(pps_per_nP, nP10, nT10, \
+                 Bangle_shift_indices, \
                  surface_file="surface.nc", \
                  gitr_rz='../setup/assets/gitr_rz.txt', \
                  W_fine_file='../setup/assets/W_fine.txt', \
@@ -273,11 +274,11 @@ def plot_surf_nc(pps_per_nP, \
     plt.axvspan(rmrs2_start, rmrs2_end, color='lightsalmon', alpha=0.5)
     plt.axvspan(rmrs3_start, rmrs3_end, color='#f99301', alpha=0.5)
     
+    
     plt.plot(rmrsFine,np.zeros(len(rmrsFine)),'gray')
-    plt.axvline(x=rmrs[4], color='k', linestyle='dotted', label='\u0394\u03A8$_B$')
-    plt.axvline(x=rmrs[10], color='k', linestyle='dotted')
-    plt.axvline(x=rmrs[11], color='k', linestyle='dotted')
-    #plt.axvline(x=rmrs[12], color='k', linestyle='dotted')
+    if Bangle_shift_indices != []:
+        for i in Bangle_shift_indices:
+            plt.axvline(x=rmrs[i], color='k', linestyle='dotted')#, label='\u0394\u03A8$_B$')
     
     plt.plot(rmrsFine,grossEro_norm,'r', label='Gross Erosion', linewidth=10)
     plt.plot(rmrsFine,grossDep_norm,'g', label='Redeposition')
@@ -287,7 +288,7 @@ def plot_surf_nc(pps_per_nP, \
     plt.ylabel('\u0393$_{W,outgoing}$ / \u0393$_{C,incoming}$')
     plt.ticklabel_format(axis='y',style='sci',scilimits=(-2,2))
     plt.legend()#loc='upper left')
-    plt.title('GITR Predicted Erosion and \n Redeposition Profiles, nP=1e6, nT=1e6')
+    plt.title('GITR Predicted Erosion and \n Redeposition Profiles, nP=1e'+str(nP10)+', nT=1e'+str(nT10))
     plt.savefig('plots/surface.png')
     
     if plot_cumsum:
@@ -409,12 +410,12 @@ if __name__ == "__main__":
     #init()
     #plot_gitr_gridspace()
     #plot_particle_source()
-    plot_history2D('history.nc')
+    #plot_history2D('history.nc')
     #plot_history2D('history-alpine.nc', plot_particle_source=1, markersize=2)
     #plot_history2D("../../../../GITR/scratch/output/history.nc")
     #plot_history2D("history_nP5e2_nT1e5.nc")
     #plot_surf_nc(7.582961536113231e+17, 'surface-alpine.nc')
-    #plot_surf_nc(3791480768056.615, "surfaceP6T6.nc")
+    plot_surf_nc(1006929636574578.9, 5, 5, [3,8,9], "surface_p5t5.nc")
     #plot_surf_nc(1063289762078132.4, "surface.nc")
     #plot_surf_nc(37914807680566.16, "/Users/Alyssa/Dev/SAS-VW-Data/netcdf_data/nP5/surf-5-6.nc")
     #spectroscopy(3791480768056.615,specFile='specP6T6.nc')
