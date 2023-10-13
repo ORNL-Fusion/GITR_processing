@@ -45,7 +45,7 @@ def point_source(nP = int(2e2)):
     vzz[:] = vz
     rootgrp.close()
 
-def distributed_source(nP, surfW, Bangle_shift_indices=[], \
+def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[], \
             geom = '../input/gitrGeometry.cfg', \
             profiles_file = '../input/plasmaProfiles.nc', \
             gitr_rz = 'assets/gitr_rz.txt', \
@@ -54,6 +54,7 @@ def distributed_source(nP, surfW, Bangle_shift_indices=[], \
             ftDFile = 'assets/ftridynBackgroundD.nc', \
             ftCFile = 'assets/ftridynBackgroundC.nc', \
             configuration = 'random', \
+            use_fractal_tridyn_outgoing_IEADS = 1, \
             plot_variables = 0):
     
     #import wall geometry to plot over
@@ -64,6 +65,7 @@ def distributed_source(nP, surfW, Bangle_shift_indices=[], \
     profiles = netCDF4.Dataset(profiles_file)
     r_right_target = profiles.variables['r_inner_target']
     z_right_target = profiles.variables['z_inner_target']
+    rmrsCoords = profiles.variables['rmrs_inner_target'][surfW]
     rmrsCoarse = profiles.variables['rmrs_inner_target_midpoints'][surfW]
 
     #import refined rmrs at the W surface
@@ -113,7 +115,7 @@ def distributed_source(nP, surfW, Bangle_shift_indices=[], \
             Alpha[i] = np.abs(np.arctan((z2[i]-z1[i]) / (r2[i]-r1[i])))
         elif (r2[i]-r1[i])==0:
             slope[i] = 100
-            Alpha[i] = 89.999*np.pi/180
+            Alpha[i] = np.pi/2
 
     Alpha = np.abs(Alpha) #np.abs(np.rad2deg(Alpha[W_fine[:-1]]))
     Beta = np.abs(np.pi/2 - Alpha)
@@ -225,16 +227,20 @@ def distributed_source(nP, surfW, Bangle_shift_indices=[], \
     sputt_fluxC6 = spyldC6*fluxC6
     sputt_flux = sputt_fluxD + sputt_fluxC1 + sputt_fluxC2 + sputt_fluxC3 + sputt_fluxC4 + sputt_fluxC5 + sputt_fluxC6
     #print('SPUTT FLUX',len(sputt_flux),'\n',sputt_flux)
+    print('\n')
     print('W eroded flux per nP:', np.sum(sputt_flux)/nP, 'm-2 s-1')
 
 
     #multiply by area to get the outgoing particles per second
     pps = np.multiply(sputt_flux,area)
-    print('Total actual W eroded per second:', np.sum(pps), 's-1')
+    print('Total actual W eroded per second:', np.sum(pps), 's-1 \n')
     pps_weights = nP*pps/np.sum(pps)
 
     if plot_variables == 1:        
         plt.close()
+        if tile_shift_indices != []:
+            for i in tile_shift_indices:
+                plt.axvline(x=rmrsCoords[i], color='k', linestyle='dashed')
         if Bangle_shift_indices != []:
             for i in Bangle_shift_indices:
                 plt.axvline(x=rmrsCoarse[i], color='k', linestyle='dotted')
@@ -282,6 +288,9 @@ def distributed_source(nP, surfW, Bangle_shift_indices=[], \
         plt.savefig('plots/particle-source/spyld.png')
         
         plt.close()
+        if tile_shift_indices != []:
+            for i in tile_shift_indices:
+                plt.axvline(x=rmrsCoords[i], color='k', linestyle='dashed')
         if Bangle_shift_indices != []:
             for i in Bangle_shift_indices:
                 plt.axvline(x=rmrsCoarse[i], color='k', linestyle='dotted')
@@ -345,12 +354,12 @@ def distributed_source(nP, surfW, Bangle_shift_indices=[], \
     pps_weights = np.round(pps_weights)
     int_weights = np.array(pps_weights,dtype='int')
     nP_diff = nP-np.sum(int_weights)
+    pps_per_nP = np.sum(pps)/nP
 
     print('total nP', nP)
-    print('pps over nP', np.sum(pps)/nP)
+    print('pps over nP', pps_per_nP)
     print('nP(r_mid):', int_weights)
     print('nP_diff should be 0: ', nP_diff)
-    
 
     #define adjustment into the sheath because particles can't start exactly on the wall
     adj = 1e-7
@@ -372,35 +381,126 @@ def distributed_source(nP, surfW, Bangle_shift_indices=[], \
     #use PyGITR to set up vx,vy,vz,E,theta,psi distributions
     PartDist = Particles.ParticleDistribution(nP, ListAttr=['vx','vy','vz'])
 
-    vx = np.zeros(1)
-    vy = np.zeros(1)
-    vz = np.zeros(1)
+    vx = np.empty(0)
+    vy = np.empty(0)
+    vz = np.empty(0)
     
     for i in range(len(int_weights)):
     
         weight = int(int_weights[i])
+        weight_diff = np.zeros(len(int_weights))
+        m = np.sign(slope[i])
 
         if weight>0:
-            m = np.sign(slope[i])
-            #get IEADs for sputtered W
-            E = PartDist.Generate(weight, 'Thomson')
-            PolAng = PartDist.Generate(weight, 'SinCos', x=np.linspace(0,np.pi/2,10*weight))
-            AziAng = PartDist.Generate(weight, 'Uniform', x=np.linspace(0,2*np.pi,10*weight))
+            
+            if use_fractal_tridyn_outgoing_IEADS:
+                
+                E = np.empty(0)
+                PolAng = np.empty(0)
+                AziAng = np.empty(0)
+                
+                #confirm species-weighted pps integer weights stay constant
+                weightsC1 = weight * sputt_fluxC1[i]/sputt_flux[i]
+                weightsC2 = weight * sputt_fluxC2[i]/sputt_flux[i]
+                weightsC3 = weight * sputt_fluxC3[i]/sputt_flux[i]
+                weightsC4 = weight * sputt_fluxC4[i]/sputt_flux[i]
+                weightsC5 = weight * sputt_fluxC5[i]/sputt_flux[i]
+                weightsC6 = weight * sputt_fluxC6[i]/sputt_flux[i]
+                species_weights = np.array([weightsC1,weightsC2,weightsC3,weightsC4,weightsC5,weightsC6])
+                
+                for j in range(len(species_weights)): 
+                    species_weights[j] = int(round(species_weights[j]))
+                
+                #randomly add particles to species weight to adjust for rounding                    
+                weight_diff[i] = round(weight - np.sum(species_weights))
+                
+                if weight_diff[i] > 0:
+                    for d in range(abs(int(weight_diff[i]))):
+                        rand_index = np.random.choice(len(species_weights))
+                        species_weights[rand_index] += 1
+                elif weight_diff[i] < 0:
+                    for d in range(abs(int(weight_diff[i]))):
+                        pos_indices = np.where(species_weights>0)
+                        rand_index = np.random.choice(pos_indices[0])
+                        species_weights[rand_index] -= 1
+                
+                for j in range(len(species_weights)): 
+                    species_weights[j] = round(species_weights[j])
+                weight_diff[i] = int(weight - np.sum(species_weights))
+
+                weightC1 = int(species_weights[0])
+                weightC2 = int(species_weights[1])
+                weightC3 = int(species_weights[2])
+                weightC4 = int(species_weights[3])
+                weightC5 = int(species_weights[4])
+                weightC6 = int(species_weights[5])
+                
+                #get IEADs for outgoing W from from fractal tridyn
+                EC1, PhiC1, ThetaC1 = get_ft_IEAD(energyC1[i], weightC1, ftCFile)
+                EC2, PhiC2, ThetaC2 = get_ft_IEAD(energyC2[i], weightC2, ftCFile)
+                EC3, PhiC3, ThetaC3 = get_ft_IEAD(energyC3[i], weightC3, ftCFile)
+                EC4, PhiC4, ThetaC4 = get_ft_IEAD(energyC4[i], weightC4, ftCFile)
+                EC5, PhiC5, ThetaC5 = get_ft_IEAD(energyC5[i], weightC5, ftCFile)
+                EC6, PhiC6, ThetaC6 = get_ft_IEAD(energyC6[i], weightC6, ftCFile)
+                
+                #populate 1D list of energies, polar angles, and azimuthal angles
+                for w in range(weightC1):
+                    E = np.append(E,EC1[w])
+                    PolAng = np.append(PolAng,PhiC1[w])
+                    AziAng = np.append(AziAng,ThetaC1[w])
+                for w in range(weightC2):
+                    E = np.append(E,EC2[w])
+                    PolAng = np.append(PolAng,PhiC2[w])
+                    AziAng = np.append(AziAng,ThetaC2[w])
+                for w in range(weightC3):
+                    E = np.append(E,EC3[w])
+                    PolAng = np.append(PolAng,PhiC3[w])
+                    AziAng = np.append(AziAng,ThetaC3[w])
+                for w in range(weightC4):
+                    E = np.append(E,EC4[w])
+                    PolAng = np.append(PolAng,PhiC4[w])
+                    AziAng = np.append(AziAng,ThetaC4[w])
+                for w in range(weightC5):
+                    E = np.append(E,EC5[w])
+                    PolAng = np.append(PolAng,PhiC5[w])
+                    AziAng = np.append(AziAng,ThetaC5[w])
+                for w in range(weightC6):
+                    E = np.append(E,EC6[w])
+                    PolAng = np.append(PolAng,PhiC6[w])
+                    AziAng = np.append(AziAng,ThetaC6[w])
+                
+                PolAng = np.deg2rad(PolAng)
+                AziAng = np.deg2rad(AziAng)
+                
+                #debugging
+                '''
+                #convert IEADs to vx,vy,vz unit vectors in particle frame of ref
+                vx_prime = np.multiply(np.cos(PolAng), np.cos(AziAng))
+                vy_prime = np.multiply(np.cos(PolAng), np.sin(AziAng))
+                vz_prime = m*np.sin(PolAng)
+                (vx_lab,vy_lab,vz_lab) = (vx_prime,vy_prime,vz_prime)
+                '''
+        
+            else:
+            
+                #get IEADs for sputtered W
+                E = PartDist.Generate(weight, 'Thomson')
+                PolAng = PartDist.Generate(weight, 'SinCos', x=np.linspace(0,np.pi/2,10*weight))
+                AziAng = PartDist.Generate(weight, 'Uniform', x=np.linspace(0,2*np.pi,10*weight))
             
             #convert IEADs to vx,vy,vz unit vectors in particle frame of ref
-            PartDist.SetAttr('vx', np.multiply(np.cos(PolAng), np.cos(AziAng)))
-            PartDist.SetAttr('vy', np.multiply(np.cos(PolAng), np.sin(AziAng)))
-            PartDist.SetAttr('vz', m*np.sin(PolAng))
-            
-            vx_prime = PartDist.Particles['vx']
-            vy_prime = PartDist.Particles['vy']
-            vz_prime = PartDist.Particles['vz']
+            vx_prime = -np.cos(PolAng)
+            vy_prime = np.multiply(np.sin(PolAng), -np.sin(AziAng))
+            vz_prime = np.multiply(np.sin(PolAng), np.cos(AziAng))
+            PartDist.SetAttr('vx', vx_prime)
+            PartDist.SetAttr('vy', vy_prime)
+            PartDist.SetAttr('vz', vz_prime)
     
             #rotate vx,vy,vz from particle frame to lab frame
-            PartDist.RotateAngle('v', -m*Alpha[i],0, Degree=False)
+            PartDist.RotateAngle('v', m*Beta[i],0, Degree=False)
             
             vx_lab = PartDist.Particles['vx']
-            vy_lab = PartDist.Particles['vy']
+            vy_lab = vy_prime
             vz_lab = PartDist.Particles['vz']
     
             #convert unit vectors to vx,vy,vz
@@ -410,11 +510,37 @@ def distributed_source(nP, surfW, Bangle_shift_indices=[], \
             vx = np.append(vx, vtot*vx_lab)
             vy = np.append(vy, vtot*vy_lab)
             vz = np.append(vz, vtot*vz_lab)
+            
+            '''
+            #debugging
+            #print(vz_lab)
+            plt.close()
+            plt.scatter(vx_lab,vz_lab,s=1)
+            plt.axis('Scaled')
+            plt.xlabel('vx')
+            plt.ylabel('vz')
+            plt.title('Polar Angle Distribution in the Lab Frame \n nP='+str(int_weights[i]))
+            plt.show(block=True)'''
     
-    vx = np.delete(vx,0)
-    vy = np.delete(vy,0)
-    vz = np.delete(vz,0)
+    print('vx',np.average(vx))
+    print('vy',np.average(vy))
+    print('vz',np.average(vz))
+    
+    blocker=True
+    plt.close()
+    plt.hist(vx)
+    plt.title('vx')
+    plt.show(block=blocker)
+    plt.hist(vy)
+    plt.title('vy')
+    plt.show(block=blocker)
+    plt.hist(vz)
+    plt.title('vz')
+    plt.show(block=blocker)
 
+    #double check that all particles actually received an energy and 2 angles
+    print('species weights_diff should be 0:', np.sum(weight_diff))
+    
     if plot_variables == 1:
         #plot Thomson E dist
         plt.close()
@@ -430,7 +556,7 @@ def distributed_source(nP, surfW, Bangle_shift_indices=[], \
         plt.axis('Scaled')
         plt.xlabel('vx')
         plt.ylabel('vy')
-        plt.title('Uniform Azimuthal Angle in the Particle Frame \n nP='+str(int_weights[-1]))
+        plt.title('Azimuthal Angle in the Particle Frame \n nP='+str(int_weights[-1]))
         plt.savefig('plots/particle-source/vxvy_prime.png')
         
         plt.close()
@@ -438,17 +564,43 @@ def distributed_source(nP, surfW, Bangle_shift_indices=[], \
         plt.axis('Scaled')
         plt.xlabel('vx')
         plt.ylabel('vz')
-        plt.title('SinCos Polar Angle in the Particle Frame \n nP='+str(int_weights[-1]))
+        plt.title('Azimuthal Angle in the Particle Frame \n nP='+str(int_weights[-1]))
         plt.savefig('plots/particle-source/vxvz_prime.png')
+        
+        plt.close()
+        plt.scatter(vy_prime,vz_prime,s=1)
+        plt.axis('Scaled')
+        plt.xlabel('vy')
+        plt.ylabel('vz')
+        plt.title('Polar Angle in the Particle Frame \n nP='+str(int_weights[-1]))
+        plt.savefig('plots/particle-source/vyvz_prime.png')
+        
+        plt.close()
+        plt.scatter(vx_lab,vy_lab,s=1)
+        plt.axis('Scaled')
+        plt.xlabel('vx')
+        plt.ylabel('vy')
+        plt.title('Azimuthal Angle in the Lab Frame \n nP='+str(int_weights[-1]))
+        plt.savefig('plots/particle-source/vxvy_lab.png')
         
         plt.close()
         plt.scatter(vx_lab,vz_lab,s=1)
         plt.axis('Scaled')
         plt.xlabel('vx')
         plt.ylabel('vz')
-        plt.title('SinCos Polar Angle Distribution in \n the Lab Frame nP='+str(int_weights[-1]))
+        plt.title('Polar Angle Distribution in the Lab Frame \n nP='+str(int_weights[-1]))
         plt.savefig('plots/particle-source/vxvz_lab.png')
+        
         plt.close()
+        plt.scatter(vy_lab,vz_lab,s=1)
+        plt.axis('Scaled')
+        plt.xlabel('vy')
+        plt.ylabel('vz')
+        plt.title('Azimuthal Angle in the Lab Frame \n nP='+str(int_weights[-1]))
+        plt.savefig('plots/particle-source/vyvz_lab.png')
+        plt.close()
+        
+        
 
     #########################################
     #make NetCDF Particle Source file
@@ -456,12 +608,15 @@ def distributed_source(nP, surfW, Bangle_shift_indices=[], \
 
     rootgrp = netCDF4.Dataset("particleSource.nc", "w", format="NETCDF4")
     npp = rootgrp.createDimension("nP", nP)
+    onee = rootgrp.createDimension("one",1)
+    PPS_per_nP = rootgrp.createVariable("pps_per_nP","f8",("one"))
     xxx = rootgrp.createVariable("x","f8",("nP"))
     yyy = rootgrp.createVariable("y","f8",("nP"))
     zzz = rootgrp.createVariable("z","f8",("nP"))
     vxx = rootgrp.createVariable("vx","f8",("nP"))
     vyy = rootgrp.createVariable("vy","f8",("nP"))
     vzz = rootgrp.createVariable("vz","f8",("nP"))
+    PPS_per_nP[:] = pps_per_nP
     xxx[:] = x
     yyy[:] = y
     zzz[:] = z
@@ -488,7 +643,7 @@ def midpoints(nP,pps_weights,adj,slope,Beta, r1,z1,r2,z2):
         x[counter:counter+pps_weights[i]] = r_mid[i] - adj*np.abs(np.cos(Beta[i]))
         z[counter:counter+pps_weights[i]] = z_mid[i] + np.sign(slope[i]) * adj*np.abs(np.sin(Beta[i]))
         counter += pps_weights[i]
-
+        
     return x,y,z
 
 def uniform(nP,pps_weights,adj,slope,Beta, r1,z1,r2,z2):
@@ -506,7 +661,7 @@ def uniform(nP,pps_weights,adj,slope,Beta, r1,z1,r2,z2):
             x[tally:tally+pps_weights[i]] = r_segment - adj*np.abs(np.cos(Beta[i]))
             z[tally:tally+pps_weights[i]] = z_segment + np.sign(slope[i]) * adj*np.abs(np.sin(Beta[i]))
             tally += pps_weights[i]
-
+            
     return x,y,z
 
 def random(nP,pps_weights,adj,slope,Beta, r1,z1,r2,z2):
@@ -520,7 +675,7 @@ def random(nP,pps_weights,adj,slope,Beta, r1,z1,r2,z2):
             x[counter+j] = r1[i]+chi*(r2[i]-r1[i]) - adj*np.abs(np.cos(Beta[i]))
             z[counter+j] = z1[i]+chi*(z2[i]-z1[i]) + np.sign(slope[i]) * adj*np.abs(np.sin(Beta[i]))
         counter += pps_weights[i]
-
+        
     return x,y,z
 
 
@@ -559,14 +714,14 @@ def get_incoming_IEADs(q, profiles, surfW, rmrsCoarse, rmrsFine):
     #interpolate temp at points in rmrsFine
     te = fte(rmrsFine)
     ti = fti(rmrsFine)
-
+    
     SimpleEnergyEst = 2*ti+3*te*q
-
+    
     if q<0:
         Esp, f, b, c, ThetaMax = FittingParameters_NonW(SimpleEnergyEst)
         AngleEst = ThetaMax
     else: AngleEst = 70*np.ones(len(SimpleEnergyEst))
-
+    
     return SimpleEnergyEst, AngleEst
 
 def get_ft_spyld(S, surfE, surfA, ftBFile):
@@ -588,6 +743,73 @@ def get_ft_spyld(S, surfE, surfA, ftBFile):
         surfY = scii.interpn((ftE,ftA), spyld, (surfE,surfA))
     
     return surfY
+
+def get_ft_IEAD(surfE, weight, ftBFile):
+    #CANNOT TAKE FULL SURFACES, SURFE AND SURFA MUST BE SINGLE VARIABLES
+    #import IEAD tables for incident ions on W
+    ftB = netCDF4.Dataset(ftBFile, "r", format="NETCDF4")
+    
+    #find closest ftE value to plug into distribution tables
+    ftE = ftB.variables['E'][:]
+    Ediff = 1000
+    for i,v in enumerate(ftE):
+        Ediff_test = np.abs(v-surfE)
+        if Ediff_test<Ediff:
+            Ediff=Ediff_test
+            nearestEindex = i
+                
+    #find closest ftA value to plug into distribution tables
+    nearestAindex = 4
+
+    #get PDFs and CDFs over energy/angle grids
+    energyGrid = ftB.variables['eDistEgrid'][:]
+    energyPDF = ftB.variables['energyDist'][0][nearestEindex][nearestAindex][:]
+    energyCDF = np.cumsum(energyPDF)/np.sum(energyPDF)
+    
+    phiGrid = ftB.variables['phiGrid'][:]
+    cosXPDF = ftB.variables['cosXDist'][0][nearestEindex][nearestAindex][:]
+    cosXCDF = np.cumsum(cosXPDF)/np.sum(cosXPDF)
+    
+    thetaGrid = ftB.variables['thetaGrid'][:]
+    cosYPDF = ftB.variables['cosYDist'][0][nearestEindex][nearestAindex][:]
+    cosYCDF = np.cumsum(cosYPDF)/np.sum(cosYPDF)
+    
+    #stretch thetaGrid to span 0 to 360
+    thetaGrid = 2*thetaGrid-180+45
+    
+    if np.max(energyPDF)==0:
+        energySampled = np.zeros(weight)
+        phiSampled = np.zeros(weight)
+        thetaSampled = np.zeros(weight)
+    
+    else:
+        #turn cdfs into functions from which to randomly sample energies and angles 
+        energyFunc = scii.interp1d(energyCDF, energyGrid, bounds_error=False, fill_value=(energyGrid[0], energyGrid[-1]))
+        phiFunc = scii.interp1d(cosXCDF, phiGrid,  bounds_error=False, fill_value=(0, 90))
+        thetaFunc = scii.interp1d(cosYCDF, thetaGrid, bounds_error=False, fill_value=(0, 180))
+        
+        #debugging
+        '''
+        plt.close()
+        plt.plot(phiGrid,cosXPDF)
+        plt.title('phi')
+        plt.xlabel('degree')
+        plt.ylabel('counts')
+        plt.show(block=True)
+        plt.plot(thetaGrid,cosYPDF)
+        plt.title('theta')
+        plt.xlabel('degree')
+        plt.ylabel('counts')
+        plt.show(block=True)
+        '''
+        
+        #randomly sample energies and angles from CDFs
+        [energyXi, phiXi, thetaXi] = np.random.rand(3, weight)
+        energySampled = energyFunc(energyXi)
+        phiSampled = phiFunc(phiXi)
+        thetaSampled = thetaFunc(thetaXi)    
+    
+    return energySampled, phiSampled, thetaSampled
 
 def FittingParameters_NonW(E):
     Eth=45.3362
@@ -648,17 +870,17 @@ def get_analytic_spyld(surfE, surfA, Z1=6, M1=12, Z2=74, M2=183.84, \
     #Eth is the threshold energy for any sputtering to occur
     #Esp is the SBE for self-bombardment
     #lam, q, mu, f, b, c are fitting parameters from Eckstein tables
-
+    
     e = 14.399651
-
+    
     a_L = 0.0529177*((9*np.pi**2/128)**(1/3)) + \
         (Z1**(2/3) + Z2**(2/3))**-0.5
-
+        
     epsilon_L = surfE * (M2/(M1+M2)) * (a_L/(Z1*Z2*e**2))
-
+    
     omega = epsilon_L + 0.1728*np.sqrt(epsilon_L) + \
         0.008*epsilon_L**0.1504
-
+        
     snKrC = 0.5*np.log(1+1.2288*epsilon_L)/omega
     
     #spyld(E, angle = 0) normal incidence
@@ -670,20 +892,21 @@ def get_analytic_spyld(surfE, surfA, Z1=6, M1=12, Z2=74, M2=183.84, \
     
     #choose basis for fitting parameters for different energies
     Esp, f, b, c, ThetaMax = FittingParameters_NonW(surfE)
-
+    
     theta_0 = np.pi - np.arccos(np.sqrt(1/(1+surfE/Esp)))
-
+    
     #spyld(E,A)    
     Y = Y_0 * (np.cos((np.pi*surfA/(2*theta_0))**c))**(-f) * \
         np.exp(b*(1-1/np.cos((np.pi*surfA/(2*theta_0))**c)))
-
+        
     return Y_0
 
 
 
 if __name__ == "__main__":
-    init()
+    #init()
     distributed_source(nP=int(10000), surfW=np.arange(11,22), \
+                tile_shift_indices = [1,9], \
                 Bangle_shift_indices = [3,8,9], \
                 geom = '../input/gitrGeometry.cfg', \
                 profiles_file = '../input/plasmaProfiles.nc', \
@@ -694,5 +917,6 @@ if __name__ == "__main__":
                 ftCFile = 'assets/ftridynBackgroundC.nc', \
                 configuration = 'random', \
                 plot_variables = 1)
+
 
 

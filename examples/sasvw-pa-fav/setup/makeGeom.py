@@ -294,6 +294,12 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
         plt.savefig('plots/geom/makeGeomCoarse.png')
         plt.show(block=True)
     
+    print('\n')
+    print('Vertex between Legs 1 and 2:,', \
+          r_right_target[W_indices_profiles][tile_shift_indices[0]], z_right_target[W_indices_profiles][tile_shift_indices[0]])
+    print('Vertex between Legs 2 and 3:,', \
+          r_right_target[W_indices_profiles][tile_shift_indices[1]], z_right_target[W_indices_profiles][tile_shift_indices[1]],'\n')
+    
     #set number of added points in a line segment to be proportional to the length of the segment
     rSurfCoarse = r_final[W_indicesCoarse]
     zSurfCoarse = z_final[W_indicesCoarse]
@@ -314,6 +320,10 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     rmrsTestCoarse = np.ones(len(rmrsMidCoarse))
     rmrsTestFine = np.ones(len(rmrsMid))
     plt.close()
+    tile_shift_indices = [1,9]
+    if tile_shift_indices != []:
+        for i in tile_shift_indices:
+            plt.axvline(x=rmrsCoarse[i], color='k', linestyle='dotted')
     plt.scatter(rmrsMidCoarse, rmrsTestCoarse, s=5, color='orange', label='Coarse')
     plt.scatter(rmrsMid, rmrsTestFine, s=1, color='cyan', label='Fine')
     plt.title('Ones plotted rmrs values')
@@ -342,6 +352,8 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
         plt.title('Cross Section of SAS-VW Divertor')
         plt.savefig('plots/geom/makeGeom.png')
         plt.show(block=True)
+    
+    print('length of 3rd leg:',np.sqrt((rSurfCoarse[-1]-rSurfCoarse[-2])**2+(zSurfCoarse[-1]-zSurfCoarse[-2])**2))
     
     if plot_variables:
         #plot correctly-ordered line segments

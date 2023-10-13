@@ -303,7 +303,6 @@ def plot_surf_nc(pps_per_nP, nP10, nT10, \
         plt.title('GITR Predicted Cumulative Sum of \n Erosion and Redeposition Profiles',fontsize=20)
         plt.savefig('plots/surface_cumsum.pdf')
     
-
 def spectroscopy(pps_per_nP, View=3, \
                  specFile='spec.nc'):
     
@@ -406,7 +405,65 @@ def spectroscopy(pps_per_nP, View=3, \
     plt.title('Toroidal Slice of W0 Density \n W0: %10e' %np.sum(fscope))
     plt.savefig('plots/spec_filterscope.png')
     
+
+def analyze_forces(varString, vartype='F', xylim=True, colorbarLimits=[]):
+    #import wall geometry to plot over
+    gitr_rz='assets/gitr_rz.txt'
+    with open(gitr_rz, 'r') as file:
+        wall = file.readlines()
+        
+    r_wall = np.zeros(len(wall))
+    z_wall = np.zeros(len(wall))
+    for i,line in enumerate(wall):
+        point = line.split()
+        r_wall[i] = float(point[0])
+        z_wall[i] = float(point[1])
+    
+    profilesFile = '../input/plasmaProfiles.nc'
+    profiles = netCDF4.Dataset(profilesFile)
+    gridr = profiles.variables['gridr'][:]
+    gridz = profiles.variables['gridz'][:]
+    dr = (np.max(gridr[1:]-gridr[:-1])-np.min(gridr[1:]-gridr[:-1]))/2
+    dz = (np.max(gridz[1:]-gridz[:-1])-np.min(gridz[1:]-gridz[:-1]))/2
+    
+    Br = profiles.variables['Br'][:]
+    Bt = profiles.variables['Bt'][:]
+    Bz = profiles.variables['Bz'][:]
+    Er = profiles.variables['Er'][:]
+    Et = profiles.variables['Et'][:]
+    Ez = profiles.variables['Ez'][:]
+    
+    q = (1.602e-19)*np.ones(np.shape(Br))
+    vr = -1000*np.ones(np.shape(Br))
+    vt = -500*np.ones(np.shape(Br))
+    vz = 700*np.ones(np.shape(Br))
+    
+    if varString=='q(v x B)':
+        print('.')
+    
+    if varString=='qE':
+        Fr = q*Er
+        Ft = q*Et
+        Fz = q*Ez
+    
+    if varString=='q(E + v x B)':
+        print('.')
+    
+    if varString=='$v_{ExB}':
+        print('.')
+
+    
+    
+    return 
+
+def plot_forces(titleString, gridrz, vartype='F', xylim=True, colorbarLimits=[]):
+    
+    
+    return
+
 if __name__ == "__main__":
+    analyze_forces('.', 'F', True, [])
+    
     #init()
     #plot_gitr_gridspace()
     #plot_particle_source()
@@ -415,7 +472,7 @@ if __name__ == "__main__":
     #plot_history2D("../../../../GITR/scratch/output/history.nc")
     #plot_history2D("history_nP5e2_nT1e5.nc")
     #plot_surf_nc(7.582961536113231e+17, 'surface-alpine.nc')
-    plot_surf_nc(1006929636574578.9, 5, 5, [3,8,9], "surface_p5t5.nc")
+    #plot_surf_nc(1006929636574578.9, 5, 5, [3,8,9], "surface_p5t5.nc")
     #plot_surf_nc(1063289762078132.4, "surface.nc")
     #plot_surf_nc(37914807680566.16, "/Users/Alyssa/Dev/SAS-VW-Data/netcdf_data/nP5/surf-5-6.nc")
     #spectroscopy(3791480768056.615,specFile='specP6T6.nc')
