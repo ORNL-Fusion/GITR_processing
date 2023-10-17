@@ -405,10 +405,12 @@ def spectroscopy(pps_per_nP, View=3, \
     plt.title('Toroidal Slice of W0 Density \n W0: %10e' %np.sum(fscope))
     plt.savefig('plots/spec_filterscope.png')
     
+def analyze_leakage():
+    return
 
-def analyze_forces(varString, vartype='F', xylim=True, colorbarLimits=[]):
+def analyze_forces(varString, component, rzlim=True, colorbarLimits=[]):
     #import wall geometry to plot over
-    gitr_rz='assets/gitr_rz.txt'
+    gitr_rz='../setup/assets/gitr_rz.txt'
     with open(gitr_rz, 'r') as file:
         wall = file.readlines()
         
@@ -423,8 +425,6 @@ def analyze_forces(varString, vartype='F', xylim=True, colorbarLimits=[]):
     profiles = netCDF4.Dataset(profilesFile)
     gridr = profiles.variables['gridr'][:]
     gridz = profiles.variables['gridz'][:]
-    dr = (np.max(gridr[1:]-gridr[:-1])-np.min(gridr[1:]-gridr[:-1]))/2
-    dz = (np.max(gridz[1:]-gridz[:-1])-np.min(gridz[1:]-gridz[:-1]))/2
     
     Br = profiles.variables['Br'][:]
     Bt = profiles.variables['Bt'][:]
@@ -439,30 +439,128 @@ def analyze_forces(varString, vartype='F', xylim=True, colorbarLimits=[]):
     vz = 700*np.ones(np.shape(Br))
     
     if varString=='q(v x B)':
-        print('.')
+        vartype = 'F'
+        titleString = ' = (q(v x B))'
+        
+        Fr = q*(vt*Bz - vz*Bt)
+        Ft = q*(vz*Br - vr*Bz)
+        Fz = q*(vr*Bt - vt*Br)
     
     if varString=='qE':
+        vartype = 'F'
+        titleString = ' = (qE))'
+        
         Fr = q*Er
         Ft = q*Et
         Fz = q*Ez
     
     if varString=='q(E + v x B)':
-        print('.')
+        vartype = 'F'
+        titleString = ' = (q(E + v x B))'
+        
+        Fr = q*(Er + vt*Bz - vz*Bt)
+        Ft = q*(Et + vz*Br - vr*Bz)
+        Fz = q*(Ez + vr*Bt - vt*Br)
     
-    if varString=='$v_{ExB}':
-        print('.')
-
+    if varString=='v_ExB':
+        vartype = 'v'
+        titleString = ' = ($v_{ExB}$)'
+        
+        dr = (np.max(gridr[1:]-gridr[:-1])-np.min(gridr[1:]-gridr[:-1]))/2
+        dz = (np.max(gridz[1:]-gridz[:-1])-np.min(gridz[1:]-gridz[:-1]))/2
+        Wmass_amu = 183.84
+        Wmass_kg = Wmass_amu * 1.66054e-27
+        B_mag2 = Br**2 + Bt**2 + Bz**2
+        B_mag = np.sqrt(B_mag2)
+        v_mag = np.sqrt(vr**2 + vt**2 + vz**2)
+        v_parallel = vr*Br/B_mag + vt*Bt/B_mag + vz*Bz/B_mag
+        v_perp = np.abs(v_mag) - np.abs(v_parallel)
+        r_Larmor = Wmass_kg * v_perp / (q * B_mag)
+        print('r_Larmor:', np.average(r_Larmor))
+        
+        ExB_r = Et*Bz - Ez*Bt
+        ExB_t = Ez*Br - Er*Bz
+        ExB_z = Er*Bt - Et*Br
+        
+        del_ExB_z = np.zeros(np.shape(Br))
+        del_ExB_z[0,:] = (ExB_z[1,:] - ExB_z[0,:])/dz
+        del_ExB_z[-1,:] = (ExB_z[-1,:] - ExB_z[-2,:])/dz
+        for i in range(1,len(gridz)-1):
+            del_ExB_z[i,:] = (ExB_z[i+1,:] - ExB_z[i-1,:])/(2*dz)
+        
+        del2_ExB_z = np.zeros(np.shape(Br))
+        del2_ExB_z[0,:] = (del_ExB_z[1,:] - del_ExB_z[0,:])/dz
+        del2_ExB_z[-1,:] = (del_ExB_z[-1,:] - del_ExB_z[-2,:])/dz
+        for i in range(1,len(gridz)-1):
+            del2_ExB_z[i,:] = (del_ExB_z[i+1,:] - del_ExB_z[i-1,:])/(2*dz)
+        
+        del_ExB_r = np.zeros(np.shape(Br))
+        del_ExB_r[:,0] = gridr[0] * (ExB_r[:,1] - ExB_r[:,0])/dr
+        del_ExB_r[:,-1] = gridr[-1] * (ExB_r[:,-1] - ExB_r[:,-2])/dr
+        for i in range(1,len(gridr)-1):
+            del_ExB_r[:,i] = gridr[i] * (ExB_r[:,i+1] - ExB_r[:,i-1])/(2*dr)
+        
+        del2_ExB_r = np.zeros(np.shape(Br))
+        del2_ExB_r[:,0] = (del_ExB_r[:,1] - del_ExB_r[:,0])/(gridr[0]*dr)
+        del2_ExB_r[:,-1] = (del_ExB_r[:,-1] - del_ExB_r[:,-2])/(gridr[-1]*dr)
+        for i in range(1,len(gridr)-1):
+            del2_ExB_r[:,i] = (del_ExB_r[:,i+1] - del_ExB_r[:,i-1])/(2*gridr[i]*dr)
+        
+        Fr = ExB_r/B_mag2 + (r_Larmor**2 * del2_ExB_r)/(4 * B_mag2)
+        Ft = ExB_t/B_mag2
+        Fz = ExB_z/B_mag2 + (r_Larmor**2 * del2_ExB_z)/(4 * B_mag2)
     
+    Fr[np.where(Fr==0)] = 'nan'
+    Ft[np.where(Ft==0)] = 'nan'
+    Fz[np.where(Fz==0)] = 'nan'
+    
+    gridrz = [gridr, gridz, r_wall, z_wall]
+    if component == 'r': plot_forces(Fr, vartype+'r'+titleString+'$_r$', gridrz, vartype, rzlim, colorbarLimits)
+    if component == 't': plot_forces(Ft, vartype+'t'+titleString+'$_t$', gridrz, vartype, rzlim, colorbarLimits)
+    if component == 'z': plot_forces(Fz, vartype+'z'+titleString+'$_z$', gridrz, vartype, rzlim, colorbarLimits)
     
     return 
 
-def plot_forces(titleString, gridrz, vartype='F', xylim=True, colorbarLimits=[]):
+def plot_forces(var, titleString, gridrz, vartype='F', rzlim=True, colorbarLimits=[]):
+    [gridr, gridz, r_wall, z_wall] = gridrz
+    plt.rcParams.update({'pcolor.shading':'auto'})
+    plt.rcParams.update({'image.cmap':'rainbow'})
+    rlim = [1.375, 1.575]
+    zlim = [1.05, 1.25]
     
+    if rzlim:
+        r_indices = np.empty(0, dtype='int')
+        z_indices = np.empty(0, dtype='int')
+        
+        for i,v in enumerate(gridr):
+            if v>=rlim[0] and v<=rlim[1]:
+                r_indices = np.append(r_indices, i)
+        
+        for i,v in enumerate(gridz):
+            if v>=zlim[0] and v<=zlim[1]:
+                z_indices = np.append(z_indices, i)
+
+        gridr = gridr[r_indices]
+        gridz = gridz[z_indices]
+        var = var[z_indices[0]:z_indices[-1]+1,r_indices[0]:r_indices[-1]+1]
+    
+    plt.plot(r_wall,z_wall,'-k')
+    plot = plt.pcolor(gridr,gridz,var)
+    
+    if colorbarLimits != []: plot.set_clim(vmin=colorbarLimits[0],vmax=colorbarLimits[1])
+    if vartype=='F': plt.colorbar(label='\n Force [N]')
+    if vartype=='v': plt.colorbar(label='\n Velocity [m/s]')
+    plt.xlabel('r [m]')
+    plt.ylabel('z [m]')
+    plt.title(titleString)
+    plt.axis('Scaled')
+    plt.xlim(rlim)
+    plt.ylim(zlim)
     
     return
 
 if __name__ == "__main__":
-    analyze_forces('.', 'F', True, [])
+    analyze_forces('v_ExB', 'z', rzlim=True, colorbarLimits=[-2e7,2e7])
     
     #init()
     #plot_gitr_gridspace()
