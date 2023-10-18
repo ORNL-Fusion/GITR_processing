@@ -407,55 +407,7 @@ def spectroscopy(pps_per_nP, View=3, \
     plt.savefig('plots/spec_filterscope.png')
     
 def analyze_leakage():
-    return
-
-def get_nu0(Br, Bt, Bz, charge, density, ti, te, vr, vt, vz, \
-            vr_background, vt_background, vz_background):
-    amu = 183.84
-    D_amu = 2
-    C_amu = 12.011
-    D_Z = 1
-    C_Z = 6
-    EPS0 = 8.854187e-12
-    Q = 1.60217662e-19
-    MI = 1.6737236e-27
-    
-    #inverese acceleration of D and C background ions
-    a_D = D_amu*MI/(2*ti*Q)
-    a_C = C_amu*MI/(2*ti*Q)
-    
-    relativeVelocity_r = vr - vr_background
-    relativeVelocity_t = vt - vt_background
-    relativeVelocity_z = vz - vz_background
-    velocityNorm = np.sqrt( relativeVelocity_r**2 + relativeVelocity_t**2 + relativeVelocity_z**2)
-    
-    #wtf is this
-    lam_d_D = np.sqrt(EPS0*te/(density*(D_Z**2)*Q))
-    lam_d_C = np.sqrt(EPS0*te/(density*(C_Z**2)*Q))
-    lam_D = 12.0*np.pi*density*lam_d_D**3/charge
-    lam_C = 12.0*np.pi*density*lam_d_C**3/charge
-    gam_electron_background_D = 0.238762895*charge**2*np.log(lam_D)/(amu*amu)
-    gam_electron_background_C = 0.238762895*charge**2*np.log(lam_C)/(amu*amu)
-    nu_0_D = gam_electron_background_D*density/velocityNorm**3
-    nu_0_C = gam_electron_background_C*density/velocityNorm**3
-    
-    #wtf is any of this
-    xx_D = velocityNorm**2 * a_D
-    xx_C = velocityNorm**2 * a_C
-    psi_prime_D = 2.0*np.sqrt(xx_D/np.pi)*np.exp(-xx_D)
-    psi_prime_C = 2.0*np.sqrt(xx_C/np.pi)*np.exp(-xx_C)
-    psi_psiprime_D = special.erf(np.sqrt(xx_D))
-    psi_psiprime_C = special.erf(np.sqrt(xx_C))
-    psi_D = psi_psiprime_D - psi_prime_D
-    psi_C = psi_psiprime_C - psi_prime_C
-    
-    #Find zero velocity moment friction frequency:
-    #nu_0 for W in D (nu_friction_D) and for W in C (nu_friction_C)
-    nu_friction_D = (1+amu/D_amu)*psi_D*nu_0_D
-    nu_friction_C = (1+amu/C_amu)*psi_C*nu_0_C
-    
-    return nu_friction_D, nu_friction_C
-    
+    return    
 
 def analyze_forces(varString, component, rzlim=True, colorbarLimits=[]):
     #import wall geometry to plot over
@@ -502,7 +454,7 @@ def analyze_forces(varString, component, rzlim=True, colorbarLimits=[]):
         Ft = q*(vz*Br - vr*Bz)
         Fz = q*(vr*Bt - vt*Br)
     
-    if varString=='qE':
+    elif varString=='qE':
         vartype = 'F'
         titleString = ' = (qE))'
         
@@ -510,7 +462,7 @@ def analyze_forces(varString, component, rzlim=True, colorbarLimits=[]):
         Ft = q*Et
         Fz = q*Ez
     
-    if varString=='Lorentz':
+    elif varString=='Lorentz':
         vartype = 'F'
         titleString = ' = (q(E + v x B))'
         
@@ -518,7 +470,7 @@ def analyze_forces(varString, component, rzlim=True, colorbarLimits=[]):
         Ft = q*(Et + vz*Br - vr*Bz)
         Fz = q*(Ez + vr*Bt - vt*Br)
     
-    if varString=='ExB drift':
+    elif varString=='ExB drift':
         vartype = 'v'
         titleString = ' = ($v_{ExB}$)'
         
@@ -566,15 +518,52 @@ def analyze_forces(varString, component, rzlim=True, colorbarLimits=[]):
         Ft = ExB_t/B_mag2
         Fz = ExB_z/B_mag2 + (r_Larmor**2 * del2_ExB_z)/(4 * B_mag2)
     
-    if varString=='drag':
+    elif varString=='drag':
         vartype = 'F'
         titleString = ' = ($m \\nu_S U_{\parallel}$)'
         
         amu = 183.84
+        amu_D = 2
+        amu_C = 12.011
+        Z_D = 1
+        Z_C = 6
+        EPS0 = 8.854187e-12 #epsilon_0 = vacuum permissivity
+        Q = 1.60217662e-19
         MI = 1.6737236e-27
         
-        nu_friction_D, nu_friction_C = get_nu0(Br, Bt, Bz, charge, density, ti, te, vr, vt, vz, \
-                    vr_background, vt_background, vt_background)
+        #inverese acceleration of D and C background ions
+        a_D = amu_D*MI/(2*ti*Q)
+        a_C = amu_C*MI/(2*ti*Q)
+        
+        relativeVelocity_r = vr - vr_background
+        relativeVelocity_t = vt - vt_background
+        relativeVelocity_z = vz - vz_background
+        velocityNorm = np.sqrt(relativeVelocity_r**2 + relativeVelocity_t**2 + relativeVelocity_z**2)
+        
+        #wtf is this
+        lam_d_D = np.sqrt(EPS0*te/(density*(Z_D**2)*Q))
+        lam_d_C = np.sqrt(EPS0*te/(density*(Z_C**2)*Q))
+        lam_D = 12.0*np.pi*density*lam_d_D**3/charge
+        lam_C = 12.0*np.pi*density*lam_d_C**3/charge
+        gam_electron_background_D = 0.238762895*charge**2*np.log(lam_D)/(amu*amu)
+        gam_electron_background_C = 0.238762895*charge**2*np.log(lam_C)/(amu*amu)
+        nu_0_D = gam_electron_background_D*density/velocityNorm**3
+        nu_0_C = gam_electron_background_C*density/velocityNorm**3
+        
+        #wtf is any of this
+        xx_D = velocityNorm**2 * a_D
+        xx_C = velocityNorm**2 * a_C
+        psi_prime_D = 2.0*np.sqrt(xx_D/np.pi)*np.exp(-xx_D)
+        psi_prime_C = 2.0*np.sqrt(xx_C/np.pi)*np.exp(-xx_C)
+        psi_psiprime_D = special.erf(np.sqrt(xx_D))
+        psi_psiprime_C = special.erf(np.sqrt(xx_C))
+        psi_D = psi_psiprime_D - psi_prime_D
+        psi_C = psi_psiprime_C - psi_prime_C
+        
+        #Find zero velocity moment friction frequency:
+        #nu_0 for W in D (nu_friction_D) and for W in C (nu_friction_C)
+        nu_friction_D = (1+amu/amu_D)*psi_D*nu_0_D
+        nu_friction_C = (1+amu/amu_C)*psi_C*nu_0_C
         
         B_mag2 = Br**2 + Bt**2 + Bz**2
         B_mag = np.sqrt(B_mag2)
@@ -591,11 +580,108 @@ def analyze_forces(varString, component, rzlim=True, colorbarLimits=[]):
         drag_C_t = amu * MI * nu_friction_C * v_parallel_t
         drag_C_z = amu * MI * nu_friction_C * v_parallel_z
         
-        Fr = drag_D_r + drag_C_r
-        Ft = drag_D_t + drag_C_t
-        Fz = drag_D_z + drag_C_z
+        Fr = -1* (drag_D_r + drag_C_r)
+        Ft = -1* (drag_D_t + drag_C_t)
+        Fz = -1* (drag_D_z + drag_C_z)
+        
+    elif varString=='friction':
+        vartype = 'F'
+        titleString = ' = ($m \\nu_S U_{\parallel}$)'
+        
+        amu = 183.84
+        amu_D = 2
+        amu_C = 12.011
+        Z_D = 1
+        Z_C = 6
+        EPS0 = 8.854187e-12 #epsilon_0 = vacuum permissivity
+        Q = 1.60217662e-19
+        MI = 1.6737236e-27
+        
+        #inverese acceleration of D and C background ions
+        a_D = amu_D*MI/(2*ti*Q)
+        a_C = amu_C*MI/(2*ti*Q)
+        
+        relativeVelocity_r = vr - vr_background
+        relativeVelocity_t = vt - vt_background
+        relativeVelocity_z = vz - vz_background
+        velocityNorm = np.sqrt(relativeVelocity_r**2 + relativeVelocity_t**2 + relativeVelocity_z**2)
+        
+        #wtf is this
+        lam_d_D = np.sqrt(EPS0*te/(density*(Z_D**2)*Q))
+        lam_d_C = np.sqrt(EPS0*te/(density*(Z_C**2)*Q))
+        lam_D = 12.0*np.pi*density*lam_d_D**3/charge
+        lam_C = 12.0*np.pi*density*lam_d_C**3/charge
+        gam_electron_background_D = 0.238762895*charge**2*np.log(lam_D)/(amu*amu)
+        gam_electron_background_C = 0.238762895*charge**2*np.log(lam_C)/(amu*amu)
+        nu_0_D = gam_electron_background_D*density/velocityNorm**3
+        nu_0_C = gam_electron_background_C*density/velocityNorm**3
+        
+        #wtf is any of this
+        xx_D = velocityNorm**2 * a_D
+        xx_C = velocityNorm**2 * a_C
+        psi_prime_D = 2.0*np.sqrt(xx_D/np.pi)*np.exp(-xx_D)
+        psi_prime_C = 2.0*np.sqrt(xx_C/np.pi)*np.exp(-xx_C)
+        psi_psiprime_D = special.erf(np.sqrt(xx_D))
+        psi_psiprime_C = special.erf(np.sqrt(xx_C))
+        psi_D = psi_psiprime_D - psi_prime_D
+        psi_C = psi_psiprime_C - psi_prime_C
+        
+        #Find zero velocity moment friction frequency:
+        #nu_0 for W in D (nu_friction_D) and for W in C (nu_friction_C)
+        nu_friction_D = (1+amu/amu_D)*psi_D*nu_0_D
+        nu_friction_C = (1+amu/amu_C)*psi_C*nu_0_C
+        
+        B_mag2 = Br**2 + Bt**2 + Bz**2
+        B_mag = np.sqrt(B_mag2)
+        v_mag = np.sqrt(vr**2 + vt**2 + vz**2)
+        v_parallel_r = v_mag*Br/B_mag
+        v_parallel_t = v_mag*Bt/B_mag
+        v_parallel_z = v_mag*Bz/B_mag
+        
+        #Calulate drag force component of the Fokker-Plank collisional forces
+        drag_D_r = amu * MI * nu_friction_D * v_parallel_r
+        drag_D_t = amu * MI * nu_friction_D * v_parallel_t
+        drag_D_z = amu * MI * nu_friction_D * v_parallel_z
+        drag_C_r = amu * MI * nu_friction_C * v_parallel_r
+        drag_C_t = amu * MI * nu_friction_C * v_parallel_t
+        drag_C_z = amu * MI * nu_friction_C * v_parallel_z
+        
+        Fr_drag = -1* (drag_D_r + drag_C_r)
+        Ft_drag = -1* (drag_D_t + drag_C_t)
+        Fz_drag = -1* (drag_D_z + drag_C_z)
+        
+        nu_parallel_D = psi_D/xx_D*nu_0_D
+        nu_parallel_C = psi_C/xx_C*nu_0_C
+        nu_deflection_D = 2*(psi_psiprime_D - psi_D/(2*xx_D))*nu_0_D
+        nu_deflection_C = 2*(psi_psiprime_C - psi_C/(2*xx_C))*nu_0_C
+        nu_energy_D = 2*(amu/amu_D*psi_D - psi_prime_D)*nu_0_D
+        nu_energy_C = 2*(amu/amu_C*psi_C - psi_prime_C)*nu_0_C
         
         
+        
+        #vx_relative = velocityRelativeNorm*(1.0-0.5*nuEdt)*((1.0 + coeff_par) * parallel_direction[0] + std::abs(n2)*(coeff_perp1 * perp_direction1[0] + coeff_perp2 * perp_direction2[0])) - velocityRelativeNorm*dt*nu_friction*parallel_direction[0];
+    
+    elif varString=='gradTi':
+        vartype = 'F'
+        titleString = ' = ($placeholder$)'
+        
+        gradTir = profiles.variables['gradTir'][:]
+        gradTit = profiles.variables['gradTit'][:]
+        gradTiz = profiles.variables['gradTiz'][:]
+        gradTer = profiles.variables['gradTer'][:]
+        gradTet = profiles.variables['gradTet'][:]
+        gradTez = profiles.variables['gradTez'][:]
+        
+        mu_D = amu / (amu_D + amu)
+        mu_C = amu / (amu_C + amu)
+        alpha = 0.71*charge**2
+        beta_D = 3 * (mu_D + 5*np.sqrt(2.0) * charge**2 * (1.1*mu_D**(5 / 2) - 0.35*mu_D**(3 / 2)) - 1) / (2.6 - 2*mu_D + 5.4*mu_D**2)
+        beta_C = 3 * (mu_C + 5*np.sqrt(2.0) * charge**2 * (1.1*mu_C**(5 / 2) - 0.35*mu_C**(3 / 2)) - 1) / (2.6 - 2*mu_C + 5.4*mu_C**2)
+        beta = beta_D + beta_C #assume that D and C are in thermal equilibrium
+        
+        Fr = alpha*gradTer + beta*gradTir
+        Ft = alpha*gradTet + beta*gradTit
+        Fz = alpha*gradTez + beta*gradTiz
     
     Fr[np.where(Fr==0)] = 'nan'
     Ft[np.where(Ft==0)] = 'nan'
@@ -647,7 +733,7 @@ def plot_forces(var, titleString, gridrz, vartype='F', rzlim=True, colorbarLimit
     return
 
 if __name__ == "__main__":
-    analyze_forces('drag', 't', rzlim=True, colorbarLimits=[])
+    analyze_forces('friction', 'r', rzlim=True, colorbarLimits=[])
     
     #init()
     #plot_gitr_gridspace()
