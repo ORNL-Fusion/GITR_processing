@@ -8,6 +8,7 @@ examples/sasvw-pa-fav-old/setup/plots/
 examples/sasvw-pa-fav-old/setup/*.nc
 examples/sasvw-pa-fav-old/setup/assets/*.nc
 examples/sasvw21/input/*.nc
+examples/sasvw-pa-fav/*.sh
 examples/sasvw-pa-fav/input/*.nc
 examples/sasvw-pa-fav-old/input/*.nc
 examples/sasvw21/output/*.nc
@@ -21,6 +22,7 @@ examples/sasvw-pa-fav-old/output/plots/
 python/__pycache__/
 setup/__pycache__/
 *.DS_Store
+*.nc
 *.pdf
 *.png
 *.swp
