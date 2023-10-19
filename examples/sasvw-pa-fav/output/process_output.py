@@ -5,6 +5,7 @@ import numpy as np
 from scipy import special
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+import matplotlib.path as path
 import netCDF4
 import solps
 
@@ -98,7 +99,9 @@ def plot_history2D(history_file='history.nc', \
     print('nP:',nP)
     nT = len(history.dimensions['nT'])
     x = history.variables['x']
+    y = history.variables['y']
     z = history.variables['z']
+    r = np.sqrt(x**2 + y**2)
     charge = history.variables['charge']
 
     #plt.close()
@@ -117,18 +120,18 @@ def plot_history2D(history_file='history.nc', \
     # all particle source vars ordered as (nP, nT)
     if basic==1:
         for p in range(0,nP,100):
-            plt.plot(x[p][:],z[p][:])
+            plt.plot(r[p][:],z[p][:])
             #plt.scatter(x[p][:],z[p][:],marker='_',s=50,c='k')
     
     if continuousChargeState==1:
         for p in np.arange(0,nP,1):
             print(p,'out of', nP)
             for t in np.arange(0,nT,100):
-                plt.plot(x[p][t:t+100],z[p][t:t+100], colors[charge[p][t]])
+                plt.plot(r[p][t:t+100],z[p][t:t+100], colors[charge[p][t]])
 
     if endChargeState==1:
         for p in range(0,nP):
-            plt.plot(x[p][:],z[p][:], colors[charge[p][-1]])
+            plt.plot(r[p][:],z[p][:], colors[charge[p][-1]])
         plt.title('Particle Tracks by End Charge State')
     
     legend_dict = {'+0':'black', '+1':'firebrick', '+2':'darkorange', '+3':'gold', '+4':'limegreen', '+5':'dodgerblue', \
@@ -406,7 +409,58 @@ def spectroscopy(pps_per_nP, View=3, \
     plt.title('Toroidal Slice of W0 Density \n W0: %10e' %np.sum(fscope))
     plt.savefig('plots/spec_filterscope.png')
     
-def analyze_leakage():
+def analyze_leakage(historyFile):
+    bFile = '../input/bField.nc'
+    bField = netCDF4.Dataset(bFile)
+    r_bField = bField.variables['r'][:]
+    z_bField = bField.variables['z'][:]
+    psi = bField.variables['psi'][:]
+    xpoint_z = 0.9874948
+    
+    gitr_rz='../setup/assets/gitr_rz.txt'
+    with open(gitr_rz, 'r') as file:
+        wall = file.readlines()
+        
+    r_wall = np.zeros(len(wall))
+    z_wall = np.zeros(len(wall))
+    for i,line in enumerate(wall):
+        point = line.split()
+        r_wall[i] = float(point[0])
+        z_wall[i] = float(point[1])
+    
+    history = netCDF4.Dataset(historyFile)
+    nP = len(history.dimensions['nP'])
+    x = history.variables['x'][:]
+    y = history.variables['y'][:]
+    z = history.variables['z'][:]
+    r = np.sqrt(x**2 + y**2)
+    
+    cs = plt.contourf(r_bField,z_bField,psi,1)
+    p = cs.collections[0].get_paths()[0]
+    v = p.vertices
+    pathx = v[:,0]
+    pathy = v[:,1]
+    
+    plt.close()
+    fig,ax = plt.subplots()
+    ax.fill(pathx,pathy,'lightpink')
+    plt.plot(r_wall, z_wall, 'darkmagenta', linewidth=2)
+    for p in range(0,nP,100):
+        plt.plot(r[p][:],z[p][:],'k',linewidth=0.3)
+    plt.xlabel('r [m]')
+    plt.ylabel('z [m]')
+    plt.title('Leakage of W into the core')
+    plt.axis('Scaled')
+    
+    leakage = 0
+    polygon = path.Path(v,closed=True)
+    for i in range(0,nP):
+        if polygon.contains_point((r[i][-1],z[i][-1])) and z[i][-1]<=xpoint_z: leakage+=1
+    
+    print('leakage fraction:', leakage/nP)
+    
+    
+    
     return    
 
 def analyze_forces(varString, component, rzlim=True, colorbarLimits=[], dt=1e-8):
@@ -732,7 +786,8 @@ def plot_forces(var, titleString, gridrz, vartype='F', rzlim=True, colorbarLimit
     return
 
 if __name__ == "__main__":
-    analyze_forces('q(v x B)', 't', rzlim=True, colorbarLimits=[], dt=1e-8)
+    analyze_leakage('perlmutter/history_D3t6.nc')
+    #analyze_forces('q(v x B)', 't', rzlim=True, colorbarLimits=[], dt=1e-8)
     
     #init()
     #plot_gitr_gridspace()
