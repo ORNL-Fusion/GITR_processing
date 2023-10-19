@@ -409,7 +409,7 @@ def spectroscopy(pps_per_nP, View=3, \
 def analyze_leakage():
     return    
 
-def analyze_forces(varString, component, rzlim=True, colorbarLimits=[]):
+def analyze_forces(varString, component, rzlim=True, colorbarLimits=[], dt=1e-8):
     #import wall geometry to plot over
     gitr_rz='../setup/assets/gitr_rz.txt'
     with open(gitr_rz, 'r') as file:
@@ -441,7 +441,13 @@ def analyze_forces(varString, component, rzlim=True, colorbarLimits=[]):
     vt_background = profiles.variables['vt'][:]
     vz_background = profiles.variables['vz'][:]
     
-    q = (1.602e-19)*np.ones(np.shape(Br))
+    amu = 183.84
+    amu_D = 2
+    amu_C = 12.011
+    Q = 1.60217662e-19
+    
+    charge_W = np.ones(np.shape(Br))
+    q = Q*charge_W
     vr = -1000*np.ones(np.shape(Br))
     vt = -500*np.ones(np.shape(Br))
     vz = 700*np.ones(np.shape(Br))
@@ -453,14 +459,7 @@ def analyze_forces(varString, component, rzlim=True, colorbarLimits=[]):
         Fr = q*(vt*Bz - vz*Bt)
         Ft = q*(vz*Br - vr*Bz)
         Fz = q*(vr*Bt - vt*Br)
-    
-    elif varString=='qE':
-        vartype = 'F'
-        titleString = ' = (qE))'
-        
-        Fr = q*Er
-        Ft = q*Et
-        Fz = q*Ez
+
     
     elif varString=='Lorentz':
         vartype = 'F'
@@ -474,15 +473,19 @@ def analyze_forces(varString, component, rzlim=True, colorbarLimits=[]):
         vartype = 'v'
         titleString = ' = ($v_{ExB}$)'
         
-        dr = (np.max(gridr[1:]-gridr[:-1])-np.min(gridr[1:]-gridr[:-1]))/2
-        dz = (np.max(gridz[1:]-gridz[:-1])-np.min(gridz[1:]-gridz[:-1]))/2
+        dr = np.average(gridr[1:]-gridr[:-1])
+        dz = np.average(gridz[1:]-gridz[:-1])
         Wmass_amu = 183.84
         Wmass_kg = Wmass_amu * 1.66054e-27
         B_mag2 = Br**2 + Bt**2 + Bz**2
         B_mag = np.sqrt(B_mag2)
+        vdotB = vr*Br + vt*Bt + vz*Bz
+        v_parallel_r = Br * vdotB / B_mag2
+        v_parallel_t = Bt * vdotB / B_mag2
+        v_parallel_z = Bz * vdotB / B_mag2
+        v_parallel = np.sqrt(v_parallel_r**2 + v_parallel_t**2 + v_parallel_z**2)
         v_mag = np.sqrt(vr**2 + vt**2 + vz**2)
-        v_parallel = np.sqrt((v_mag*Br/B_mag)**2 + (v_mag*Bt/B_mag)**2 + (v_mag*Bz/B_mag)**2)
-        v_perp = np.abs(v_mag) - np.abs(v_parallel)
+        v_perp = v_mag - v_parallel
         r_Larmor = Wmass_kg * v_perp / (q * B_mag)
         print('r_Larmor:', np.average(r_Larmor))
         
@@ -522,13 +525,9 @@ def analyze_forces(varString, component, rzlim=True, colorbarLimits=[]):
         vartype = 'F'
         titleString = ' = ($m \\nu_S U_{\parallel}$)'
         
-        amu = 183.84
-        amu_D = 2
-        amu_C = 12.011
         Z_D = 1
         Z_C = 6
         EPS0 = 8.854187e-12 #epsilon_0 = vacuum permissivity
-        Q = 1.60217662e-19
         MI = 1.6737236e-27
         
         #inverese acceleration of D and C background ions
@@ -540,7 +539,7 @@ def analyze_forces(varString, component, rzlim=True, colorbarLimits=[]):
         relativeVelocity_z = vz - vz_background
         velocityNorm = np.sqrt(relativeVelocity_r**2 + relativeVelocity_t**2 + relativeVelocity_z**2)
         
-        #wtf is this
+        #plasma parameter
         lam_d_D = np.sqrt(EPS0*te/(density*(Z_D**2)*Q))
         lam_d_C = np.sqrt(EPS0*te/(density*(Z_C**2)*Q))
         lam_D = 12.0*np.pi*density*lam_d_D**3/charge
@@ -564,37 +563,26 @@ def analyze_forces(varString, component, rzlim=True, colorbarLimits=[]):
         #nu_0 for W in D (nu_friction_D) and for W in C (nu_friction_C)
         nu_friction_D = (1+amu/amu_D)*psi_D*nu_0_D
         nu_friction_C = (1+amu/amu_C)*psi_C*nu_0_C
+        nu_s = 0.9*nu_friction_D+0.1*nu_friction_C
         
         B_mag2 = Br**2 + Bt**2 + Bz**2
-        B_mag = np.sqrt(B_mag2)
-        v_mag = np.sqrt(vr**2 + vt**2 + vz**2)
-        v_parallel_r = v_mag*Br/B_mag
-        v_parallel_t = v_mag*Bt/B_mag
-        v_parallel_z = v_mag*Bz/B_mag
+        vdotB = vr*Br + vt*Bt + vz*Bz
+        v_parallel_r = Br * vdotB / B_mag2
+        v_parallel_t = Bt * vdotB / B_mag2
+        v_parallel_z = Bz * vdotB / B_mag2
         
         #Calulate drag force component of the Fokker-Plank collisional forces
-        drag_D_r = amu * MI * nu_friction_D * v_parallel_r
-        drag_D_t = amu * MI * nu_friction_D * v_parallel_t
-        drag_D_z = amu * MI * nu_friction_D * v_parallel_z
-        drag_C_r = amu * MI * nu_friction_C * v_parallel_r
-        drag_C_t = amu * MI * nu_friction_C * v_parallel_t
-        drag_C_z = amu * MI * nu_friction_C * v_parallel_z
-        
-        Fr = -1* (drag_D_r + drag_C_r)
-        Ft = -1* (drag_D_t + drag_C_t)
-        Fz = -1* (drag_D_z + drag_C_z)
+        Fr = -1 * amu * MI * nu_s * v_parallel_r
+        Ft = -1 * amu * MI * nu_s * v_parallel_t
+        Fz = -1 * amu * MI * nu_s * v_parallel_z
         
     elif varString=='friction':
         vartype = 'F'
         titleString = ' = ($m \\nu_S U_{\parallel}$)'
         
-        amu = 183.84
-        amu_D = 2
-        amu_C = 12.011
         Z_D = 1
         Z_C = 6
         EPS0 = 8.854187e-12 #epsilon_0 = vacuum permissivity
-        Q = 1.60217662e-19
         MI = 1.6737236e-27
         
         #inverese acceleration of D and C background ions
@@ -630,59 +618,69 @@ def analyze_forces(varString, component, rzlim=True, colorbarLimits=[]):
         #nu_0 for W in D (nu_friction_D) and for W in C (nu_friction_C)
         nu_friction_D = (1+amu/amu_D)*psi_D*nu_0_D
         nu_friction_C = (1+amu/amu_C)*psi_C*nu_0_C
+        nu_s = 0.9*nu_friction_D+0.1*nu_friction_C
         
         B_mag2 = Br**2 + Bt**2 + Bz**2
-        B_mag = np.sqrt(B_mag2)
-        v_mag = np.sqrt(vr**2 + vt**2 + vz**2)
-        v_parallel_r = v_mag*Br/B_mag
-        v_parallel_t = v_mag*Bt/B_mag
-        v_parallel_z = v_mag*Bz/B_mag
+        vdotB = vr*Br + vt*Bt + vz*Bz
+        v_parallel_r = Br * vdotB / B_mag2
+        v_parallel_t = Bt * vdotB / B_mag2
+        v_parallel_z = Bz * vdotB / B_mag2
         
         #Calulate drag force component of the Fokker-Plank collisional forces
-        drag_D_r = amu * MI * nu_friction_D * v_parallel_r
-        drag_D_t = amu * MI * nu_friction_D * v_parallel_t
-        drag_D_z = amu * MI * nu_friction_D * v_parallel_z
-        drag_C_r = amu * MI * nu_friction_C * v_parallel_r
-        drag_C_t = amu * MI * nu_friction_C * v_parallel_t
-        drag_C_z = amu * MI * nu_friction_C * v_parallel_z
-        
-        Fr_drag = -1* (drag_D_r + drag_C_r)
-        Ft_drag = -1* (drag_D_t + drag_C_t)
-        Fz_drag = -1* (drag_D_z + drag_C_z)
+        drag_r = -1 * amu * MI * nu_s * v_parallel_r
+        drag_t = -1 * amu * MI * nu_s * v_parallel_t
+        drag_z = -1 * amu * MI * nu_s * v_parallel_z
         
         nu_parallel_D = psi_D/xx_D*nu_0_D
         nu_parallel_C = psi_C/xx_C*nu_0_C
+        nu_p = 0.9*nu_parallel_D+0.1*nu_parallel_C
         nu_deflection_D = 2*(psi_psiprime_D - psi_D/(2*xx_D))*nu_0_D
         nu_deflection_C = 2*(psi_psiprime_C - psi_C/(2*xx_C))*nu_0_C
+        nu_d = 0.9*nu_deflection_D+0.1*nu_deflection_C
         nu_energy_D = 2*(amu/amu_D*psi_D - psi_prime_D)*nu_0_D
         nu_energy_C = 2*(amu/amu_C*psi_C - psi_prime_C)*nu_0_C
+        nu_e = 0.9*nu_energy_D+0.1*nu_energy_C
+        
+        print('s:', np.average(nu_friction_D), np.average(nu_friction_C))
+        print('parallel:', np.average(nu_parallel_D), np.average(nu_parallel_C))
+        print('deflection:', np.average(nu_deflection_D), np.average(nu_deflection_C))
+        print('energy:', np.average(nu_energy_D), np.average(nu_energy_C))
+        
+        v_perp_r = np.abs(vr - v_parallel_r)
+        v_perp_t = np.abs(vt - v_parallel_t)
+        v_perp_z = np.abs(vz - v_parallel_z)
+        
+        m = amu * MI
+        Fr = drag_r - m*v_parallel_r*np.sqrt(nu_p/dt) - m*v_perp_r*np.sqrt(nu_d/(2*dt))
+        Ft = drag_t - m*v_parallel_t*np.sqrt(nu_p/dt) - m*v_perp_t*np.sqrt(nu_d/(2*dt))
+        Fz = drag_z - m*v_parallel_z*np.sqrt(nu_p/dt) - m*v_perp_z*np.sqrt(nu_d/(2*dt))
         
         
         
-        #vx_relative = velocityRelativeNorm*(1.0-0.5*nuEdt)*((1.0 + coeff_par) * parallel_direction[0] + std::abs(n2)*(coeff_perp1 * perp_direction1[0] + coeff_perp2 * perp_direction2[0])) - velocityRelativeNorm*dt*nu_friction*parallel_direction[0];
     
-    elif varString=='gradTi':
+    elif varString=='gradT':
         vartype = 'F'
-        titleString = ' = ($placeholder$)'
+        titleString = ' = ($ \\alpha \\nabla_{\parallel} T_e + \\beta \\nabla_{\parallel} T_i $)'
         
-        gradTir = profiles.variables['gradTir'][:]
-        gradTit = profiles.variables['gradTit'][:]
-        gradTiz = profiles.variables['gradTiz'][:]
-        gradTer = profiles.variables['gradTer'][:]
-        gradTet = profiles.variables['gradTet'][:]
-        gradTez = profiles.variables['gradTez'][:]
+        gradTir = profiles.variables['gradTir'][:]*Q
+        gradTit = profiles.variables['gradTit'][:]*Q
+        gradTiz = profiles.variables['gradTiz'][:]*Q
+        gradTer = profiles.variables['gradTer'][:]*Q
+        gradTet = profiles.variables['gradTet'][:]*Q
+        gradTez = profiles.variables['gradTez'][:]*Q
         
         mu_D = amu / (amu_D + amu)
         mu_C = amu / (amu_C + amu)
-        alpha = 0.71*charge**2
-        beta_D = 3 * (mu_D + 5*np.sqrt(2.0) * charge**2 * (1.1*mu_D**(5 / 2) - 0.35*mu_D**(3 / 2)) - 1) / (2.6 - 2*mu_D + 5.4*mu_D**2)
-        beta_C = 3 * (mu_C + 5*np.sqrt(2.0) * charge**2 * (1.1*mu_C**(5 / 2) - 0.35*mu_C**(3 / 2)) - 1) / (2.6 - 2*mu_C + 5.4*mu_C**2)
-        beta = beta_D + beta_C #assume that D and C are in thermal equilibrium
+        alpha = 0.71*charge_W**2
+        beta_D = 3 * (mu_D + 5*np.sqrt(2.0) * charge_W**2 * (1.1*mu_D**(5 / 2) - 0.35*mu_D**(3 / 2)) - 1) / (2.6 - 2*mu_D + 5.4*mu_D**2)
+        beta_C = 3 * (mu_C + 5*np.sqrt(2.0) * charge_W**2 * (1.1*mu_C**(5 / 2) - 0.35*mu_C**(3 / 2)) - 1) / (2.6 - 2*mu_C + 5.4*mu_C**2)
+        #assume a 10% C plasma everywhere
+        beta = 0.9*beta_D + 0.1*beta_C 
         
         Fr = alpha*gradTer + beta*gradTir
         Ft = alpha*gradTet + beta*gradTit
         Fz = alpha*gradTez + beta*gradTiz
-    
+        
     Fr[np.where(Fr==0)] = 'nan'
     Ft[np.where(Ft==0)] = 'nan'
     Fz[np.where(Fz==0)] = 'nan'
@@ -717,6 +715,7 @@ def plot_forces(var, titleString, gridrz, vartype='F', rzlim=True, colorbarLimit
         gridz = gridz[z_indices]
         var = var[z_indices[0]:z_indices[-1]+1,r_indices[0]:r_indices[-1]+1]
     
+    plt.close()
     plt.plot(r_wall,z_wall,'-k')
     plot = plt.pcolor(gridr,gridz,var)
     
@@ -733,7 +732,7 @@ def plot_forces(var, titleString, gridrz, vartype='F', rzlim=True, colorbarLimit
     return
 
 if __name__ == "__main__":
-    analyze_forces('friction', 'r', rzlim=True, colorbarLimits=[])
+    analyze_forces('q(v x B)', 't', rzlim=True, colorbarLimits=[], dt=1e-8)
     
     #init()
     #plot_gitr_gridspace()

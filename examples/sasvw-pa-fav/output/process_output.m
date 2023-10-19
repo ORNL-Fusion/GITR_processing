@@ -86,7 +86,7 @@ legend('wall','hasHit','notHit')
 
 plot_tracks = 1;
 if plot_tracks
-    file = strcat('perlmutter/history_nT5dt-9.nc');
+    file = strcat('history.nc');
     x = ncread(file,'x');
     y = ncread(file,'y');
     z = ncread(file,'z');
