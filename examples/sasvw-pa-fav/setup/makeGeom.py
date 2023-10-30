@@ -292,7 +292,7 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
         plt.ylabel('z [m]')
         plt.title('Upper Outer SAS-VW Divertor in DIII-D \n makeGeom')
         plt.savefig('plots/geom/makeGeomCoarse.png')
-        plt.show(block=True)
+        plt.show(block=False)
     
     print('\n')
     print('Vertex between Legs 1 and 2:,', \
@@ -329,7 +329,7 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     plt.title('Ones plotted rmrs values')
     plt.xlabel('rmrs a.k.a. D-Dsep [m]')
     plt.legend()
-    plt.show(block=True)
+    plt.show(block=False)
     plt.close()
     print('TEST')
     print('\n')
@@ -351,7 +351,7 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
         plt.ylabel('z [m]')
         plt.title('Cross Section of SAS-VW Divertor')
         plt.savefig('plots/geom/makeGeom.png')
-        plt.show(block=True)
+        plt.show(block=False)
     
     print('length of 3rd leg:',np.sqrt((rSurfCoarse[-1]-rSurfCoarse[-2])**2+(zSurfCoarse[-1]-zSurfCoarse[-2])**2))
     

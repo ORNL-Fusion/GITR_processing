@@ -86,7 +86,7 @@ legend('wall','hasHit','notHit')
 
 plot_tracks = 1;
 if plot_tracks
-    file = strcat('history.nc');
+    file = strcat('perlmutter/D3p5t8T5/history.nc');
     x = ncread(file,'x');
     y = ncread(file,'y');
     z = ncread(file,'z');
@@ -103,7 +103,7 @@ if plot_tracks
     plot3(R,T,Z, 'LineWidth',2)
     hold on
 
-    for i=1:1:(length(x)/10)
+    for i=1:1:(length(x))
     plot3(x(:,i),y(:,i),z(:,i))
     end
 

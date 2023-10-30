@@ -236,14 +236,17 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     print('Total actual W eroded per second:', np.sum(pps), 's-1 \n')
     pps_weights = nP*pps/np.sum(pps)
 
-    if plot_variables == 1:        
+    if plot_variables == 1: 
+        plt.rcParams.update({'font.size':14})
         plt.close()
         if tile_shift_indices != []:
-            for i in tile_shift_indices:
-                plt.axvline(x=rmrsCoords[i], color='k', linestyle='dashed')
+            for i,v in enumerate(tile_shift_indices):
+                if i==0: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', label='Walll\nVertices')
+                else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
         if Bangle_shift_indices != []:
-            for i in Bangle_shift_indices:
-                plt.axvline(x=rmrsCoarse[i], color='k', linestyle='dotted')
+            for i,v in enumerate(Bangle_shift_indices):
+                if i==0: plt.axvline(x=rmrsCoarse[v], color='k', linestyle='dotted', label='$\Delta\Psi_B$')
+                else: plt.axvline(x=rmrsCoarse[v], color='k', linestyle='dotted')
         
         plt.plot(rmrsFine, fluxC1, 'firebrick', label='C$^{1+}$')
         plt.plot(rmrsFine, fluxC2, 'darkorange', label='C$^{2+}$')
@@ -259,11 +262,12 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
         plt.plot(rmrsCoarse, fluxCoarseC5, 'dodgerblue', linestyle='dotted', label='C$^{5+}$')
         plt.plot(rmrsCoarse, fluxCoarseC6, 'mediumpurple', linestyle='dotted', label='C$^{6+}$')
         '''
+        plt.xlim(-0.05)
         #plt.yscale('log')
-        plt.xlabel('D-Dsep [m]')
-        plt.ylabel('Flux [m$^{-2}$s$^{-1}$]')
-        plt.legend()
-        plt.title('C ion flux to W surface', fontsize=20)
+        plt.xlabel('D-Dsep [m]', fontsize=14)
+        plt.ylabel('Flux [m$^{-2}$s$^{-1}$]', fontsize=16)
+        plt.legend(loc='upper left', fontsize=12)
+        plt.title('C flux to W surface', fontsize=24)
         plt.show(block=False)
         plt.savefig('plots/particle-source/incident_flux.png')
 
@@ -280,20 +284,23 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
         plt.plot(rmrsFine, spyldC6, 'mediumpurple', label='C$^{6+}$')
         plt.plot(rmrsFine, spyldW1, 'rosybrown', label='W$^{1+}$')
         plt.plot(rmrsFine, spyldW2, 'burlywood', label='W$^{2+}$')
-        plt.legend()
-        plt.xlabel('D-Dsep [m]')
-        plt.ylabel('Sputtering Yield')
-        plt.title('W sputtering yield by incident ions',fontsize=20)
+        plt.xlim(-0.05)
+        plt.legend(fontsize=12)
+        plt.xlabel('D-Dsep [m]', fontsize=14)
+        plt.ylabel('Sputtering Yield', fontsize=16)
+        plt.title('W sputtering yield by incident ions',fontsize=24)
         plt.show(block=False)
         plt.savefig('plots/particle-source/spyld.png')
         
         plt.close()
         if tile_shift_indices != []:
-            for i in tile_shift_indices:
-                plt.axvline(x=rmrsCoords[i], color='k', linestyle='dashed')
+            for i,v in enumerate(tile_shift_indices):
+                if i==0: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', label='Wall\nVertices')
+                else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
         if Bangle_shift_indices != []:
-            for i in Bangle_shift_indices:
-                plt.axvline(x=rmrsCoarse[i], color='k', linestyle='dotted')
+            for i,v in enumerate(Bangle_shift_indices):
+                if i==0: plt.axvline(x=rmrsCoarse[v], color='k', linestyle='dotted', label='$\Delta\Psi_B$')
+                else: plt.axvline(x=rmrsCoarse[v], color='k', linestyle='dotted')
         
         plt.plot(rmrsFine, sputt_fluxD, 'black', label='D$^{1+}$')
         plt.plot(rmrsFine, sputt_fluxC1, 'firebrick', label='C$^{1+}$')
@@ -302,10 +309,11 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
         plt.plot(rmrsFine, sputt_fluxC4, 'limegreen', label='C$^{4+}$')
         plt.plot(rmrsFine, sputt_fluxC5, 'dodgerblue', label='C$^{5+}$')
         plt.plot(rmrsFine, sputt_fluxC6, 'mediumpurple', label='C$^{6+}$')
-        plt.xlabel('D-Dsep [m]')
-        plt.ylabel('Flux [m$^{-2}$s$^{-1}$]')
-        plt.legend(loc='upper left')
-        plt.title('Flux of W sputtered off wall', fontsize=20)
+        plt.xlim(-0.05)
+        plt.xlabel('D-Dsep [m]', fontsize=14)
+        plt.ylabel('Flux [m$^{-2}$s$^{-1}$]', fontsize=16)
+        plt.legend(loc='upper left', fontsize=12)
+        plt.title('Flux of sputtered W', fontsize=24)
         plt.show(block=False)
         plt.savefig('plots/particle-source/sputt_flux_charge_dependent.png')
 
@@ -526,7 +534,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     print('vy',np.average(vy))
     print('vz',np.average(vz))
     
-    blocker=True
+    blocker=False
     plt.close()
     plt.hist(vx)
     plt.title('vx')

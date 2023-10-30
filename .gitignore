@@ -22,6 +22,7 @@ examples/sasvw-pa-fav-old/output/plots/
 python/__pycache__/
 setup/__pycache__/
 *.DS_Store
+*positions.m
 *.nc
 *.pdf
 *.png
@@ -30,5 +31,6 @@ setup/__pycache__/
 *.fig
 *.gif
 *.nc
+*.svg
 *:Zone.Identifier
 examples/sasvw21/LcS.nc

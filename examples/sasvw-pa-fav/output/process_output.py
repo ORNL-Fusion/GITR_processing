@@ -24,7 +24,7 @@ def init(W_indices = np.arange(11,22)):
     
     #set plotting style defaults
     plt.rcParams.update({'font.size':11.5})
-    plt.rcParams.update({'lines.linewidth':20})
+    plt.rcParams.update({'lines.linewidth':2})
     plt.rcParams.update({'lines.markersize':1})
 
     return profiles, W_indices, r_inner_target, z_inner_target, rmrs
@@ -80,7 +80,7 @@ def plot_particle_source():
     plt.savefig('plots/particleSource.png')
 
 def plot_history2D(history_file='history.nc', \
-                   basic=1, continuousChargeState=0, endChargeState=0, \
+                   basic=0, continuousChargeState=1, endChargeState=0, \
                    plot_particle_source=0, markersize=0):
     
     if plot_particle_source:
@@ -91,16 +91,16 @@ def plot_history2D(history_file='history.nc', \
     profiles, W_indices, R, Z, rmrs = init()
     history = netCDF4.Dataset(history_file, "r", format="NETCDF4")
 
-    plt.rcParams.update({'lines.linewidth':1})
+    plt.rcParams.update({'lines.linewidth':0.3})
     plt.rcParams.update({'lines.markersize':markersize})
     plt.rcParams.update({'font.size':16})
 
     nP = len(history.dimensions['nP'])
     print('nP:',nP)
     nT = len(history.dimensions['nT'])
-    x = history.variables['x']
-    y = history.variables['y']
-    z = history.variables['z']
+    x = history.variables['x'][:]
+    y = history.variables['y'][:]
+    z = history.variables['z'][:]
     r = np.sqrt(x**2 + y**2)
     charge = history.variables['charge']
 
@@ -109,7 +109,7 @@ def plot_history2D(history_file='history.nc', \
     if plot_particle_source: plt.scatter(x0,z0,marker='o',s=10)
     plt.plot(R,Z,'-k',linewidth=0.7)
     plt.axis('scaled')
-    plt.xlabel('x [m]')
+    plt.xlabel('r [m]')
     plt.ylabel('z [m]')
     plt.title('W Impurity Trajectories', fontsize=20)
         
@@ -119,20 +119,27 @@ def plot_history2D(history_file='history.nc', \
     
     # all particle source vars ordered as (nP, nT)
     if basic==1:
-        for p in range(0,nP,100):
+        for p in range(0,nP):
+            print(p,'out of', nP)
             plt.plot(r[p][:],z[p][:])
             #plt.scatter(x[p][:],z[p][:],marker='_',s=50,c='k')
     
     if continuousChargeState==1:
-        for p in np.arange(0,nP,1):
+        for p in np.arange(0,nP):
             print(p,'out of', nP)
-            for t in np.arange(0,nT,100):
-                plt.plot(r[p][t:t+100],z[p][t:t+100], colors[charge[p][t]])
+            t=0
+            while t<nT-1:
+                if r[p][t] == r[p][t+1]: t=nT
+                else:
+                    plt.plot(r[p][t:t+2],z[p][t:t+2], colors[charge[p][t]])
+                    t+=1
 
     if endChargeState==1:
         for p in range(0,nP):
             plt.plot(r[p][:],z[p][:], colors[charge[p][-1]])
         plt.title('Particle Tracks by End Charge State')
+    
+    plt.scatter(1.49829829, 1.19672716, label='Strikepoint', marker='X', color='k', s=100, zorder=5)
     
     legend_dict = {'+0':'black', '+1':'firebrick', '+2':'darkorange', '+3':'gold', '+4':'limegreen', '+5':'dodgerblue', \
               '+6':'mediumpurple', '+7':'darkviolet', '+8':'darkmagenta', '+9':'deeppink', '+10':'gray'}
@@ -143,8 +150,8 @@ def plot_history2D(history_file='history.nc', \
 
     if basic==0: plt.legend(handles=patchList, fontsize=12)
     
-    plt.xlim(1.3, 1.6)
-    plt.ylim(1, 1.3)
+    plt.xlim(1.45, 1.525)
+    plt.ylim(1.1, 1.23)
     plt.show(block=True)
     plt.savefig('plots/history.pdf')
     plt.close()
@@ -152,7 +159,7 @@ def plot_history2D(history_file='history.nc', \
     return
 
 def plot_surf_nc(pps_per_nP, nP10, nT10, \
-                 Bangle_shift_indices, \
+                 tile_shift_indices = [], Bangle_shift_indices = [], \
                  surface_file="surface.nc", \
                  gitr_rz='../setup/assets/gitr_rz.txt', \
                  W_fine_file='../setup/assets/W_fine.txt', \
@@ -160,6 +167,7 @@ def plot_surf_nc(pps_per_nP, nP10, nT10, \
                  plot_cumsum=0):
     
     profiles, W_indices, r_inner_target, z_inner_target, rmrs = init()
+    rmrsCoords = profiles.variables['rmrs_inner_target'][W_indices]
     surface = netCDF4.Dataset(surface_file, "r", format="NETCDF4")
     #print(surface.variables['grossErosion'][:])
     
@@ -270,29 +278,33 @@ def plot_surf_nc(pps_per_nP, nP10, nT10, \
     print('gross erosion in View 2:', V2_grossEro)
     print('gross erosion in View 3:', V3_grossEro)
     
-    plt.rcParams.update({'font.size':16})
-    plt.rcParams.update({'lines.linewidth':3}) 
+    plt.rcParams.update({'font.size':30})
+    plt.rcParams.update({'lines.linewidth':5}) 
     
     plt.close()
     plt.axvspan(rmrs1_start, rmrs1_end, color='#f7bc00', alpha=0.5)
     plt.axvspan(rmrs2_start, rmrs2_end, color='lightsalmon', alpha=0.5)
     plt.axvspan(rmrs3_start, rmrs3_end, color='#f99301', alpha=0.5)
     
-    
     plt.plot(rmrsFine,np.zeros(len(rmrsFine)),'gray')
+    if tile_shift_indices != []:
+        for i,v in enumerate(tile_shift_indices):
+            if i==0: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', label='Walll\nVertices')
+            else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
     if Bangle_shift_indices != []:
-        for i in Bangle_shift_indices:
-            plt.axvline(x=rmrs[i], color='k', linestyle='dotted')#, label='\u0394\u03A8$_B$')
+        for i,v in enumerate(Bangle_shift_indices):
+            if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\Psi_B$')
+            else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
     
-    plt.plot(rmrsFine,grossEro_norm,'r', label='Gross Erosion', linewidth=10)
+    plt.plot(rmrsFine,grossEro_norm,'r', label='Gross Erosion')
     plt.plot(rmrsFine,grossDep_norm,'g', label='Redeposition')
     plt.plot(rmrsFine,netDep_norm,'k', label='Net Deposition')
     
     plt.xlabel('D-Dsep [m]')
     plt.ylabel('\u0393$_{W,outgoing}$ / \u0393$_{C,incoming}$')
     plt.ticklabel_format(axis='y',style='sci',scilimits=(-2,2))
-    plt.legend()#loc='upper left')
-    plt.title('GITR Predicted Erosion and \n Redeposition Profiles, nP=1e'+str(nP10)+', nT=1e'+str(nT10))
+    plt.legend(fontsize=20)#loc='upper left')
+    plt.title('GITR Predicted Erosion and \n Redeposition Profiles, nP=1e'+str(nP10)+', nT=1e'+str(nT10), fontsize=30)
     plt.savefig('plots/surface.png')
     
     if plot_cumsum:
@@ -632,7 +644,7 @@ def analyze_forces(varString, component, rzlim=True, colorbarLimits=[], dt=1e-8)
         
     elif varString=='friction':
         vartype = 'F'
-        titleString = ' = ($m \\nu_S U_{\parallel}$)'
+        titleString = ' = ($F_{FP}$)'
         
         Z_D = 1
         Z_C = 6
@@ -786,18 +798,17 @@ def plot_forces(var, titleString, gridrz, vartype='F', rzlim=True, colorbarLimit
     return
 
 if __name__ == "__main__":
-    analyze_leakage('perlmutter/history_D3t6.nc')
+    plot_history2D('perlmutter/D3p5t8T5/history.nc')
+    #plot_surf_nc(1006929636574578.9, 6, 6, [1,9], [3,8,9], "perlmutter/D3p6t8T6/surface.nc")
+    #analyze_leakage('perlmutter/history_D3t6.nc')
     #analyze_forces('q(v x B)', 't', rzlim=True, colorbarLimits=[], dt=1e-8)
     
     #init()
     #plot_gitr_gridspace()
     #plot_particle_source()
-    #plot_history2D('history.nc')
     #plot_history2D('history-alpine.nc', plot_particle_source=1, markersize=2)
     #plot_history2D("../../../../GITR/scratch/output/history.nc")
     #plot_history2D("history_nP5e2_nT1e5.nc")
-    #plot_surf_nc(7.582961536113231e+17, 'surface-alpine.nc')
-    #plot_surf_nc(1006929636574578.9, 5, 5, [3,8,9], "surface_p5t5.nc")
     #plot_surf_nc(1063289762078132.4, "surface.nc")
     #plot_surf_nc(37914807680566.16, "/Users/Alyssa/Dev/SAS-VW-Data/netcdf_data/nP5/surf-5-6.nc")
     #spectroscopy(3791480768056.615,specFile='specP6T6.nc')

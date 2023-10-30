@@ -145,10 +145,28 @@ bb = reshape(bb,nx+2,ny+2,4);
 
 ua =  read_b2f_variable("b2fstate", "ua"); % parallel velocity
 ua = reshape(ua,nx+2,ny+2,9);
+
+na =  read_b2f_variable("b2fstate", "na"); 
+na = reshape(na,nx+2,ny+2,9); 
+naD0 =  na(:,:,1);  % D0 density
+naD1 = na(:,:,2); % D1+ density
+naC0 = na(:,:,3); % C0 density
+naC1 = na(:,:,4); % C1+ density
+naC2 = na(:,:,5); % C2+ density
+naC3 = na(:,:,6); % C3+ density
+naC4 = na(:,:,7); % C4+ density
+naC5 = na(:,:,8); % C5+ density
+naC6 = na(:,:,9); % C6+ density
+
+%carbon fraction
+naC = naC0 + naC1 + naC2 + naC3 + naC4 + naC5 + naC6;
+ni = naD0 + naD1 + naC
+Cfraction = 100 .* naC./ni;
+
 %figure(4)
 for i=1:nx+2
     for j=1:ny+2
-        patch(reshape(crx(i,j,:),1,4),reshape(cry(i,j,:),1,4),ua(i,j,2))
+        patch(reshape(crx(i,j,:),1,4),reshape(cry(i,j,:),1,4),Cfraction(i,j))
     end
 end
 
