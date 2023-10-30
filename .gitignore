@@ -23,6 +23,7 @@ python/__pycache__/
 setup/__pycache__/
 *.DS_Store
 *positions.m
+*gitrGeometry.cfg*
 *.nc
 *.pdf
 *.png
