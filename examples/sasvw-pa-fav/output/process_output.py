@@ -1,5 +1,6 @@
 import sys, os
 sys.path.insert(0, os.path.abspath('../../../python/'))
+sys.path.insert(0, os.path.abspath('../setup/'))
 
 import numpy as np
 from scipy import special
@@ -8,6 +9,7 @@ import matplotlib.patches as mpatches
 import matplotlib.path as path
 import netCDF4
 import solps
+import makeParticleSource
 
 def init(W_indices = np.arange(11,22)):
     profilesFile = '../input/plasmaProfiles.nc'
@@ -125,7 +127,7 @@ def plot_history2D(history_file='history.nc', \
             #plt.scatter(x[p][:],z[p][:],marker='_',s=50,c='k')
     
     if continuousChargeState==1:
-        for p in np.arange(0,nP):
+        for p in np.arange(0,nP,10):
             print(p,'out of', nP)
             t=0
             while t<nT-1:
@@ -169,6 +171,9 @@ def plot_surf_nc(pps_per_nP, nP10, nT10, \
     profiles, W_indices, r_inner_target, z_inner_target, rmrs = init()
     rmrsCoords = profiles.variables['rmrs_inner_target'][W_indices]
     surface = netCDF4.Dataset(surface_file, "r", format="NETCDF4")
+    ConW_flux = makeParticleSource.distributed_source(nP=int(10**nP10), surfW=np.arange(11,22), \
+                tile_shift_indices = [1,9], \
+                Bangle_shift_indices = [3,8,9])
     #print(surface.variables['grossErosion'][:])
     
     #calculate area from wall
@@ -210,6 +215,7 @@ def plot_surf_nc(pps_per_nP, nP10, nT10, \
     print(grossDep)
     netDep = (grossDep-grossEro)
     
+    print('\n')
     print('total gross eroded comp particles',sum(grossEro))
     print('total redeposited comp particles',sum(grossDep))
     print('total net deposited comp particles',sum(netDep))
@@ -221,11 +227,14 @@ def plot_surf_nc(pps_per_nP, nP10, nT10, \
     grossDep = grossDep[:-1]*pps_per_nP/area
     netDep = netDep[:-1]*pps_per_nP/area
     
+    print('\n')
     print('rmrs length',len(rmrsFine))
     print('surf length',len(grossEro))
+    print('\n')
     print('total gross eroded flux',sum(grossEro))
     print('total redeposited flux',sum(grossDep))
     print('total net deposited flux',sum(netDep))
+    print('self-sputtering fraction',(sum(grossEro)-sum(ConW_flux))/sum(grossEro))
     
     fluxC = 2.22351742230795e22
     grossEro_norm = grossEro/fluxC
@@ -274,6 +283,7 @@ def plot_surf_nc(pps_per_nP, nP10, nT10, \
     V2_grossEro = V2_grossEro / V2_area
     V3_grossEro = V3_grossEro / V3_area
     
+    print('\n')
     print('gross erosion in View 1:', V1_grossEro)
     print('gross erosion in View 2:', V2_grossEro)
     print('gross erosion in View 3:', V3_grossEro)
@@ -281,6 +291,24 @@ def plot_surf_nc(pps_per_nP, nP10, nT10, \
     plt.rcParams.update({'font.size':30})
     plt.rcParams.update({'lines.linewidth':5}) 
     
+    #plot self-sputtering
+    plt.close()
+    if tile_shift_indices != []:
+        for i,v in enumerate(tile_shift_indices):
+            if i==0: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', label='Walll\nVertices')
+            else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
+    if Bangle_shift_indices != []:
+        for i,v in enumerate(Bangle_shift_indices):
+            if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\Psi_B$')
+            else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
+    
+    plt.plot(rmrsFine, 100*(grossEro-ConW_flux)/grossEro)
+    plt.xlabel('D-Dsep [m]')
+    plt.ylabel('Percentage')
+    plt.title('Percentage of Gross Erosion from Self-Sputtering')
+    plt.show(block=True)
+    
+    #plot main surface plot with 3 views
     plt.close()
     plt.axvspan(rmrs1_start, rmrs1_end, color='#f7bc00', alpha=0.5)
     plt.axvspan(rmrs2_start, rmrs2_end, color='lightsalmon', alpha=0.5)
@@ -318,7 +346,7 @@ def plot_surf_nc(pps_per_nP, nP10, nT10, \
         plt.legend(loc='upper left')
         plt.title('GITR Predicted Cumulative Sum of \n Erosion and Redeposition Profiles',fontsize=20)
         plt.savefig('plots/surface_cumsum.pdf')
-    
+        
 def spectroscopy(pps_per_nP, View=3, \
                  specFile='spec.nc'):
     
@@ -527,13 +555,22 @@ def analyze_forces(varString, component, rzlim=True, colorbarLimits=[], dt=1e-8)
         Fz = q*(vr*Bt - vt*Br)
 
     
-    elif varString=='Lorentz':
+    elif varString=='Lorentz' or varString=='Lorentz dv':
         vartype = 'F'
         titleString = ' = (q(E + v x B))'
         
         Fr = q*(Er + vt*Bz - vz*Bt)
         Ft = q*(Et + vz*Br - vr*Bz)
         Fz = q*(Ez + vr*Bt - vt*Br)
+    
+        if varString=='Lorentz dv':
+            vartype = 'v'
+            Wmass_amu = 183.84
+            Wmass_kg = Wmass_amu * 1.66054e-27
+            
+            Fr = dt*Fr/Wmass_kg
+            Ft = dt*Ft/Wmass_kg
+            Fz = dt*Fz/Wmass_kg
     
     elif varString=='ExB drift':
         vartype = 'v'
@@ -587,7 +624,7 @@ def analyze_forces(varString, component, rzlim=True, colorbarLimits=[], dt=1e-8)
         Ft = ExB_t/B_mag2
         Fz = ExB_z/B_mag2 + (r_Larmor**2 * del2_ExB_z)/(4 * B_mag2)
     
-    elif varString=='drag':
+    elif varString=='drag' or varString=='drag dv':
         vartype = 'F'
         titleString = ' = ($m \\nu_S U_{\parallel}$)'
         
@@ -632,7 +669,7 @@ def analyze_forces(varString, component, rzlim=True, colorbarLimits=[], dt=1e-8)
         nu_s = 0.9*nu_friction_D+0.1*nu_friction_C
         
         B_mag2 = Br**2 + Bt**2 + Bz**2
-        vdotB = vr*Br + vt*Bt + vz*Bz
+        vdotB = relativeVelocity_r*Br + relativeVelocity_t*Bt + relativeVelocity_z*Bz
         v_parallel_r = Br * vdotB / B_mag2
         v_parallel_t = Bt * vdotB / B_mag2
         v_parallel_z = Bz * vdotB / B_mag2
@@ -641,6 +678,15 @@ def analyze_forces(varString, component, rzlim=True, colorbarLimits=[], dt=1e-8)
         Fr = -1 * amu * MI * nu_s * v_parallel_r
         Ft = -1 * amu * MI * nu_s * v_parallel_t
         Fz = -1 * amu * MI * nu_s * v_parallel_z
+        
+        if varString=='drag dv':
+            vartype = 'v'
+            Wmass_amu = 183.84
+            Wmass_kg = Wmass_amu * 1.66054e-27
+            
+            Fr = dt*Fr/Wmass_kg
+            Ft = dt*Ft/Wmass_kg
+            Fz = dt*Fz/Wmass_kg
         
     elif varString=='friction':
         vartype = 'F'
@@ -687,7 +733,7 @@ def analyze_forces(varString, component, rzlim=True, colorbarLimits=[], dt=1e-8)
         nu_s = 0.9*nu_friction_D+0.1*nu_friction_C
         
         B_mag2 = Br**2 + Bt**2 + Bz**2
-        vdotB = vr*Br + vt*Bt + vz*Bz
+        vdotB = relativeVelocity_r*Br + relativeVelocity_t*Bt + relativeVelocity_z*Bz
         v_parallel_r = Br * vdotB / B_mag2
         v_parallel_t = Bt * vdotB / B_mag2
         v_parallel_z = Bz * vdotB / B_mag2
@@ -712,9 +758,9 @@ def analyze_forces(varString, component, rzlim=True, colorbarLimits=[], dt=1e-8)
         print('deflection:', np.average(nu_deflection_D), np.average(nu_deflection_C))
         print('energy:', np.average(nu_energy_D), np.average(nu_energy_C))
         
-        v_perp_r = np.abs(vr - v_parallel_r)
-        v_perp_t = np.abs(vt - v_parallel_t)
-        v_perp_z = np.abs(vz - v_parallel_z)
+        v_perp_r = np.abs(relativeVelocity_r - v_parallel_r)
+        v_perp_t = np.abs(relativeVelocity_t - v_parallel_t)
+        v_perp_z = np.abs(relativeVelocity_z - v_parallel_z)
         
         m = amu * MI
         Fr = drag_r - m*v_parallel_r*np.sqrt(nu_p/dt) - m*v_perp_r*np.sqrt(nu_d/(2*dt))
@@ -722,9 +768,7 @@ def analyze_forces(varString, component, rzlim=True, colorbarLimits=[], dt=1e-8)
         Fz = drag_z - m*v_parallel_z*np.sqrt(nu_p/dt) - m*v_perp_z*np.sqrt(nu_d/(2*dt))
         
         
-        
-    
-    elif varString=='gradT':
+    elif varString=='gradT' or varString=='gradT dv':
         vartype = 'F'
         titleString = ' = ($ \\alpha \\nabla_{\parallel} T_e + \\beta \\nabla_{\parallel} T_i $)'
         
@@ -740,12 +784,22 @@ def analyze_forces(varString, component, rzlim=True, colorbarLimits=[], dt=1e-8)
         alpha = 0.71*charge_W**2
         beta_D = 3 * (mu_D + 5*np.sqrt(2.0) * charge_W**2 * (1.1*mu_D**(5 / 2) - 0.35*mu_D**(3 / 2)) - 1) / (2.6 - 2*mu_D + 5.4*mu_D**2)
         beta_C = 3 * (mu_C + 5*np.sqrt(2.0) * charge_W**2 * (1.1*mu_C**(5 / 2) - 0.35*mu_C**(3 / 2)) - 1) / (2.6 - 2*mu_C + 5.4*mu_C**2)
-        #assume a 10% C plasma everywhere
-        beta = 0.9*beta_D + 0.1*beta_C 
+        #assume a 3.7% C plasma everywhere
+        beta = 0.9565*beta_D + 0.0435*beta_C 
         
         Fr = alpha*gradTer + beta*gradTir
         Ft = alpha*gradTet + beta*gradTit
         Fz = alpha*gradTez + beta*gradTiz
+        
+        if varString=='gradT dv':
+            vartype = 'v'
+            Wmass_amu = 183.84
+            Wmass_kg = Wmass_amu * 1.66054e-27
+            
+            Fr = dt*Fr/Wmass_kg
+            Ft = dt*Ft/Wmass_kg
+            Fz = dt*Fz/Wmass_kg
+    
         
     Fr[np.where(Fr==0)] = 'nan'
     Ft[np.where(Ft==0)] = 'nan'
@@ -798,10 +852,10 @@ def plot_forces(var, titleString, gridrz, vartype='F', rzlim=True, colorbarLimit
     return
 
 if __name__ == "__main__":
-    plot_history2D('perlmutter/D3p5t8T5/history.nc')
-    #plot_surf_nc(1006929636574578.9, 6, 6, [1,9], [3,8,9], "perlmutter/D3p6t8T6/surface.nc")
+    #plot_history2D('perlmutter/D3p5t8T5/history.nc')
+    plot_surf_nc(100692963657457.89, 5, 5, [1,9], [3,8,9], "perlmutter/D3p5t8T5/surface.nc")
     #analyze_leakage('perlmutter/history_D3t6.nc')
-    #analyze_forces('q(v x B)', 't', rzlim=True, colorbarLimits=[], dt=1e-8)
+    #analyze_forces('gradT dv', 't', rzlim=True, colorbarLimits=[], dt=1e-8)
     
     #init()
     #plot_gitr_gridspace()

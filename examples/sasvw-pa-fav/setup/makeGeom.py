@@ -276,9 +276,9 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     
     # find what W_indices (gitrGeometry) and W_indices_profiles (plasmaProfiles) 
     # should be along the plasmaProfiles.nc targets
+    tile_shift_indices = [1,9]
     if plot_variables:
         plt.close()
-        tile_shift_indices = [1,9]
         if tile_shift_indices != []:
             for i in tile_shift_indices:
                 plt.axhline(y=z_right_target[W_indices_profiles][i], color='k', linestyle='dotted')

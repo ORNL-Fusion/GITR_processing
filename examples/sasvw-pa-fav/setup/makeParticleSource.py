@@ -48,11 +48,11 @@ def point_source(nP = int(2e2)):
 def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[], \
             geom = '../input/gitrGeometry.cfg', \
             profiles_file = '../input/plasmaProfiles.nc', \
-            gitr_rz = 'assets/gitr_rz.txt', \
-            rmrs_fine_file = 'assets/rmrs_fine.txt', \
-            W_fine_file = 'assets/W_fine.txt', \
-            ftDFile = 'assets/ftridynBackgroundD.nc', \
-            ftCFile = 'assets/ftridynBackgroundC.nc', \
+            gitr_rz = '../setup/assets/gitr_rz.txt', \
+            rmrs_fine_file = '../setup/assets/rmrs_fine.txt', \
+            W_fine_file = '../setup/assets/W_fine.txt', \
+            ftDFile = '../setup/assets/ftridynBackgroundD.nc', \
+            ftCFile = '../setup/assets/ftridynBackgroundC.nc', \
             configuration = 'random', \
             use_fractal_tridyn_outgoing_IEADS = 1, \
             plot_variables = 0):
@@ -632,6 +632,8 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     vyy[:] = vy
     vzz[:] = vz
     rootgrp.close()
+    
+    return sputt_flux
 
 
 
@@ -913,7 +915,7 @@ def get_analytic_spyld(surfE, surfA, Z1=6, M1=12, Z2=74, M2=183.84, \
 
 if __name__ == "__main__":
     #init()
-    distributed_source(nP=int(10000), surfW=np.arange(11,22), \
+    distributed_source(nP=int(1e6), surfW=np.arange(11,22), \
                 tile_shift_indices = [1,9], \
                 Bangle_shift_indices = [3,8,9], \
                 geom = '../input/gitrGeometry.cfg', \
