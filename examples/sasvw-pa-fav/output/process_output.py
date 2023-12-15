@@ -10,8 +10,9 @@ import matplotlib.path as path
 import netCDF4
 import solps
 import makeParticleSource
+import time
 
-def init(W_indices = np.arange(11,22)):
+def init(W_indices = np.arange(11,22), plot_rz=False):
     profilesFile = '../input/plasmaProfiles.nc'
     profiles = netCDF4.Dataset(profilesFile)
     
@@ -21,8 +22,9 @@ def init(W_indices = np.arange(11,22)):
     rmrs = profiles.variables['rmrs_inner_target_midpoints'][W_indices]
     
     #plot r,z to check that target indices are restricted to W surfaces
-    plt.close()
-    plt.plot(r_inner_target, z_inner_target)
+    if plot_rz:
+        plt.close()
+        plt.plot(r_inner_target, z_inner_target)
     
     #set plotting style defaults
     plt.rcParams.update({'font.size':11.5})
@@ -851,9 +853,249 @@ def plot_forces(var, titleString, gridrz, vartype='F', rzlim=True, colorbarLimit
     
     return
 
+def theoretical_sheath(profiles, W_surf):
+    Bmag = profiles.variables['Bmag_inner_target'][W_surf]
+    te = profiles.variables['te_inner_target'][W_surf]
+    ti = profiles.variables['ti_inner_target'][W_surf]
+    ni = profiles.variables['ni_inner_target'][:,W_surf]
+    niC = ni[2] + ni[3] + ni[4] + ni[5] + ni[6] + ni[7] + ni[8]
+    ni = ni[0] + ni[1] + niC
+    
+    #Debye Length
+    epsilon_0 = 55.26349406
+    lambda_D = np.sqrt(epsilon_0 * te / (1e-18 * ni)) #in microns
+    lambda_D = lambda_D*1e-6 #in meters
+    
+    #Larmor Radius
+    unit_charge = 1.602176634e-19
+    amu2kg = 1.6605402e-27
+    mi = 2 * amu2kg
+    cs = np.sqrt(unit_charge*(te+ti)/mi) #sound speed
+    r_Larmor = (mi/(unit_charge*Bmag)) * cs * 1000 #in milimeters
+    r_Larmor = r_Larmor*1e-3 #in meters
+    
+    #Sheath Width Factors
+    Debye_factor = 3
+    Chodura_factor = 3
+    Debye_width = Debye_factor * lambda_D
+    Chodura_width = Chodura_factor * r_Larmor
+    
+    return Debye_width, Chodura_width
+
+
+def ionization_analysis(plotting, historyFile, positionsFile, tile_shift_indices, Bangle_shift_indices, W_surf):    
+    profiles, W_indices, r_inner_target, z_inner_target, rmrs = init(W_surf)
+    history = netCDF4.Dataset(historyFile)
+    positions = netCDF4.Dataset(positionsFile)
+    
+    z_inner_target = z_inner_target[W_surf]
+    rmrsMid = rmrs[:-1]
+    rmrsCoords = profiles.variables['rmrs_inner_target'][W_surf]
+    nP = len(history.dimensions['nP'])
+    charge = history.variables['charge'][:]
+    angle = positions.variables['angle'][:]
+    
+    Debye, Chodura = theoretical_sheath(profiles,W_surf)
+        
+    x = history.variables['x'][:]
+    y = history.variables['y'][:]
+    z = history.variables['z'][:]
+    
+    tally_never_ionizes = np.zeros(len(z_inner_target)-1)
+    avg_distance_to_first_ionization = np.empty(0)
+    std_distance_to_first_ionization = np.empty(0)
+    
+    frac_ioniz_in_Chodura = np.zeros(len(z_inner_target)-1)
+    frac_ioniz_in_Debye = np.zeros(len(z_inner_target)-1)
+    pindex_in_Chodura = np.empty(0,dtype=int)
+    pindex_in_Debye = np.empty(0,dtype=int)
+    frac_prompt_Chodura = np.zeros(len(z_inner_target)-1)
+    frac_prompt_Debye = np.zeros(len(z_inner_target)-1)
+    
+    for seg in range(len(z_inner_target)-1):
+
+        particle_index_list = np.empty(0,dtype=int)
+        for p in range(int(nP)):
+            
+            if z[p,0]<=z_inner_target[seg] and z[p,0]>z_inner_target[seg+1]:
+                particle_index_list = np.append(particle_index_list, int(p))
+        
+        distance_to_first_ionization = np.empty(0)
+        Chodura_top, Debye_top = (0,0)
+        for p in particle_index_list:
+            
+            time_index = np.nonzero(charge[p])[0]
+            if time_index.size == 0:
+                tally_never_ionizes[seg] += 1
+            else:
+                time_index = time_index[0]
+                
+                x1 = x[p,0]
+                y1 = y[p,0]
+                z1 = z[p,0]
+                x2 = x[p,time_index]
+                y2 = y[p,time_index]
+                z2 = z[p,time_index]
+                
+                dist = np.sqrt((x2-x1)**2 + (y2-y1)**2 + (z2-z1)**2)
+                distance_to_first_ionization = np.append(distance_to_first_ionization, dist)
+                
+                if dist<Chodura[seg]:
+                    pindex_in_Chodura = np.append(pindex_in_Chodura, int(p))
+                    Chodura_top += 1
+                    
+                    if dist<Debye[seg]:
+                        pindex_in_Debye = np.append(pindex_in_Debye, int(p))
+                        Debye_top += 1
+                        
+        avg_distance_to_first_ionization = np.append(avg_distance_to_first_ionization, \
+                                                     np.average(distance_to_first_ionization))
+        std_distance_to_first_ionization = np.append(std_distance_to_first_ionization, \
+                                                     np.std(std_distance_to_first_ionization))
+        frac_ioniz_in_Chodura[seg] = Chodura_top/len(particle_index_list)
+        frac_ioniz_in_Debye[seg] = Debye_top/len(particle_index_list)
+        
+        if plotting[0]==1:
+            plt.close()
+            plt.hist(distance_to_first_ionization*1000,100) #in mm
+            plt.xlabel('Distance [mm]')
+            plt.ylabel('Counts')
+            plt.show(block=True)
+        
+        ##############################################################################
+        # Calculate fraction of particles ionizing in a sheath that promptly redeposit
+        ##############################################################################
+        
+        angle_Chodura = angle[pindex_in_Chodura]
+        angle_Debye = angle[pindex_in_Debye]
+        
+        is_prompt_Chodura = angle_Chodura <= 8.5
+        is_prompt_Debye = angle_Debye <= 8.5
+        
+        frac_prompt_Chodura[seg] = np.sum(is_prompt_Chodura)/len(pindex_in_Chodura)
+        frac_prompt_Debye[seg] = np.sum(is_prompt_Debye)/len(pindex_in_Debye)
+
+    print('Never ionized:',tally_never_ionizes)
+    
+    if plotting[1]==1:
+        plt.close()
+        if tile_shift_indices != []:
+            for i,v in enumerate(tile_shift_indices):
+                if i==0: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', label='Walll\nVertices')
+                else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
+        if Bangle_shift_indices != []:
+            for i,v in enumerate(Bangle_shift_indices):
+                if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\Psi_B$')
+                else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
+        
+        plt.plot(rmrsMid, avg_distance_to_first_ionization*1000)
+        plt.scatter(rmrsMid, avg_distance_to_first_ionization*1000)
+        plt.xlabel('D-Dsep [m]')
+        plt.ylabel('Distance [mm]')
+        plt.title('Average Distance to First Ionization')
+        plt.show(block=True)
+        plt.savefig('plots/avg_dist_to_first_ioniz.png')
+        
+        plt.close()
+        if tile_shift_indices != []:
+            for i,v in enumerate(tile_shift_indices):
+                if i==0: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', label='Walll\nVertices')
+                else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
+        if Bangle_shift_indices != []:
+            for i,v in enumerate(Bangle_shift_indices):
+                if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\Psi_B$')
+                else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
+        
+        plt.plot(rmrsMid, frac_ioniz_in_Chodura, label='Chodura', color='orange')
+        plt.plot(rmrsMid, frac_ioniz_in_Debye, label='Debye', color='red')
+        plt.xlabel('D-Dsep [m]')
+        plt.ylabel('Fraction')
+        plt.title('Fraction of Particles First Ionizing in the Sheath')
+        plt.legend()
+        plt.show(block=True)
+        plt.savefig('plots/frac_ioniz_in_sheath.png')
+        
+        plt.close()
+        if tile_shift_indices != []:
+            for i,v in enumerate(tile_shift_indices):
+                if i==0: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', label='Walll\nVertices')
+                else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
+        if Bangle_shift_indices != []:
+            for i,v in enumerate(Bangle_shift_indices):
+                if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\Psi_B$')
+                else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
+        
+        plt.plot(rmrsMid, frac_prompt_Chodura, label='Chodura', color='orange')
+        plt.plot(rmrsMid, frac_prompt_Debye, label='Debye', color='red')
+        plt.xlabel('D-Dsep [m]')
+        plt.ylabel('Fraction')
+        plt.title('Fraction of First Ionizations in Sheath that Redeposit')
+        plt.legend()
+        plt.show(block=True)
+        plt.savefig('plots/frac_sheath_ioniz_prompt_redep.png')
+    
+    return
+
+def prompt_redep_hist(inputs, fileDir, fileON, fileOFF):
+    [nP10, dt10, nT10] = inputs
+    
+    pathON = fileDir+fileON
+    pathOFF = fileDir+fileOFF
+    
+    posON = netCDF4.Dataset(pathON, "r", format="NETCDF4")
+    posOFF = netCDF4.Dataset(pathOFF, "r", format="NETCDF4")
+    
+    angleON = posON.variables['angle'][:]
+    angleOFF = posOFF.variables['angle'][:]
+    timeON = posON.variables['transitTime'][:]
+    timeOFF = posOFF.variables['transitTime'][:]
+    
+    is_promptON = angleON<=8.5
+    is_promptOFF = angleOFF<=8.5
+    
+    frac_promptON = np.sum(is_promptON) / len(angleON)
+    frac_promptOFF = np.sum(is_promptOFF) / len(angleOFF)
+    
+    print('Fraction promptly redeposited with SurfModel ON:', frac_promptON)
+    print('Fraction promptly redeposited with SurfModel OFF:', frac_promptOFF)
+    
+    if 1:
+        plt.close()
+        bins = np.logspace(-3,4)
+        #plt.hist(angleON, 200, (0,1), color='g', label='ON')
+        #plt.hist(angleOFF, 200, (0,1), color='r', label='OFF')
+        plt.hist(angleON, bins, color='g', label='ON', alpha=0.5)
+        plt.hist(angleOFF, bins, color='r', label='OFF', alpha=0.5)
+        plt.xscale('log')
+        plt.xlabel('Radians')
+        plt.ylabel('Counts')
+        plt.title('Histogram of radians completed before striking \n with nP=1e'\
+                  +str(nP10)+', dt=1e-'+str(dt10)+', nT=1e'+str(nT10))
+        plt.legend()
+    
+    if 0: 
+        plt.close()
+        plt.hist(timeOFF, 200, (0,0.2), color='r', label='OFF')
+        plt.hist(timeON, 200, (0,0.2), color='g', label='ON')
+        plt.xlabel('Time [s]')
+        plt.ylabel('Counts')
+        plt.title('Flight time before striking \n nP=1e'+str(nP10))
+        plt.legend()
+    
+    '''
+    timeONzero = 10**nP10 - np.count_nonzero(timeON)
+    timeOFFzero = 10**nP10 - np.count_nonzero(timeOFF)
+    print('Particles that THINK they never leave the surface')
+    print('Surface Model ON:', timeONzero)
+    print('Surface Model OFF:', timeOFFzero)
+    print('\n')
+    '''
+
+    return
+
 if __name__ == "__main__":
     #plot_history2D('perlmutter/D3p5t8T5/history.nc')
-    plot_surf_nc(100692963657457.89, 5, 5, [1,9], [3,8,9], "perlmutter/D3p5t8T5/surface.nc")
+    #plot_surf_nc(100692963657457.89, 5, 5, [1,9], [3,8,9], "perlmutter/D3p5t8T5/surface.nc")
     #analyze_leakage('perlmutter/history_D3t6.nc')
     #analyze_forces('gradT dv', 't', rzlim=True, colorbarLimits=[], dt=1e-8)
     
@@ -866,3 +1108,5 @@ if __name__ == "__main__":
     #plot_surf_nc(1063289762078132.4, "surface.nc")
     #plot_surf_nc(37914807680566.16, "/Users/Alyssa/Dev/SAS-VW-Data/netcdf_data/nP5/surf-5-6.nc")
     #spectroscopy(3791480768056.615,specFile='specP6T6.nc')
+    #ionization_analysis([1,0], 'perlmutter/history_dist_first_ioniz.nc', 'perlmutter/positions_dist_first_ioniz.nc', [1,9], [3,8,9], W_surf=np.arange(11,22))
+    prompt_redep_hist([5,9,4], 'perlmutter/p5t9T4/','positions_SurfModelON.nc','positions_SurfModelOFF.nc')
