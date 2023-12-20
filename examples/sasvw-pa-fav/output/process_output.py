@@ -10,7 +10,6 @@ import matplotlib.path as path
 import netCDF4
 import solps
 import makeParticleSource
-import time
 
 def init(W_indices = np.arange(11,22), plot_rz=False):
     profilesFile = '../input/plasmaProfiles.nc'
@@ -168,12 +167,13 @@ def plot_surf_nc(pps_per_nP, nP10, nT10, \
                  gitr_rz='../setup/assets/gitr_rz.txt', \
                  W_fine_file='../setup/assets/W_fine.txt', \
                  rmrs_fine_file='../setup/assets/rmrs_fine.txt', \
-                 plot_cumsum=0):
+                 norm=None, plot_cumsum=0):
     
     profiles, W_indices, r_inner_target, z_inner_target, rmrs = init()
     rmrsCoords = profiles.variables['rmrs_inner_target'][W_indices]
     surface = netCDF4.Dataset(surface_file, "r", format="NETCDF4")
-    ConW_flux = makeParticleSource.distributed_source(nP=int(10**nP10), surfW=np.arange(11,22), \
+    partSource_flux, fluxD, fluxC = makeParticleSource.distributed_source(nP=int(10**nP10), \
+                surfW=np.arange(11,22), \
                 tile_shift_indices = [1,9], \
                 Bangle_shift_indices = [3,8,9])
     #print(surface.variables['grossErosion'][:])
@@ -236,12 +236,20 @@ def plot_surf_nc(pps_per_nP, nP10, nT10, \
     print('total gross eroded flux',sum(grossEro))
     print('total redeposited flux',sum(grossDep))
     print('total net deposited flux',sum(netDep))
-    print('self-sputtering fraction',(sum(grossEro)-sum(ConW_flux))/sum(grossEro))
+    print('self-sputtering fraction',(sum(grossEro)-sum(partSource_flux))/sum(grossEro))
     
-    fluxC = 2.22351742230795e22
-    grossEro_norm = grossEro/fluxC
-    grossDep_norm = grossDep/fluxC
-    netDep_norm = netDep/fluxC
+    if norm=='C':
+        grossEro_norm = grossEro/fluxC
+        grossDep_norm = grossDep/fluxC
+        netDep_norm = netDep/fluxC
+    elif norm=='D':
+        grossEro_norm = grossEro/fluxD
+        grossDep_norm = grossDep/fluxD
+        netDep_norm = netDep/fluxD
+    else: 
+        grossEro_norm = grossEro
+        grossDep_norm = grossDep
+        netDep_norm = netDep
     
     grossEro_cumsum = np.cumsum(grossEro)
     grossDep_cumsum = np.cumsum(grossDep)
@@ -265,22 +273,52 @@ def plot_surf_nc(pps_per_nP, nP10, nT10, \
     rmrs3_start = np.sqrt((z3_start-z_sp)**2 + (r3_start-r_sp)**2)
     rmrs3_end = np.sqrt((z3_end-z_sp)**2 + (r3_end-r_sp)**2)
     
+    #initialize intermediate variables for calculating erosion within a given view
+    V1_indices = np.empty(0, dtype=int)
+    V2_indices = np.empty(0, dtype=int)
+    V3_indices = np.empty(0, dtype=int)
     V1_grossEro = 0
-    V1_area = 0
     V2_grossEro = 0
-    V2_area = 0
     V3_grossEro = 0
+    V1_area = 0
+    V2_area = 0
     V3_area = 0
+    
     for i,v in enumerate(rmrsFine):
         if v >= rmrs1_end and v <= rmrs1_start:
-            V1_grossEro += grossEro[i] * (rmrsFine[i+1] - rmrsFine[i])
-            V1_area += rmrsFine[i+1] - rmrsFine[i]
+            V1_indices = np.append(V1_indices, i)
         elif v >= rmrs2_start and v <= rmrs2_end:
-            V2_grossEro += grossEro[i] * (rmrsFine[i+1] - rmrsFine[i])
-            V2_area += rmrsFine[i+1] - rmrsFine[i]
+            V2_indices = np.append(V2_indices, i)
         elif v >= rmrs3_start and v <= rmrs3_end:
-            V3_grossEro += grossEro[i] * (rmrsFine[i+1] - rmrsFine[i])
-            V3_area += rmrsFine[i+1] - rmrsFine[i]
+            V3_indices = np.append(V3_indices, i)
+    
+    #add all cells beginning inside the view
+    for i in V1_indices:
+        V1_grossEro += grossEro[i] * (rmrsFine[i+1] - rmrsFine[i])
+        V1_area += rmrsFine[i+1] - rmrsFine[i]
+    for i in V2_indices:
+        V2_grossEro += grossEro[i] * (rmrsFine[i+1] - rmrsFine[i])
+        V2_area += rmrsFine[i+1] - rmrsFine[i]
+    for i in V3_indices:
+        V3_grossEro += grossEro[i] * (rmrsFine[i+1] - rmrsFine[i])
+        V3_area += rmrsFine[i+1] - rmrsFine[i]
+    
+    #add fraction of previous cell ending inside the view
+    V1_grossEro += grossEro[V1_indices[0]-1] * (rmrs1_end-rmrsFine[V1_indices[0]])
+    V1_area += rmrs1_end-rmrsFine[V1_indices[0]]
+    V2_grossEro += grossEro[V2_indices[0]-1] * (rmrs2_start-rmrsFine[V2_indices[0]])
+    V2_area += rmrs2_start-rmrsFine[V2_indices[0]]
+    V3_grossEro += grossEro[V3_indices[0]-1] * (rmrs3_start-rmrsFine[V3_indices[0]])
+    V3_area += rmrs3_start-rmrsFine[V3_indices[0]]
+
+    #subtract fraction of last cell starting inside the view
+    V1_grossEro -= grossEro[V1_indices[-1]] * (rmrs1_start-rmrsFine[V1_indices[-1]+1])
+    V1_area -= rmrs1_start-rmrsFine[V1_indices[-1]+1] 
+    V2_grossEro -= grossEro[V2_indices[-1]] * (rmrs2_end-rmrsFine[V2_indices[-1]+1])
+    V2_area -= rmrs2_end-rmrsFine[V2_indices[-1]+1]
+    V3_grossEro -= grossEro[V3_indices[-1]] * (rmrs3_end-rmrsFine[V3_indices[-1]+1])
+    V3_area -= rmrs3_end-rmrsFine[V3_indices[-1]+1]
+    
     V1_grossEro = V1_grossEro / V1_area
     V2_grossEro = V2_grossEro / V2_area
     V3_grossEro = V3_grossEro / V3_area
@@ -304,7 +342,7 @@ def plot_surf_nc(pps_per_nP, nP10, nT10, \
             if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\Psi_B$')
             else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
     
-    plt.plot(rmrsFine, 100*(grossEro-ConW_flux)/grossEro)
+    plt.plot(rmrsFine, 100*(grossEro-partSource_flux)/grossEro)
     plt.xlabel('D-Dsep [m]')
     plt.ylabel('Percentage')
     plt.title('Percentage of Gross Erosion from Self-Sputtering')
@@ -348,6 +386,8 @@ def plot_surf_nc(pps_per_nP, nP10, nT10, \
         plt.legend(loc='upper left')
         plt.title('GITR Predicted Cumulative Sum of \n Erosion and Redeposition Profiles',fontsize=20)
         plt.savefig('plots/surface_cumsum.pdf')
+    
+    return
         
 def spectroscopy(pps_per_nP, View=3, \
                  specFile='spec.nc'):
@@ -988,8 +1028,8 @@ def ionization_analysis(plotting, historyFile, positionsFile, tile_shift_indices
                 if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\Psi_B$')
                 else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
         
-        plt.plot(rmrsMid, avg_distance_to_first_ionization*1000)
-        plt.scatter(rmrsMid, avg_distance_to_first_ionization*1000)
+        plt.errorbar(rmrsMid, avg_distance_to_first_ionization*1000, std_distance_to_first_ionization*1000)
+        plt.scatter(rmrsMid, avg_distance_to_first_ionization*1000, s=15)
         plt.xlabel('D-Dsep [m]')
         plt.ylabel('Distance [mm]')
         plt.title('Average Distance to First Ionization')
@@ -1045,13 +1085,13 @@ def prompt_redep_hist(inputs, fileDir, fileON, fileOFF):
     posON = netCDF4.Dataset(pathON, "r", format="NETCDF4")
     posOFF = netCDF4.Dataset(pathOFF, "r", format="NETCDF4")
     
-    angleON = posON.variables['angle'][:]
-    angleOFF = posOFF.variables['angle'][:]
-    timeON = posON.variables['transitTime'][:]
-    timeOFF = posOFF.variables['transitTime'][:]
+    angleON = posON.variables['angle'][:]/2/np.pi #radians -> rotations
+    angleOFF = posOFF.variables['angle'][:]/2/np.pi #radians -> rotations
+    timeON = posON.variables['time'][:]
+    timeOFF = posOFF.variables['time'][:]
     
-    is_promptON = angleON<=8.5
-    is_promptOFF = angleOFF<=8.5
+    is_promptON = angleON<=1
+    is_promptOFF = angleOFF<=1
     
     frac_promptON = np.sum(is_promptON) / len(angleON)
     frac_promptOFF = np.sum(is_promptOFF) / len(angleOFF)
@@ -1059,21 +1099,23 @@ def prompt_redep_hist(inputs, fileDir, fileON, fileOFF):
     print('Fraction promptly redeposited with SurfModel ON:', frac_promptON)
     print('Fraction promptly redeposited with SurfModel OFF:', frac_promptOFF)
     
-    if 1:
+    if 0:
         plt.close()
         bins = np.logspace(-3,4)
         #plt.hist(angleON, 200, (0,1), color='g', label='ON')
         #plt.hist(angleOFF, 200, (0,1), color='r', label='OFF')
-        plt.hist(angleON, bins, color='g', label='ON', alpha=0.5)
-        plt.hist(angleOFF, bins, color='r', label='OFF', alpha=0.5)
+        plt.axvline(x=1, color='k') #1 rotation = 2pi radians
+        #setting density=True divides each bar by total counts and bin width to give a pdf
+        plt.hist(angleON, bins, color='g', label='ON', alpha=0.5, density=False)
+        plt.hist(angleOFF, bins, color='r', label='OFF', alpha=0.5, density=False)
         plt.xscale('log')
-        plt.xlabel('Radians')
+        plt.xlabel('Rotations')
         plt.ylabel('Counts')
-        plt.title('Histogram of radians completed before striking \n with nP=1e'\
+        plt.title('Histogram of rotations completed before depositing \n with nP=1e'\
                   +str(nP10)+', dt=1e-'+str(dt10)+', nT=1e'+str(nT10))
         plt.legend()
     
-    if 0: 
+    if 1: 
         plt.close()
         plt.hist(timeOFF, 200, (0,0.2), color='r', label='OFF')
         plt.hist(timeON, 200, (0,0.2), color='g', label='ON')
@@ -1095,7 +1137,7 @@ def prompt_redep_hist(inputs, fileDir, fileON, fileOFF):
 
 if __name__ == "__main__":
     #plot_history2D('perlmutter/D3p5t8T5/history.nc')
-    #plot_surf_nc(100692963657457.89, 5, 5, [1,9], [3,8,9], "perlmutter/D3p5t8T5/surface.nc")
+    plot_surf_nc(100692963657457.89, 5, 5, [1,9], [3,8,9], "perlmutter/D3p5t8T5/surface.nc", norm=None)
     #analyze_leakage('perlmutter/history_D3t6.nc')
     #analyze_forces('gradT dv', 't', rzlim=True, colorbarLimits=[], dt=1e-8)
     
@@ -1104,9 +1146,9 @@ if __name__ == "__main__":
     #plot_particle_source()
     #plot_history2D('history-alpine.nc', plot_particle_source=1, markersize=2)
     #plot_history2D("../../../../GITR/scratch/output/history.nc")
-    #plot_history2D("history_nP5e2_nT1e5.nc")
-    #plot_surf_nc(1063289762078132.4, "surface.nc")
-    #plot_surf_nc(37914807680566.16, "/Users/Alyssa/Dev/SAS-VW-Data/netcdf_data/nP5/surf-5-6.nc")
+    #plot_history2D("perlmutter/historyT4_dist_first_ioniz.nc")
+    #plot_surf_nc(37914807680566.16, "/Users/Alyssa/Dev/SAS-VW-Data/netcdf_data/nP5/surf-5-6.nc", norm='C')
     #spectroscopy(3791480768056.615,specFile='specP6T6.nc')
-    #ionization_analysis([1,0], 'perlmutter/history_dist_first_ioniz.nc', 'perlmutter/positions_dist_first_ioniz.nc', [1,9], [3,8,9], W_surf=np.arange(11,22))
-    prompt_redep_hist([5,9,4], 'perlmutter/p5t9T4/','positions_SurfModelON.nc','positions_SurfModelOFF.nc')
+    #ionization_analysis([0,1], 'perlmutter/historyT5_dist_first_ioniz.nc', 'perlmutter/positionsT5_dist_first_ioniz.nc', [1,9], [3,8,9], W_surf=np.arange(11,22))
+    #prompt_redep_hist([5,9,4], 'perlmutter/p5t9T4/','positions_SurfModelON.nc','positions_SurfModelOFF.nc')
+

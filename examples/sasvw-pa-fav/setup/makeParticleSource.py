@@ -214,7 +214,6 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     fluxC = fluxC1 + fluxC2 + fluxC3 + fluxC4 + fluxC5 + fluxC6
     totalflux = fluxD0 + fluxD + fluxC0 + fluxC
     Cfraction = np.sum(fluxC0 + fluxC) / np.sum(totalflux)
-    print('Total C Flux to the Surface:', np.sum(fluxC), 'm-2 s-1')
     print('C Fraction of Total Incoming Flux:', Cfraction)
 
     #multiply incoming ion flux by Y_s to get sputtered W flux by each species
@@ -633,7 +632,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     vzz[:] = vz
     rootgrp.close()
     
-    return sputt_flux
+    return sputt_flux, fluxD, fluxC
 
 
 
