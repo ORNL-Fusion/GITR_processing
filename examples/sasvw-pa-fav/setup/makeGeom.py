@@ -105,9 +105,10 @@ def lines_to_vectors(lines, inDir, plt, plot_variables, shouldBlock):
 
         rPerp = -inDir[i]/np.sqrt(perpSlope*perpSlope+1);
         zPerp = -inDir[i]*np.sign(perpSlope)*np.sqrt(1-rPerp*rPerp);
-        plt.quiver([x1[i] + (x2[i]-x1[i])/2], [z1[i] + (z2[i]-z1[i])/2], [rPerp/10], [zPerp/10], width=0.0015, scale=5, headwidth=4)
 
     if plot_variables:
+        plt.quiver([x1[i] + (x2[i]-x1[i])/2], [z1[i] + (z2[i]-z1[i])/2], [rPerp/10], [zPerp/10], width=0.0015, scale=5, headwidth=4)
+
         plt.title('inDir')
         plt.show(block=shouldBlock)
         plt.savefig('plots/geom/inDir.png')

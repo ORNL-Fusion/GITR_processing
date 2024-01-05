@@ -1,6 +1,5 @@
 import sys, os
 sys.path.insert(0, os.path.abspath('../../../python/'))
-sys.path.insert(0, os.path.abspath('../../../../pyGITR/pyGITR'))
 
 import numpy as np
 import scipy.interpolate as scii
@@ -533,6 +532,8 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     print('vy',np.average(vy))
     print('vz',np.average(vz))
     
+    '''
+    #debugging
     blocker=False
     plt.close()
     plt.hist(vx)
@@ -543,7 +544,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     plt.show(block=blocker)
     plt.hist(vz)
     plt.title('vz')
-    plt.show(block=blocker)
+    plt.show(block=blocker)'''
 
     #double check that all particles actually received an energy and 2 angles
     print('species weights_diff should be 0:', np.sum(weight_diff))
