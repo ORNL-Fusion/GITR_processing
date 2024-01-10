@@ -517,7 +517,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
             vy = np.append(vy, vtot*vy_lab)
             vz = np.append(vz, vtot*vz_lab)
             
-            #debugging
+            '''#debugging
             #print(vz_lab)
             plt.close()
             plt.scatter(vx_lab,vz_lab,s=1)
@@ -525,7 +525,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
             plt.xlabel('vx')
             plt.ylabel('vz')
             plt.title('Polar Angle Distribution in the Lab Frame \n nP='+str(int_weights[i]))
-            plt.show(block=True)
+            plt.show(block=True)'''
     
     print('vx',np.average(vx))
     print('vy',np.average(vy))
