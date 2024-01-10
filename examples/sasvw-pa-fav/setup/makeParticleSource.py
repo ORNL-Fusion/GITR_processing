@@ -517,7 +517,6 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
             vy = np.append(vy, vtot*vy_lab)
             vz = np.append(vz, vtot*vz_lab)
             
-            '''
             #debugging
             #print(vz_lab)
             plt.close()
@@ -526,7 +525,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
             plt.xlabel('vx')
             plt.ylabel('vz')
             plt.title('Polar Angle Distribution in the Lab Frame \n nP='+str(int_weights[i]))
-            plt.show(block=True)'''
+            plt.show(block=True)
     
     print('vx',np.average(vx))
     print('vy',np.average(vy))
@@ -915,7 +914,7 @@ def get_analytic_spyld(surfE, surfA, Z1=6, M1=12, Z2=74, M2=183.84, \
 
 if __name__ == "__main__":
     #init()
-    distributed_source(nP=int(1e6), surfW=np.arange(11,22), \
+    distributed_source(nP=int(1e4), surfW=np.arange(11,22), \
                 tile_shift_indices = [1,9], \
                 Bangle_shift_indices = [3,8,9], \
                 geom = '../input/gitrGeometry.cfg', \
@@ -926,7 +925,7 @@ if __name__ == "__main__":
                 ftDFile = 'assets/ftridynBackgroundD.nc', \
                 ftCFile = 'assets/ftridynBackgroundC.nc', \
                 configuration = 'random', \
-                plot_variables = 1)
+                plot_variables = 0)
 
 
 
