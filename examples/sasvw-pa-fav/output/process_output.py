@@ -18,7 +18,7 @@ def init(W_indices = np.arange(11,22), plot_rz=False):
     #check which target is the region of interest
     r_inner_target = profiles.variables['r_inner_target'][:]
     z_inner_target = profiles.variables['z_inner_target'][:]
-    rmrs = profiles.variables['rmrs_inner_target_midpoints'][W_indices]
+    rmrs_coarse = profiles.variables['rmrs_inner_target_midpoints'][W_indices]
     
     #plot r,z to check that target indices are restricted to W surfaces
     if plot_rz:
@@ -30,7 +30,37 @@ def init(W_indices = np.arange(11,22), plot_rz=False):
     plt.rcParams.update({'lines.linewidth':2})
     plt.rcParams.update({'lines.markersize':1})
 
-    return profiles, W_indices, r_inner_target, z_inner_target, rmrs
+    return profiles, W_indices, r_inner_target, z_inner_target, rmrs_coarse
+
+def init_geom(gitr_rz = '../setup/assets/gitr_rz.txt', \
+              rmrs_fine_file = '../setup/assets/rmrs_fine.txt', \
+              W_fine_file = '../setup/assets/W_fine.txt'):
+    
+    #import refined rmrs at the W surface
+    with open(rmrs_fine_file, 'r') as file:
+        rmrs_fine = file.readlines()   
+    rmrsFine = np.array(rmrs_fine,dtype='float')
+    
+    #import wall geometry to plot over
+    with open(gitr_rz, 'r') as file:
+        wall = file.readlines()
+        
+    #import W surface indices
+    with open(W_fine_file, 'r') as file:
+        W_fine = file.readlines()
+    W_fine = np.array(W_fine,dtype='int')
+
+    R = np.zeros(len(wall))
+    Z = np.zeros(len(wall))
+    for i,line in enumerate(wall):
+        point = line.split()
+        R[i] = float(point[0])
+        Z[i] = float(point[1])
+    
+    R = R[W_fine]
+    Z = Z[W_fine]
+    
+    return W_fine, R, Z, rmrsFine
 
 def plot_gitr_gridspace():
     profiles, W_indices, R, Z, rmrs = init()
@@ -83,7 +113,7 @@ def plot_particle_source():
     plt.savefig('plots/particleSource.png')
 
 def plot_history2D(history_file='history.nc', \
-                   basic=0, continuousChargeState=1, endChargeState=0, \
+                   basic=1, continuousChargeState=0, endChargeState=0, \
                    plot_particle_source=0, markersize=0):
     
     if plot_particle_source:
@@ -92,6 +122,7 @@ def plot_history2D(history_file='history.nc', \
         z0 = particleSource.variables['z'][:]
     
     profiles, W_indices, R, Z, rmrs = init()
+    W_fine, r_target_fine, z_target_fine, rmrs_fine = init_geom()
     history = netCDF4.Dataset(history_file, "r", format="NETCDF4")
 
     plt.rcParams.update({'lines.linewidth':0.3})
@@ -111,6 +142,7 @@ def plot_history2D(history_file='history.nc', \
     plt.close()
     if plot_particle_source: plt.scatter(x0,z0,marker='o',s=10)
     plt.plot(R,Z,'-k',linewidth=0.7)
+    plt.plot(r_target_fine, z_target_fine,'-m',linewidth=0.8)
     plt.axis('scaled')
     plt.xlabel('r [m]')
     plt.ylabel('z [m]')
@@ -123,19 +155,28 @@ def plot_history2D(history_file='history.nc', \
     # all particle source vars ordered as (nP, nT)
     if basic==1:
         for p in range(0,nP):
-            print(p,'out of', nP)
-            plt.plot(r[p][:],z[p][:])
-            #plt.scatter(x[p][:],z[p][:],marker='_',s=50,c='k')
+            #if z[p][0]<=Z[W_indices][3] and z[p][0]>Z[W_indices][4]:
+                print(p,'out of', nP)
+                plt.plot(r[p][:],z[p][:])
+                plt.scatter(r[p][:],z[p][:],marker='o',s=5,c='b')
     
+    counter=0
     if continuousChargeState==1:
         for p in np.arange(0,nP,10):
-            print(p,'out of', nP)
+            #print(p,'out of', nP)
             t=0
-            while t<nT-1:
-                if r[p][t] == r[p][t+1]: t=nT
-                else:
+            if z[p][0]<=Z[W_indices][3] and z[p][0]>Z[W_indices][4]:
+                print('plotting particle')
+                counter+=1
+                while t<nT-1:
+                    if r[p][t] != r[p][t+1]: 
+                        #t=nT
+                        #print("particle didn't move")
+                    #else:
+                        print("particle #", p, "MOVED at timestep", t)
                     plt.plot(r[p][t:t+2],z[p][t:t+2], colors[charge[p][t]])
                     t+=1
+    print('total particles:',counter)
 
     if endChargeState==1:
         for p in range(0,nP):
@@ -923,7 +964,11 @@ def theoretical_sheath(profiles, W_surf):
     return Debye_width, Chodura_width
 
 
-def ionization_analysis(plotting, historyFile, positionsFile, tile_shift_indices, Bangle_shift_indices, W_surf):    
+def ionization_analysis(plotting, historyFile, positionsFile, tile_shift_indices, Bangle_shift_indices, W_surf, \
+                        use_coarse_surfs=0, \
+                        gitr_rz='../setup/assets/gitr_rz.txt', \
+                        W_fine_file='../setup/assets/W_fine.txt', \
+                        rmrs_fine_file='../setup/assets/rmrs_fine.txt'):    
     profiles, W_indices, r_inner_target, z_inner_target, rmrs = init(W_surf)
     history = netCDF4.Dataset(historyFile)
     positions = netCDF4.Dataset(positionsFile)
@@ -934,6 +979,7 @@ def ionization_analysis(plotting, historyFile, positionsFile, tile_shift_indices
     nP = len(history.dimensions['nP'])
     charge = history.variables['charge'][:]
     angle = positions.variables['angle'][:]
+    hitWall = positions.variables['hitWall'][:]
     
     Debye, Chodura = theoretical_sheath(profiles,W_surf)
         
@@ -941,138 +987,315 @@ def ionization_analysis(plotting, historyFile, positionsFile, tile_shift_indices
     y = history.variables['y'][:]
     z = history.variables['z'][:]
     
-    tally_never_ionizes = np.zeros(len(z_inner_target)-1)
-    avg_distance_to_first_ionization = np.empty(0)
-    std_distance_to_first_ionization = np.empty(0)
-    
-    frac_ioniz_in_Chodura = np.zeros(len(z_inner_target)-1)
-    frac_ioniz_in_Debye = np.zeros(len(z_inner_target)-1)
-    pindex_in_Chodura = np.empty(0,dtype=int)
-    pindex_in_Debye = np.empty(0,dtype=int)
-    frac_prompt_Chodura = np.zeros(len(z_inner_target)-1)
-    frac_prompt_Debye = np.zeros(len(z_inner_target)-1)
-    
-    for seg in range(len(z_inner_target)-1):
-
-        particle_index_list = np.empty(0,dtype=int)
-        for p in range(int(nP)):
-            
-            if z[p,0]<=z_inner_target[seg] and z[p,0]>z_inner_target[seg+1]:
-                particle_index_list = np.append(particle_index_list, int(p))
+    if use_coarse_surfs:
+        tally_never_ionizes = np.zeros(len(z_inner_target)-1)
+        avg_distance_to_first_ionization = np.empty(0)
+        std_distance_to_first_ionization = np.empty(0)
         
-        distance_to_first_ionization = np.empty(0)
-        Chodura_top, Debye_top = (0,0)
-        for p in particle_index_list:
+        frac_ioniz_in_Chodura = np.zeros(len(z_inner_target)-1)
+        frac_ioniz_in_Debye = np.zeros(len(z_inner_target)-1)
+        pindex_in_Chodura = np.empty(0,dtype=int)
+        pindex_in_Debye = np.empty(0,dtype=int)
+        frac_prompt_Chodura = np.zeros(len(z_inner_target)-1)
+        frac_prompt_Debye = np.zeros(len(z_inner_target)-1)
+        
+        rmrsPlotting = rmrsMid
+        
+        for seg in range(len(z_inner_target)-1):
+    
+            particle_index_list = np.empty(0,dtype=int)
+            for p in range(int(nP)):
+                
+                if z[p,0]<=z_inner_target[seg] and z[p,0]>z_inner_target[seg+1]:
+                    particle_index_list = np.append(particle_index_list, int(p))
             
-            time_index = np.nonzero(charge[p])[0]
-            if time_index.size == 0:
-                tally_never_ionizes[seg] += 1
-            else:
-                time_index = time_index[0]
+            distance_to_first_ionization = np.empty(0)
+            Chodura_top, Debye_top = (0,0)
+            for p in particle_index_list:
                 
-                x1 = x[p,0]
-                y1 = y[p,0]
-                z1 = z[p,0]
-                x2 = x[p,time_index]
-                y2 = y[p,time_index]
-                z2 = z[p,time_index]
-                
-                dist = np.sqrt((x2-x1)**2 + (y2-y1)**2 + (z2-z1)**2)
-                distance_to_first_ionization = np.append(distance_to_first_ionization, dist)
-                
-                if dist<Chodura[seg]:
-                    pindex_in_Chodura = np.append(pindex_in_Chodura, int(p))
-                    Chodura_top += 1
+                time_index = np.nonzero(charge[p])[0]
+                if time_index.size == 0:
+                    tally_never_ionizes[seg] += 1
+                else:
+                    time_index = time_index[0]
                     
-                    if dist<Debye[seg]:
-                        pindex_in_Debye = np.append(pindex_in_Debye, int(p))
-                        Debye_top += 1
+                    x1 = x[p,0]
+                    y1 = y[p,0]
+                    z1 = z[p,0]
+                    x2 = x[p,time_index]
+                    y2 = y[p,time_index]
+                    z2 = z[p,time_index]
+                    
+                    dist = np.sqrt((x2-x1)**2 + (y2-y1)**2 + (z2-z1)**2)
+                    distance_to_first_ionization = np.append(distance_to_first_ionization, dist)
+                    
+                    if dist<Chodura[seg]:
+                        pindex_in_Chodura = np.append(pindex_in_Chodura, int(p))
+                        Chodura_top += 1
                         
-        avg_distance_to_first_ionization = np.append(avg_distance_to_first_ionization, \
-                                                     np.average(distance_to_first_ionization))
-        std_distance_to_first_ionization = np.append(std_distance_to_first_ionization, \
-                                                     np.std(std_distance_to_first_ionization))
-        frac_ioniz_in_Chodura[seg] = Chodura_top/len(particle_index_list)
-        frac_ioniz_in_Debye[seg] = Debye_top/len(particle_index_list)
-        
-        if plotting[0]==1:
-            plt.close()
-            plt.hist(distance_to_first_ionization*1000,100) #in mm
-            plt.xlabel('Distance [mm]')
-            plt.ylabel('Counts')
-            plt.show(block=True)
-        
-        ##############################################################################
-        # Calculate fraction of particles ionizing in a sheath that promptly redeposit
-        ##############################################################################
-        
-        angle_Chodura = angle[pindex_in_Chodura]
-        angle_Debye = angle[pindex_in_Debye]
-        
-        is_prompt_Chodura = angle_Chodura <= 8.5
-        is_prompt_Debye = angle_Debye <= 8.5
-        
-        frac_prompt_Chodura[seg] = np.sum(is_prompt_Chodura)/len(pindex_in_Chodura)
-        frac_prompt_Debye[seg] = np.sum(is_prompt_Debye)/len(pindex_in_Debye)
+                        if dist<Debye[seg]:
+                            pindex_in_Debye = np.append(pindex_in_Debye, int(p))
+                            Debye_top += 1
+                            
+            avg_distance_to_first_ionization = np.append(avg_distance_to_first_ionization, \
+                                                         np.average(distance_to_first_ionization))
+            std_distance_to_first_ionization = np.append(std_distance_to_first_ionization, \
+                                                         np.std(std_distance_to_first_ionization))
+            frac_ioniz_in_Chodura[seg] = Chodura_top/len(particle_index_list)
+            frac_ioniz_in_Debye[seg] = Debye_top/len(particle_index_list)
+            
+            if plotting[0]==1:
+                plt.close()
+                plt.hist(distance_to_first_ionization*1000,100) #in mm
+                plt.xlabel('Distance [mm]')
+                plt.ylabel('Counts')
+                plt.show(block=True)
+            
+            ##############################################################################
+            # Calculate fraction of particles ionizing in a sheath that promptly redeposit
+            ##############################################################################
+            
+            angle_Chodura = angle[pindex_in_Chodura]
+            angle_Debye = angle[pindex_in_Debye]
+            
+            is_prompt_Chodura = angle_Chodura <= 8.5
+            is_prompt_Debye = angle_Debye <= 8.5
+            
+            frac_prompt_Chodura[seg] = np.sum(is_prompt_Chodura)/len(pindex_in_Chodura)
+            frac_prompt_Debye[seg] = np.sum(is_prompt_Debye)/len(pindex_in_Debye)
 
-    print('Never ionized:',tally_never_ionizes)
+    else:
+        #import wall geometry to plot over fine surface
+        with open(gitr_rz, 'r') as file:
+            wall = file.readlines()
+        
+        #import W surface indices
+        with open(W_fine_file, 'r') as file:
+            W_fine = file.readlines()
+        W_fine = np.array(W_fine,dtype='int')
+        
+        Z = np.zeros(len(wall))
+        for i,line in enumerate(wall):
+            point = line.split()
+            Z[i] = float(point[1])
+        
+        #import refined rmrs at the W surface
+        with open(rmrs_fine_file, 'r') as file:
+            rmrs_fine = file.readlines()   
+        rmrsFine = np.array(rmrs_fine,dtype='float')
+        rmrsPlotting = rmrsFine
+        
+        Z = Z[W_fine]
+        
+        Z1 = Z[:-1]
+        Z2 = Z[1:]
+        
+        tally_never_ionizes = np.zeros(len(Z1))
+        particles_per_seg = np.zeros(len(Z1))
+        avg_distance_to_first_ionization = np.zeros(len(Z1))
+        std_distance_to_first_ionization = np.zeros(len(Z1))
+        median_distance_to_first_ionization = np.zeros(len(Z1))
+        
+        frac_ioniz_in_Chodura = np.zeros(len(Z1))
+        frac_ioniz_in_Debye = np.zeros(len(Z1))
+        frac_prompt_Chodura = np.zeros(len(Z1))
+        frac_prompt_Debye = np.zeros(len(Z1))
+        frac_netEro_Chodura = np.zeros(len(Z1))
+        frac_netEro_Debye = np.zeros(len(Z1))
+        
+        z_coarse_index = 0
+        print('COARSE SEGMENT: 0')
+        for seg in range(len(Z1)):
+            
+            if Z2[seg] < z_inner_target[z_coarse_index+1]:
+                z_coarse_index += 1
+                print('\n COARSE SEGMENT:', z_coarse_index)
     
-    if plotting[1]==1:
-        plt.close()
-        if tile_shift_indices != []:
-            for i,v in enumerate(tile_shift_indices):
-                if i==0: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', label='Walll\nVertices')
-                else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
-        if Bangle_shift_indices != []:
-            for i,v in enumerate(Bangle_shift_indices):
-                if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\Psi_B$')
-                else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
-        
-        plt.errorbar(rmrsMid, avg_distance_to_first_ionization*1000, std_distance_to_first_ionization*1000)
-        plt.scatter(rmrsMid, avg_distance_to_first_ionization*1000, s=15)
-        plt.xlabel('D-Dsep [m]')
-        plt.ylabel('Distance [mm]')
-        plt.title('Average Distance to First Ionization')
-        plt.show(block=True)
-        plt.savefig('plots/avg_dist_to_first_ioniz.png')
-        
-        plt.close()
-        if tile_shift_indices != []:
-            for i,v in enumerate(tile_shift_indices):
-                if i==0: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', label='Walll\nVertices')
-                else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
-        if Bangle_shift_indices != []:
-            for i,v in enumerate(Bangle_shift_indices):
-                if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\Psi_B$')
-                else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
-        
-        plt.plot(rmrsMid, frac_ioniz_in_Chodura, label='Chodura', color='orange')
-        plt.plot(rmrsMid, frac_ioniz_in_Debye, label='Debye', color='red')
-        plt.xlabel('D-Dsep [m]')
-        plt.ylabel('Fraction')
-        plt.title('Fraction of Particles First Ionizing in the Sheath')
-        plt.legend()
-        plt.show(block=True)
-        plt.savefig('plots/frac_ioniz_in_sheath.png')
-        
-        plt.close()
-        if tile_shift_indices != []:
-            for i,v in enumerate(tile_shift_indices):
-                if i==0: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', label='Walll\nVertices')
-                else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
-        if Bangle_shift_indices != []:
-            for i,v in enumerate(Bangle_shift_indices):
-                if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\Psi_B$')
-                else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
-        
-        plt.plot(rmrsMid, frac_prompt_Chodura, label='Chodura', color='orange')
-        plt.plot(rmrsMid, frac_prompt_Debye, label='Debye', color='red')
-        plt.xlabel('D-Dsep [m]')
-        plt.ylabel('Fraction')
-        plt.title('Fraction of First Ionizations in Sheath that Redeposit')
-        plt.legend()
-        plt.show(block=True)
-        plt.savefig('plots/frac_sheath_ioniz_prompt_redep.png')
+            particle_index_list = np.empty(0,dtype=int)
+            for p in range(int(nP)):
+                
+                if z[p,0]<Z1[seg] and z[p,0]>=Z2[seg]:
+                    particle_index_list = np.append(particle_index_list, int(p))
+            particles_per_seg[seg] = len(particle_index_list)
+            
+            distance_to_first_ionization = np.empty(0)
+            pindex_in_Chodura = np.empty(0,dtype=int)
+            pindex_in_Debye = np.empty(0,dtype=int)
+            Chodura_top, Debye_top = (0,0)
+            for p in particle_index_list:
+                
+                time_index = np.nonzero(charge[p])[0]
+                if time_index.size == 0:
+                    tally_never_ionizes[seg] += 1
+                else:
+                    time_index = time_index[0]
+                    
+                    x1 = x[p,0]
+                    y1 = y[p,0]
+                    z1 = z[p,0]
+                    x2 = x[p,time_index]
+                    y2 = y[p,time_index]
+                    z2 = z[p,time_index]
+                    
+                    dist = np.sqrt((x2-x1)**2 + (y2-y1)**2 + (z2-z1)**2)
+                    distance_to_first_ionization = np.append(distance_to_first_ionization, dist)
+                    
+                    if dist<Chodura[z_coarse_index]:
+                        pindex_in_Chodura = np.append(pindex_in_Chodura, int(p))
+                        Chodura_top += 1
+                        
+                        if dist<Debye[z_coarse_index]:
+                            pindex_in_Debye = np.append(pindex_in_Debye, int(p))
+                            Debye_top += 1
+            
+            if len(distance_to_first_ionization) ==0:
+                avg_distance_to_first_ionization[seg] = 0
+                std_distance_to_first_ionization[seg] = 0
+                median_distance_to_first_ionization[seg] = 0
+            else:
+                avg_distance_to_first_ionization[seg] = np.average(distance_to_first_ionization)
+                std_distance_to_first_ionization[seg] = np.std(distance_to_first_ionization)
+                median_distance_to_first_ionization[seg] = np.median(distance_to_first_ionization)
+            
+            if len(particle_index_list) == 0:
+                frac_ioniz_in_Chodura[seg] = 0
+                frac_ioniz_in_Debye[seg] = 0
+            else:
+                frac_ioniz_in_Chodura[seg] = Chodura_top/len(particle_index_list)
+                frac_ioniz_in_Debye[seg] = Debye_top/len(particle_index_list)
+            
+            ##############################################################################
+            # Calculate fraction of particles ionizing in a sheath that promptly redeposit
+            ##############################################################################
+            
+            if len(pindex_in_Chodura) == 0:
+                frac_prompt_Chodura[seg] = 0
+                frac_netEro_Chodura[seg] = 0
+            else:
+                angle_Chodura = angle[pindex_in_Chodura]                
+                is_prompt_Chodura = angle_Chodura <= 2*np.pi                
+                frac_prompt_Chodura[seg] = np.sum(is_prompt_Chodura)/len(pindex_in_Chodura)
+                
+                hitWall_Chodura = hitWall[pindex_in_Chodura]
+                frac_hitWall_Chodura = np.sum(hitWall_Chodura)/len(pindex_in_Chodura)
+                frac_netEro_Chodura[seg] = 1-frac_hitWall_Chodura/2
+    
+            if len(pindex_in_Debye) == 0:
+                frac_prompt_Debye[seg] = 0
+                frac_netEro_Debye[seg] = 0
+            else:
+                angle_Debye = angle[pindex_in_Debye]
+                is_prompt_Debye = angle_Debye <= 2*np.pi
+                frac_prompt_Debye[seg] = np.sum(is_prompt_Debye)/len(pindex_in_Debye)
+                
+                hitWall_Debye = hitWall[pindex_in_Debye]
+                frac_hitWall_Debye = np.sum(hitWall_Debye)/len(pindex_in_Debye)
+                frac_netEro_Debye[seg] = 1-frac_hitWall_Debye/2
+    
+            #print('Segment #' + str(seg) + ': ' + tally_never_ionizes ' never ionizes of ' + str(particles_per_seg) ' total particles')
+            print('Segment:', seg)
+            print('Never ionized:',tally_never_ionizes[seg])
+            print('Total particles per segment:', particles_per_seg[seg])
+            
+            if plotting[0]==1:
+                plt.close()
+                plt.hist(distance_to_first_ionization*1000,100) #in mm
+                plt.xlabel('Distance [mm]')
+                plt.ylabel('Counts')
+                plt.title('Histogram of Distance to 1st Ionization \n Segment: '+str(seg))
+                plt.show(block=True)
+    
+    plt.close()
+    if tile_shift_indices != []:
+        for i,v in enumerate(tile_shift_indices):
+            if i==0: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', label='Walll\nVertices')
+            else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
+    if Bangle_shift_indices != []:
+        for i,v in enumerate(Bangle_shift_indices):
+            if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\Psi_B$')
+            else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
+    
+    plt.errorbar(rmrsPlotting, avg_distance_to_first_ionization*1000, std_distance_to_first_ionization*1000, ecolor='powderblue', fmt='blue')
+    #plt.scatter(rmrsPlotting, avg_distance_to_first_ionization*1000, s=15)
+    plt.xlabel('D-Dsep [m]')
+    plt.ylabel('Distance [mm]')
+    plt.title('Average Distance to First Ionization')
+    if plotting[1]==1: plt.show(block=True)
+    plt.savefig('plots/avg_dist_to_first_ioniz.png')
+    
+    plt.close()
+    if tile_shift_indices != []:
+        for i,v in enumerate(tile_shift_indices):
+            if i==0: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', label='Walll\nVertices')
+            else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
+    if Bangle_shift_indices != []:
+        for i,v in enumerate(Bangle_shift_indices):
+            if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\Psi_B$')
+            else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
+            
+    plt.plot(rmrsPlotting, median_distance_to_first_ionization*1000, marker='o')
+    plt.xlabel('D-Dsep [m]')
+    plt.ylabel('Distance [mm]')
+    plt.title('Median Distance to First Ionization')
+    if plotting[1]==1: plt.show(block=True)
+    plt.savefig('plots/med_dist_to_first_ioniz.png')
+    
+    plt.close()
+    if tile_shift_indices != []:
+        for i,v in enumerate(tile_shift_indices):
+            if i==0: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', label='Walll\nVertices')
+            else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
+    if Bangle_shift_indices != []:
+        for i,v in enumerate(Bangle_shift_indices):
+            if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\Psi_B$')
+            else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
+    
+    plt.plot(rmrsPlotting, frac_ioniz_in_Chodura, label='Chodura', color='orange')
+    plt.plot(rmrsPlotting, frac_ioniz_in_Debye, label='Debye', color='red')
+    plt.xlabel('D-Dsep [m]')
+    plt.ylabel('Fraction')
+    plt.title('Fraction of Particles First Ionizing in the Sheath')
+    plt.legend()
+    if plotting[1]==1: plt.show(block=True)
+    plt.savefig('plots/frac_ioniz_in_sheath.png')
+    
+    plt.close()
+    if tile_shift_indices != []:
+        for i,v in enumerate(tile_shift_indices):
+            if i==0: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', label='Walll\nVertices')
+            else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
+    if Bangle_shift_indices != []:
+        for i,v in enumerate(Bangle_shift_indices):
+            if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\Psi_B$')
+            else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
+    
+    plt.plot(rmrsPlotting, frac_prompt_Chodura, label='Chodura', color='orange')
+    plt.plot(rmrsPlotting, frac_prompt_Debye, label='Debye', color='red')
+    plt.xlabel('D-Dsep [m]')
+    plt.ylabel('Fraction')
+    plt.title('Fraction of First Ionizations in Sheath \n that Promptly Redeposit')
+    plt.legend()
+    if plotting[1]==1: plt.show(block=True)
+    plt.savefig('plots/frac_sheath_ioniz_prompt_redep.png')
+    
+    plt.close()
+    if tile_shift_indices != []:
+        for i,v in enumerate(tile_shift_indices):
+            if i==0: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', label='Walll\nVertices')
+            else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
+    if Bangle_shift_indices != []:
+        for i,v in enumerate(Bangle_shift_indices):
+            if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\Psi_B$')
+            else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
+    
+    plt.plot(rmrsPlotting, frac_netEro_Chodura, label='Chodura', color='orange')
+    plt.plot(rmrsPlotting, frac_netEro_Debye, label='Debye', color='red')
+    plt.xlabel('D-Dsep [m]')
+    plt.ylabel('Fraction')
+    plt.title('Fraction of First Ionizations in Sheath \n that Never Hit a Wall')
+    plt.legend()
+    if plotting[1]==1: plt.show(block=True)
+    plt.savefig('plots/frac_sheath_ioniz_netEro.png')
     
     return
 
@@ -1137,7 +1360,7 @@ def prompt_redep_hist(inputs, fileDir, fileON, fileOFF):
 
 if __name__ == "__main__":
     #plot_history2D('perlmutter/D3p5t8T5/history.nc')
-    plot_surf_nc(100692963657457.89, 5, 5, [1,9], [3,8,9], "perlmutter/D3p5t8T5/surface.nc", norm=None)
+    #plot_surf_nc(100692963657457.89, 5, 5, [1,9], [3,8,9], "perlmutter/D3p5t8T5/surface.nc", norm=None)
     #analyze_leakage('perlmutter/history_D3t6.nc')
     #analyze_forces('gradT dv', 't', rzlim=True, colorbarLimits=[], dt=1e-8)
     
@@ -1145,10 +1368,10 @@ if __name__ == "__main__":
     #plot_gitr_gridspace()
     #plot_particle_source()
     #plot_history2D('history-alpine.nc', plot_particle_source=1, markersize=2)
-    #plot_history2D("../../../../GITR/scratch/output/history.nc")
-    #plot_history2D("perlmutter/historyT4_dist_first_ioniz.nc")
+    plot_history2D("../../../../GITR/scratch/output/history.nc")
+    #plot_history2D('perlmutter/historyT4_dist_first_ioniz.nc')
     #plot_surf_nc(37914807680566.16, "/Users/Alyssa/Dev/SAS-VW-Data/netcdf_data/nP5/surf-5-6.nc", norm='C')
     #spectroscopy(3791480768056.615,specFile='specP6T6.nc')
-    #ionization_analysis([0,1], 'perlmutter/historyT5_dist_first_ioniz.nc', 'perlmutter/positionsT5_dist_first_ioniz.nc', [1,9], [3,8,9], W_surf=np.arange(11,22))
+    #ionization_analysis([0,0], 'perlmutter/historyT4_dist_first_ioniz.nc', 'perlmutter/positionsT4_dist_first_ioniz.nc', [1,9], [3,8,9], W_surf=np.arange(11,22))
     #prompt_redep_hist([5,9,4], 'perlmutter/p5t9T4/','positions_SurfModelON.nc','positions_SurfModelOFF.nc')
 

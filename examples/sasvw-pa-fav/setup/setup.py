@@ -5,7 +5,7 @@ import shutil
 import numpy as np
 import solpsProcessing, makeGeom, makeParticleSource
 
-nP = int(1e5)
+nP = int(1e4)
 W_indices = np.arange(11,22)
 
 makeGeom.main(gitr_geometry_filename='gitrGeometry.cfg', \

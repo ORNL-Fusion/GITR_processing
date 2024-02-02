@@ -4,11 +4,11 @@ sys.path.insert(0, os.path.abspath('../../../python/'))
 import numpy as np
 import scipy.interpolate as scii
 import matplotlib.pyplot as plt
+import netCDF4
 
 import gitr
 import solps
 import Particles
-import netCDF4
 
 def init():
     #set plotting style defaults
@@ -17,12 +17,15 @@ def init():
     plt.rcParams.update({'lines.markersize':1})
 
 def point_source(nP = int(2e2)):
-    x = 1.49*np.ones(nP)
+    conversion = np.sqrt(2 * 1.6021773e-19 / 1.6605E-27 / 183) #eV to m/s
+    
+    x = 1.498*np.ones(nP)
     y = np.zeros(nP)
-    z = 1.15*np.ones(nP)
-    vx = 500*np.zeros(nP)
-    vy = 5000*np.zeros(nP)
-    vz = 100*np.zeros(nP)
+    z = 1.1977*np.ones(nP)
+    vx = -0.447*np.ones(nP)*conversion
+    vy = 3.5072*np.ones(nP)*conversion
+    vz = 3.5355*np.ones(nP)*conversion
+    #5 eV, 1 degree off the surface, 83.7363 degree between surface and lab frame
 
     #########################################
     #make NetCDF Particle Source file
@@ -43,6 +46,7 @@ def point_source(nP = int(2e2)):
     vyy[:] = vy
     vzz[:] = vz
     rootgrp.close()
+
 
 def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[], \
             geom = '../input/gitrGeometry.cfg', \
@@ -117,6 +121,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
             Alpha[i] = np.pi/2
 
     Alpha = np.abs(Alpha) #np.abs(np.rad2deg(Alpha[W_fine[:-1]]))
+    print('alpha:',np.rad2deg(Alpha))
     Beta = np.abs(np.pi/2 - Alpha)
 
     dist = np.sqrt(np.power(r1-r2,2) + np.power(z1-z2,2))
@@ -368,7 +373,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     print('nP_diff should be 0: ', nP_diff)
 
     #define adjustment into the sheath because particles can't start exactly on the wall
-    adj = 1e-7
+    adj = 2e-7
 
     #populate x,y,z with r_mid,0,z_mid
     if configuration == 'random': 
@@ -391,7 +396,10 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     vy = np.empty(0)
     vz = np.empty(0)
     
-    for i in range(len(int_weights)):
+    z_coarse_index = 0 #debugging
+    print('COARSE SEGMENT: 0') #debugging
+    
+    for i in range(len(int_weights)): #range(29,34):#
     
         weight = int(int_weights[i])
         weight_diff = np.zeros(len(int_weights))
@@ -485,6 +493,28 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
                 vy_prime = np.multiply(np.cos(PolAng), np.sin(AziAng))
                 vz_prime = m*np.sin(PolAng)
                 (vx_lab,vy_lab,vz_lab) = (vx_prime,vy_prime,vz_prime)
+                
+                z_inner_target = z_right_target[surfW]
+                if z2[i] < z_inner_target[z_coarse_index+1]:
+                    z_coarse_index += 1
+                    print('\n COARSE SEGMENT:', z_coarse_index, i)
+                
+                
+                #make histograms of energies for each line segment
+                plt.close()
+                plt.hist(E,50) #in eV
+                plt.xlabel('Energy [eV]')
+                plt.ylabel('Counts')
+                plt.title('Histogram of Initial Outgoing Energies \n Segment: '+str(i))
+                plt.show(block=True)
+                
+                #make histograms of polar angles for each line segment
+                plt.close()
+                plt.hist(PolAng, 50) #in degrees
+                plt.xlabel('Polar Angle [degree]')
+                plt.ylabel('Counts')
+                plt.title('Histogram of Initial Outgoing Polar Angles \n Segment: '+str(i))
+                plt.show(block=True)
                 '''
         
             else:
@@ -511,7 +541,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     
             #convert unit vectors to vx,vy,vz
             W_kg = 183.84 * 1.6605e-27 #mass of W in kg
-            vtot = np.sqrt(E*1.6022e-19/W_kg) #convert eV to m/s
+            vtot = np.sqrt(2*E*1.6022e-19/W_kg) #convert eV to m/s
             
             vx = np.append(vx, vtot*vx_lab)
             vy = np.append(vy, vtot*vy_lab)
@@ -526,22 +556,30 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
             plt.ylabel('vz')
             plt.title('Polar Angle Distribution in the Lab Frame \n nP='+str(int_weights[i]))
             plt.show(block=True)'''
-    
+    '''
     print('vx',np.average(vx))
     print('vy',np.average(vy))
     print('vz',np.average(vz))
     
-    '''
     #debugging
     blocker=False
+    print(np.cumsum(int_weights))
+    first_particle = np.cumsum(int_weights)[28] + 1
+    last_particle = np.cumsum(int_weights)[33] - first_particle + 1
+    print('first particle:', first_particle)
+    print('last particle:', last_particle)
+    
+    print('x:',x[first_particle:last_particle])
+    print('y:',y[first_particle:last_particle])
+    print('z:',z[first_particle:last_particle])
     plt.close()
-    plt.hist(vx)
+    plt.hist(vx[first_particle:last_particle])
     plt.title('vx')
     plt.show(block=blocker)
-    plt.hist(vy)
+    plt.hist(vy[first_particle:last_particle])
     plt.title('vy')
     plt.show(block=blocker)
-    plt.hist(vz)
+    plt.hist(vz[first_particle:last_particle])
     plt.title('vz')
     plt.show(block=blocker)'''
 
@@ -612,7 +650,17 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     #########################################
     #make NetCDF Particle Source file
     #########################################
-
+    '''
+    #debugging
+    nP = last_particle - first_particle
+    print('debugging nP:',nP)
+    x = x[first_particle:last_particle]
+    y = y[first_particle:last_particle]
+    z = z[first_particle:last_particle]
+    vx = vx[first_particle:last_particle]
+    vy = vy[first_particle:last_particle]
+    vz = vz[first_particle:last_particle]
+    '''
     rootgrp = netCDF4.Dataset("particleSource.nc", "w", format="NETCDF4")
     npp = rootgrp.createDimension("nP", nP)
     onee = rootgrp.createDimension("one",1)
@@ -914,7 +962,8 @@ def get_analytic_spyld(surfE, surfA, Z1=6, M1=12, Z2=74, M2=183.84, \
 
 if __name__ == "__main__":
     #init()
-    distributed_source(nP=int(1e4), surfW=np.arange(11,22), \
+    
+    distributed_source(nP=int(1e5), surfW=np.arange(11,22), \
                 tile_shift_indices = [1,9], \
                 Bangle_shift_indices = [3,8,9], \
                 geom = '../input/gitrGeometry.cfg', \
