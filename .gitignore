@@ -33,5 +33,6 @@ setup/__pycache__/
 *.gif
 *.nc
 *.svg
+*.zip
 *:Zone.Identifier
 examples/sasvw21/LcS.nc
