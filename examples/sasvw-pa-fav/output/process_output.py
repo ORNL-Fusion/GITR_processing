@@ -202,7 +202,7 @@ def plot_history2D(history_file='history.nc', \
 
     return
 
-def plot_surf_nc(pps_per_nP, nP10, nT10, \
+def plot_surf_nc(nP10, nT10, \
                  tile_shift_indices = [], Bangle_shift_indices = [], \
                  surface_file="surface.nc", \
                  gitr_rz='../setup/assets/gitr_rz.txt', \
@@ -213,7 +213,7 @@ def plot_surf_nc(pps_per_nP, nP10, nT10, \
     profiles, W_indices, r_inner_target, z_inner_target, rmrs = init()
     rmrsCoords = profiles.variables['rmrs_inner_target'][W_indices]
     surface = netCDF4.Dataset(surface_file, "r", format="NETCDF4")
-    partSource_flux, fluxD, fluxC = makeParticleSource.distributed_source(nP=int(10**nP10), \
+    pps_per_nP, partSource_flux, fluxD, fluxC = makeParticleSource.distributed_source(nP=int(10**nP10), \
                 surfW=np.arange(11,22), \
                 tile_shift_indices = [1,9], \
                 Bangle_shift_indices = [3,8,9])
@@ -1443,7 +1443,7 @@ def prompt_redep_hist(inputs, fileDir, fileON, fileOFF):
 
 if __name__ == "__main__":
     #plot_history2D('perlmutter/D3p5t8T5/history.nc')
-    #plot_surf_nc(100692963657457.89, 5, 5, [1,9], [3,8,9], "perlmutter/D3p5t8T5/surface.nc", norm=None)
+    plot_surf_nc(5, 5, [1,9], [3,8,9], "perlmutter/D3p5t9T6/surface.nc", norm=None)
     #analyze_leakage('perlmutter/history_D3t6.nc')
     #analyze_forces('gradT dv', 't', rzlim=True, colorbarLimits=[], dt=1e-8)
     
@@ -1455,6 +1455,6 @@ if __name__ == "__main__":
     #plot_history2D('perlmutter/historyT4_dist_first_ioniz.nc')
     #plot_surf_nc(37914807680566.16, "/Users/Alyssa/Dev/SAS-VW-Data/netcdf_data/nP5/surf-5-6.nc", norm='C')
     #spectroscopy(1006929636574578.9,2,specFile='spec.nc')
-    ionization_analysis([1,1], 'perlmutter/historyT4_dist_first_ioniz.nc', 'perlmutter/positionsT4_dist_first_ioniz.nc', [1,9], [3,8,9], W_surf=np.arange(11,22))
+    #ionization_analysis([1,1], 'perlmutter/historyT4_dist_first_ioniz.nc', 'perlmutter/positionsT4_dist_first_ioniz.nc', [1,9], [3,8,9], W_surf=np.arange(11,22))
     #prompt_redep_hist([5,9,4], 'perlmutter/p5t9T4/','positions_SurfModelON.nc','positions_SurfModelOFF.nc')
 

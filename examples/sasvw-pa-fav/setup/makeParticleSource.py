@@ -682,7 +682,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     
     print('Created particleSource.nc')
     
-    return sputt_flux, fluxD, fluxC
+    return pps_per_nP, sputt_flux, fluxD, fluxC
 
 
 
