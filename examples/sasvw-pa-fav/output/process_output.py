@@ -430,8 +430,8 @@ def plot_surf_nc(pps_per_nP, nP10, nT10, \
     
     return
         
-def spectroscopy(pps_per_nP, View=3, \
-                 specFile='spec.nc'):
+def spectroscopy(pps_per_nP, View=2, \
+                 specFile='spec.nc',plotting=0):
     
     spec = netCDF4.Dataset(specFile, "r", format="NETCDF4")
     profiles, W_indices, R, Z, rmrs = init()
@@ -444,28 +444,31 @@ def spectroscopy(pps_per_nP, View=3, \
     gridz = np.append(gridz, gridz[-1]+dz)
     rr, zz = np.meshgrid(gridr,gridz)
     density_unitless = spec.variables['n'][:]
-    density_neutrals = density_unitless[0]
-    #density_neutrals = np.sum(density_unitless, axis=0)
+    density_neutrals_unitless = density_unitless[0]
     
-    plt.pcolor(gridr,gridz,density_neutrals)
+    plt.pcolor(gridr,gridz,density_neutrals_unitless)
     plt.axis('Scaled')
     plt.xlabel('r [m]')
     plt.ylabel('z [m]')
-    plt.colorbar(label='# Computational Particles')
+    plt.colorbar(label='# Computational Neutrals')
     plt.title('Raw W0 Spec Output form GITR')
-    plt.savefig('plots/spec_compParticles.png')
+    plt.savefig('plots/spec_compNeutrals.png')
     
     filterscope_diameter = 0.00702068
     tokamak_circumference = 2 * np.pi * 1.4925
     toroidal_fraction = filterscope_diameter / tokamak_circumference
+    view_fraction = toroidal_fraction * np.pi/4
     
+    dA = np.pi * (filterscope_diameter/2)**2
+    neutral_flux = density_neutrals_unitless * pps_per_nP / dA
+    neutral_flux_sliced = view_fraction * neutral_flux
+
+    '''
     r_mid = dr/2 + rr[:-1,:]
     dV = 2 * np.pi * r_mid[:,:-1] * dr * dz * toroidal_fraction
-    # dA = np.pi * (0.00702068/2)**2
     density_volumetric = pps_per_nP * (density_neutrals/dV) * 1e-8 * 3e3 # W0 m-2 s-1
     #neutral_flux = density_volumetric * 3e3 # W0 m-2 s-1
-    #print('TESTTT',neutral_flux)
-    
+
     plt.close()
     plt.plot(R,Z)
     plt.pcolor(gridr,gridz,density_volumetric)
@@ -477,20 +480,95 @@ def spectroscopy(pps_per_nP, View=3, \
     plt.colorbar(label='\n Density [m$^{-3}$ s$^{-1}$]')
     plt.title('Toroidally Integrated W0 Density')
     plt.savefig('plots/spec_density.png')
-
-    view_fraction = toroidal_fraction * np.pi/4
-    density_sliced = view_fraction * density_volumetric
-    
-    if View==3:
-        line1 = -0.97*gridr + 2.600823
-        line2 = -0.906*gridr + 2.515464
+    '''
+    if View==1:
+        line1 = -0.564378*gridr + 2.063959
+        line2 = -0.790843*gridr + 2.395664
         
-        if True:
+        if plotting:
             plt.close()
             plt.plot(R,Z)
             plt.plot(gridr,line1,'orange')
             plt.plot(gridr,line2,'orange')
-            plt.pcolor(gridr,gridz,density_sliced)
+            plt.pcolor(gridr,gridz,neutral_flux_sliced)
+            plt.axis('Scaled')
+            plt.xlim(gridr[0],gridr[-1])
+            plt.ylim(gridz[0],gridz[-1])
+            plt.xlabel('r [m]')
+            plt.ylabel('z [m]')
+            plt.colorbar(label='\n Density [m$^{-3}$ s$^{-1}$]')
+            plt.title('Toroidal Slice of W0 Density')
+            plt.savefig('plots/spec_density_sliced.png')
+        
+        rstart, rend = 62, 71
+        zstart, zend = 95, 104
+        
+        gridr = gridr[rstart:rend]
+        gridz = gridz[zstart:zend]
+        fscope = neutral_flux_sliced[zstart:zend, rstart:rend]
+        
+        line1 = -0.564378*gridr + 2.063959
+        line2 = -0.790843*gridr + 2.395664
+        
+        fscope[np.where(fscope==0)] = 'NaN'
+        fscope[:,0] = fscope[-1,5:] = fscope[-2,6:] = fscope[-3:,7:] = 'NaN'
+        for i in range(0,8):
+            fscope[i,:-i-2] = 'NaN'
+        
+    elif View==2: 
+        line1 = -0.685413*gridr + 2.216844
+        line2 = -0.744624*gridr + 2.298601
+        
+        if plotting:
+            plt.close()
+            plt.plot(R,Z)
+            plt.plot(gridr,line1,'orange')
+            plt.plot(gridr,line2,'orange')
+            plt.pcolor(gridr,gridz,neutral_flux_sliced)
+            plt.axis('Scaled')
+            plt.xlim(gridr[0],gridr[-1])
+            plt.ylim(gridz[0],gridz[-1])
+            plt.xlabel('r [m]')
+            plt.ylabel('z [m]')
+            plt.colorbar(label='\n Density [m$^{-3}$ s$^{-1}$]')
+            plt.title('Toroidal Slice of W0 Density')
+            plt.savefig('plots/spec_density_sliced.png')
+        
+        rstart, rend = 50, 72
+        zstart, zend = 69, 92
+        
+        gridr = gridr[rstart:rend]
+        gridz = gridz[zstart:zend]
+        fscope = neutral_flux_sliced[zstart:zend, rstart:rend]
+        
+        line1 = -0.685413*gridr + 2.216844
+        line2 = -0.744624*gridr + 2.298601
+        
+        fscope[np.where(fscope==0)] = 'NaN'
+        fscope[0] = fscope[-1] = fscope[:,0] = 'NaN'
+        for i in range(1,7):
+            fscope[-i,i+2:] = 'NaN'
+        for i in range(7,12):
+            fscope[-i,i+3:] = 'NaN'
+        for i in range(12,18):
+            fscope[-i,i+4:] = 'NaN'
+        for i in range(7,12):
+            fscope[-i,i+3:] = 'NaN'
+        for i in range(0,15):
+            fscope[:-i-3,i] = 'NaN'
+        for i in range(15,20):
+            fscope[:-i-2,i] = 'NaN'
+        
+    elif View==3:     
+        line1 = -0.906176*gridr + 2.515464
+        line2 = -0.972056*gridr + 2.604085
+        
+        if plotting:
+            plt.close()
+            plt.plot(R,Z)
+            plt.plot(gridr,line1,'orange')
+            plt.plot(gridr,line2,'orange')
+            plt.pcolor(gridr,gridz,neutral_flux_sliced)
             plt.axis('Scaled')
             plt.xlim(gridr[0],gridr[-1])
             plt.ylim(gridz[0],gridz[-1])
@@ -502,35 +580,40 @@ def spectroscopy(pps_per_nP, View=3, \
         
         rstart, rend = 39, 72
         zstart, zend = 40, 80
+        
         gridr = gridr[rstart:rend]
         gridz = gridz[zstart:zend]
-        fscope = density_sliced[zstart:zend, rstart:rend]
+        fscope = neutral_flux_sliced[zstart:zend, rstart:rend]
+        
+        line1 = -0.906176*gridr + 2.515464
+        line2 = -0.972056*gridr + 2.604085
         
         fscope[np.where(fscope==0)] = 'NaN'
-        #fscope[-5:,23:] = 'NaN'
+        for i in range(0,35):
+            fscope[-i,i+2:] = 'NaN'
+        for i in range(0,40):
+            fscope[i,:-1-i] = 'NaN'
+        for i in range(0,20):
+            fscope[-i-4,:i] = 'NaN'
+        fscope[9:,-2:] = fscope[11:,-4:] = 'NaN'
     
-        line1 = -0.97*gridr + 2.600823
-        line2 = -0.906*gridr + 2.515464
-        
-        if True:
-            plt.close()
-            plt.plot(R,Z)
-            line1 = -0.97*gridr + 2.600823
-            line2 = -0.906*gridr + 2.515464    
-            plt.plot(gridr,line1,'orange')
-            plt.plot(gridr,line2,'orange')
-            plt.pcolor(gridr,gridz,fscope,shading='auto')
-            plt.axis('Scaled')
-            plt.xlim(gridr[0],gridr[-1])
-            plt.ylim(gridz[0],gridz[-1])
-            plt.xlabel('r [m]')
-            plt.ylabel('z [m]')
-            plt.colorbar(label='\n Density [m$^{-3}$ s$^{-1}$]')
-    
-    fscope[np.isnan(fscope)] = 0
-    print('W0 Neutral Flux:', np.sum(fscope)) # in units of m-3 s-1
-    plt.title('Toroidal Slice of W0 Density \n W0: %10e' %np.sum(fscope))
-    plt.savefig('plots/spec_filterscope.png')
+    if True:
+        plt.close()
+        plt.plot(R,Z)
+        plt.plot(gridr,line1,'orange')
+        plt.plot(gridr,line2,'orange')
+        plt.pcolor(gridr,gridz,fscope,shading='auto')
+        plt.axis('Scaled')
+        plt.xlim(gridr[0],gridr[-1])
+        plt.ylim(gridz[0],gridz[-1])
+        plt.xlabel('r [m]')
+        plt.ylabel('z [m]')
+        plt.colorbar(label='\n Density [m$^{-3}$ s$^{-1}$]')
+
+        fscope[np.isnan(fscope)] = 0
+        print('W0 Neutral Flux:', np.sum(fscope)) # in units of m-3 s-1
+        plt.title('Toroidal Slice of W0 Density \n View '+str(View)+' W0: %10e m$^{-2}$s$^{-1}$' %np.sum(fscope))
+        plt.savefig('plots/spec_filterscope.png')
     
 def analyze_leakage(historyFile):
     bFile = '../input/bField.nc'
@@ -1368,10 +1451,10 @@ if __name__ == "__main__":
     #plot_gitr_gridspace()
     #plot_particle_source()
     #plot_history2D('history-alpine.nc', plot_particle_source=1, markersize=2)
-    plot_history2D("../../../../GITR/scratch/output/history.nc")
+    #plot_history2D("../../../../GITR/scratch/output/history.nc")
     #plot_history2D('perlmutter/historyT4_dist_first_ioniz.nc')
     #plot_surf_nc(37914807680566.16, "/Users/Alyssa/Dev/SAS-VW-Data/netcdf_data/nP5/surf-5-6.nc", norm='C')
-    #spectroscopy(3791480768056.615,specFile='specP6T6.nc')
-    #ionization_analysis([0,0], 'perlmutter/historyT4_dist_first_ioniz.nc', 'perlmutter/positionsT4_dist_first_ioniz.nc', [1,9], [3,8,9], W_surf=np.arange(11,22))
+    #spectroscopy(1006929636574578.9,2,specFile='spec.nc')
+    ionization_analysis([1,1], 'perlmutter/historyT4_dist_first_ioniz.nc', 'perlmutter/positionsT4_dist_first_ioniz.nc', [1,9], [3,8,9], W_surf=np.arange(11,22))
     #prompt_redep_hist([5,9,4], 'perlmutter/p5t9T4/','positions_SurfModelON.nc','positions_SurfModelOFF.nc')
 

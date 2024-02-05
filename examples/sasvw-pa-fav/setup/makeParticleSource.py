@@ -121,7 +121,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
             Alpha[i] = np.pi/2
 
     Alpha = np.abs(Alpha) #np.abs(np.rad2deg(Alpha[W_fine[:-1]]))
-    print('alpha:',np.rad2deg(Alpha))
+    #print('alpha:',np.rad2deg(Alpha))
     Beta = np.abs(np.pi/2 - Alpha)
 
     dist = np.sqrt(np.power(r1-r2,2) + np.power(z1-z2,2))
@@ -397,7 +397,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     vz = np.empty(0)
     
     z_coarse_index = 0 #debugging
-    print('COARSE SEGMENT: 0') #debugging
+    #print('COARSE SEGMENT: 0') #debugging
     
     for i in range(len(int_weights)): #range(29,34):#
     
@@ -679,6 +679,8 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     vyy[:] = vy
     vzz[:] = vz
     rootgrp.close()
+    
+    print('Created particleSource.nc')
     
     return sputt_flux, fluxD, fluxC
 

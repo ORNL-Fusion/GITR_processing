@@ -158,7 +158,7 @@ def refine_target(rSurfCoarse, zSurfCoarse, rmrsCoarse, numAddedPoints=100):
     dist = np.sqrt((rSurfCoarse[:-1]-rSurfCoarse[1:])**2 + (zSurfCoarse[:-1]-zSurfCoarse[1:])**2)
     totalDist = np.sum(dist)
     addedPoints = numAddedPoints*dist/totalDist
-    print('addedPoints:',addedPoints)
+    #print('addedPoints:',addedPoints)
     for i,v in enumerate(addedPoints): addedPoints[i] = round(v)
     addedPoints = np.array(addedPoints,dtype='int')
     
@@ -312,6 +312,7 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     W_indices = np.array(range(W_indicesCoarse[0], W_indicesCoarse[-1]+numAddedPoints+1)) #+1 may need to be added because range function is exclusive
     print('length Fine W_indices:',len(W_indices))
     
+    '''
     #test to check that the refined rmrsMid fall between the matching coarse rmrs midpoint values
     print('\n')
     print('TEST')
@@ -334,6 +335,7 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     plt.close()
     print('TEST')
     print('\n')
+    '''
     
     #find strikepoint
     strikepoint_index = np.where(rmrsFine==0)[0]
@@ -354,7 +356,7 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
         plt.savefig('plots/geom/makeGeom.png')
         plt.show(block=False)
     
-    print('length of 3rd leg:',np.sqrt((rSurfCoarse[-1]-rSurfCoarse[-2])**2+(zSurfCoarse[-1]-zSurfCoarse[-2])**2))
+    #print('length of 3rd leg:',np.sqrt((rSurfCoarse[-1]-rSurfCoarse[-2])**2+(zSurfCoarse[-1]-zSurfCoarse[-2])**2))
     
     if plot_variables:
         #plot correctly-ordered line segments
@@ -407,7 +409,8 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
             f.write(str(rmrsMid[i]) +'\n')
     
     print('r_min:', min(r_final), '\nr_max:', max(r_final), '\nz_min:', min(z_final), '\nz_max:', max(z_final))
-    print('created gitrGeometry.cfg')
+    print('Created gitrGeometry.cfg')
+    
     return
 
 if __name__ == "__main__":
