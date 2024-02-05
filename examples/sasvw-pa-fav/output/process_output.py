@@ -1047,14 +1047,14 @@ def theoretical_sheath(profiles, W_surf):
     return Debye_width, Chodura_width
 
 
-def ionization_analysis(plotting, historyFile, positionsFile, tile_shift_indices, Bangle_shift_indices, W_surf, \
+def ionization_analysis(plotting, output_dir, historyFile, positionsFile, tile_shift_indices, Bangle_shift_indices, W_surf, \
                         use_coarse_surfs=0, \
                         gitr_rz='../setup/assets/gitr_rz.txt', \
                         W_fine_file='../setup/assets/W_fine.txt', \
                         rmrs_fine_file='../setup/assets/rmrs_fine.txt'):    
     profiles, W_indices, r_inner_target, z_inner_target, rmrs = init(W_surf)
-    history = netCDF4.Dataset(historyFile)
-    positions = netCDF4.Dataset(positionsFile)
+    history = netCDF4.Dataset(output_dir+historyFile)
+    positions = netCDF4.Dataset(output_dir+positionsFile)
     
     z_inner_target = z_inner_target[W_surf]
     rmrsMid = rmrs[:-1]
@@ -1304,7 +1304,7 @@ def ionization_analysis(plotting, historyFile, positionsFile, tile_shift_indices
     plt.ylabel('Distance [mm]')
     plt.title('Average Distance to First Ionization')
     if plotting[1]==1: plt.show(block=True)
-    plt.savefig('plots/avg_dist_to_first_ioniz.png')
+    plt.savefig(output_dir+'plots/avg_dist_to_first_ioniz.png')
     
     plt.close()
     if tile_shift_indices != []:
@@ -1321,7 +1321,7 @@ def ionization_analysis(plotting, historyFile, positionsFile, tile_shift_indices
     plt.ylabel('Distance [mm]')
     plt.title('Median Distance to First Ionization')
     if plotting[1]==1: plt.show(block=True)
-    plt.savefig('plots/med_dist_to_first_ioniz.png')
+    plt.savefig(output_dir+'plots/med_dist_to_first_ioniz.png')
     
     plt.close()
     if tile_shift_indices != []:
@@ -1340,7 +1340,7 @@ def ionization_analysis(plotting, historyFile, positionsFile, tile_shift_indices
     plt.title('Fraction of Particles First Ionizing in the Sheath')
     plt.legend()
     if plotting[1]==1: plt.show(block=True)
-    plt.savefig('plots/frac_ioniz_in_sheath.png')
+    plt.savefig(output_dir+'plots/frac_ioniz_in_sheath.png')
     
     plt.close()
     if tile_shift_indices != []:
@@ -1359,7 +1359,7 @@ def ionization_analysis(plotting, historyFile, positionsFile, tile_shift_indices
     plt.title('Fraction of First Ionizations in Sheath \n that Promptly Redeposit')
     plt.legend()
     if plotting[1]==1: plt.show(block=True)
-    plt.savefig('plots/frac_sheath_ioniz_prompt_redep.png')
+    plt.savefig(output_dir+'plots/frac_sheath_ioniz_prompt_redep.png')
     
     plt.close()
     if tile_shift_indices != []:
@@ -1378,7 +1378,7 @@ def ionization_analysis(plotting, historyFile, positionsFile, tile_shift_indices
     plt.title('Fraction of First Ionizations in Sheath \n that Never Hit a Wall')
     plt.legend()
     if plotting[1]==1: plt.show(block=True)
-    plt.savefig('plots/frac_sheath_ioniz_netEro.png')
+    plt.savefig(output_dir+'plots/frac_sheath_ioniz_netEro.png')
     
     return
 
@@ -1443,7 +1443,7 @@ def prompt_redep_hist(inputs, fileDir, fileON, fileOFF):
 
 if __name__ == "__main__":
     #plot_history2D('perlmutter/D3p5t8T5/history.nc')
-    plot_surf_nc(5, 5, [1,9], [3,8,9], "perlmutter/D3p5t9T6/surface.nc", norm=None)
+    #plot_surf_nc(5, 5, [1,9], [3,8,9], "perlmutter/D3p5t9T6/surface.nc", norm=None)
     #analyze_leakage('perlmutter/history_D3t6.nc')
     #analyze_forces('gradT dv', 't', rzlim=True, colorbarLimits=[], dt=1e-8)
     
@@ -1455,6 +1455,6 @@ if __name__ == "__main__":
     #plot_history2D('perlmutter/historyT4_dist_first_ioniz.nc')
     #plot_surf_nc(37914807680566.16, "/Users/Alyssa/Dev/SAS-VW-Data/netcdf_data/nP5/surf-5-6.nc", norm='C')
     #spectroscopy(1006929636574578.9,2,specFile='spec.nc')
-    #ionization_analysis([1,1], 'perlmutter/historyT4_dist_first_ioniz.nc', 'perlmutter/positionsT4_dist_first_ioniz.nc', [1,9], [3,8,9], W_surf=np.arange(11,22))
+    ionization_analysis([0,0], 'perlmutter/','historyT4_dist_first_ioniz.nc', 'positionsT4_dist_first_ioniz.nc', [1,9], [3,8,9], W_surf=np.arange(11,22))
     #prompt_redep_hist([5,9,4], 'perlmutter/p5t9T4/','positions_SurfModelON.nc','positions_SurfModelOFF.nc')
 
