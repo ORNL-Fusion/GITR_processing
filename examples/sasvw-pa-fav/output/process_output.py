@@ -158,7 +158,7 @@ def plot_history2D(history_file='history.nc', \
             #if z[p][0]<=Z[W_indices][3] and z[p][0]>Z[W_indices][4]:
                 print(p,'out of', nP)
                 plt.plot(r[p][:],z[p][:])
-                plt.scatter(r[p][:],z[p][:],marker='o',s=5,c='b')
+                #plt.scatter(r[p][:],z[p][:],marker='o',s=5,c='b')
     
     counter=0
     if continuousChargeState==1:
@@ -194,15 +194,17 @@ def plot_history2D(history_file='history.nc', \
 
     if basic==0: plt.legend(handles=patchList, fontsize=12)
     
-    plt.xlim(1.45, 1.525)
-    plt.ylim(1.1, 1.23)
+    plt.xlim(1.0, 2.0)
+    plt.ylim(-1.5, 1.5)
+    #plt.xlim(1.45, 1.525)
+    #plt.ylim(1.1, 1.23)
     plt.show(block=True)
     plt.savefig('plots/history.pdf')
     plt.close()
 
     return
 
-def plot_surf_nc(nP10, nT10, \
+def plot_surf_nc(nP10, dt10, nT10, \
                  tile_shift_indices = [], Bangle_shift_indices = [], \
                  surface_file="surface.nc", \
                  gitr_rz='../setup/assets/gitr_rz.txt', \
@@ -410,10 +412,11 @@ def plot_surf_nc(nP10, nT10, \
     plt.plot(rmrsFine,netDep_norm,'k', label='Net Deposition')
     
     plt.xlabel('D-Dsep [m]')
-    plt.ylabel('\u0393$_{W,outgoing}$ / \u0393$_{C,incoming}$')
+    if norm!=None: plt.ylabel('\u0393$_{W,outgoing}$ / \u0393$_{%s,incoming}$'%norm)
+    if norm==None: plt.ylabel('\u0393$_{W,outgoing}$')
     plt.ticklabel_format(axis='y',style='sci',scilimits=(-2,2))
     plt.legend(fontsize=20)#loc='upper left')
-    plt.title('GITR Predicted Erosion and \n Redeposition Profiles, nP=1e'+str(nP10)+', nT=1e'+str(nT10), fontsize=30)
+    plt.title('GITR Predicted Erosion and \n Redeposition Profiles, nP=1e'+str(nP10)+', dt=1e-'+str(dt10)+', nT=1e'+str(nT10), fontsize=30)
     plt.savefig('plots/surface.png')
     
     if plot_cumsum:
@@ -430,7 +433,7 @@ def plot_surf_nc(nP10, nT10, \
     
     return
         
-def spectroscopy(pps_per_nP, View=2, \
+def spectroscopy(pps_per_nP, View=3, \
                  specFile='spec.nc',plotting=0):
     
     spec = netCDF4.Dataset(specFile, "r", format="NETCDF4")
@@ -548,15 +551,15 @@ def spectroscopy(pps_per_nP, View=2, \
         fscope[0] = fscope[-1] = fscope[:,0] = 'NaN'
         for i in range(1,7):
             fscope[-i,i+2:] = 'NaN'
-        for i in range(7,12):
+        for i in range(7,9):
             fscope[-i,i+3:] = 'NaN'
-        for i in range(12,18):
+        for i in range(9,18):
             fscope[-i,i+4:] = 'NaN'
         for i in range(7,12):
             fscope[-i,i+3:] = 'NaN'
-        for i in range(0,15):
+        for i in range(0,11):
             fscope[:-i-3,i] = 'NaN'
-        for i in range(15,20):
+        for i in range(11,20):
             fscope[:-i-2,i] = 'NaN'
         
     elif View==3:     
@@ -608,7 +611,7 @@ def spectroscopy(pps_per_nP, View=2, \
         plt.ylim(gridz[0],gridz[-1])
         plt.xlabel('r [m]')
         plt.ylabel('z [m]')
-        plt.colorbar(label='\n Density [m$^{-3}$ s$^{-1}$]')
+        plt.colorbar(label='\n Gross Eroded W Flux [m$^{-2}$ s$^{-1}$]') #'\n Density [m$^{-3}$ s$^{-1}$]')
 
         fscope[np.isnan(fscope)] = 0
         print('W0 Neutral Flux:', np.sum(fscope)) # in units of m-3 s-1
@@ -1443,18 +1446,17 @@ def prompt_redep_hist(inputs, fileDir, fileON, fileOFF):
 
 if __name__ == "__main__":
     #plot_history2D('perlmutter/D3p5t8T5/history.nc')
-    #plot_surf_nc(5, 5, [1,9], [3,8,9], "perlmutter/D3p5t9T6/surface.nc", norm=None)
+    #plot_surf_nc(6, 9, 7, [1,9], [3,8,9], "perlmutter/surface_p6t9T7.nc", norm=None)
     #analyze_leakage('perlmutter/history_D3t6.nc')
     #analyze_forces('gradT dv', 't', rzlim=True, colorbarLimits=[], dt=1e-8)
     
     #init()
     #plot_gitr_gridspace()
     #plot_particle_source()
-    #plot_history2D('history-alpine.nc', plot_particle_source=1, markersize=2)
-    #plot_history2D("../../../../GITR/scratch/output/history.nc")
+    plot_history2D("../../../../GITR/scratch/output/history.nc")
     #plot_history2D('perlmutter/historyT4_dist_first_ioniz.nc')
-    #plot_surf_nc(37914807680566.16, "/Users/Alyssa/Dev/SAS-VW-Data/netcdf_data/nP5/surf-5-6.nc", norm='C')
-    #spectroscopy(1006929636574578.9,2,specFile='spec.nc')
-    ionization_analysis([0,0], 'perlmutter/','historyT4_dist_first_ioniz.nc', 'positionsT4_dist_first_ioniz.nc', [1,9], [3,8,9], W_surf=np.arange(11,22))
+    #plot_surf_nc(2, 9, 6, [1,9], [3,8,9], "../../../../GITR/scratch/output/surface.nc")
+    #spectroscopy(1006929636574578.9,2,specFile='perlmutter/D3p5t9T6/spec.nc')
+    #ionization_analysis([0,0], 'perlmutter/dist_first_ioniz/','historyT4_dist_first_ioniz.nc', 'positionsT4_dist_first_ioniz.nc', [1,9], [3,8,9], W_surf=np.arange(11,22))
     #prompt_redep_hist([5,9,4], 'perlmutter/p5t9T4/','positions_SurfModelON.nc','positions_SurfModelOFF.nc')
 

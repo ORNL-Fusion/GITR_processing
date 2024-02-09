@@ -131,7 +131,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     ##############################################
     #get W/s sputtered by D, C flux to wall
     ##############################################
-    
+     
     #get incoming ion energy and angle estimations where the integer input is z
     energyD, angleD = get_incoming_IEADs(1, profiles, surfW, rmrsCoarse, rmrsFine)
     energyC1, angleC1 = get_incoming_IEADs(1, profiles, surfW, rmrsCoarse, rmrsFine)

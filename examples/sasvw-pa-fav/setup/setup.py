@@ -5,8 +5,8 @@ import shutil
 import numpy as np
 import solpsProcessing, makeGeom, makeParticleSource
 
-nP = int(1e5)
-run_directory = '..'
+nP = int(1e3)
+run_directory = '../../../../GITR/scratch'
 W_indices = np.arange(11,22)
 
 print_separator = '\n-------------------------------------------------\n'
