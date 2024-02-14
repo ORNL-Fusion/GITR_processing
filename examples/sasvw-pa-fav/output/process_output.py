@@ -11,6 +11,12 @@ import netCDF4
 import solps
 import makeParticleSource
 
+tile_shift_indices = [1,9]
+Bangle_shift_indices = [3,8,9]
+W_surf_indices = np.arange(11,22)
+
+rmrs_fine_file = '../setup/assets/rmrs_fine.txt'
+
 def init(W_indices = np.arange(11,22), plot_rz=False):
     profilesFile = '../input/plasmaProfiles.nc'
     profiles = netCDF4.Dataset(profilesFile)
@@ -205,7 +211,6 @@ def plot_history2D(history_file='history.nc', \
     return
 
 def plot_surf_nc(nP10, dt10, nT10, \
-                 tile_shift_indices = [], Bangle_shift_indices = [], \
                  surface_file="surface.nc", \
                  gitr_rz='../setup/assets/gitr_rz.txt', \
                  W_fine_file='../setup/assets/W_fine.txt', \
@@ -276,10 +281,11 @@ def plot_surf_nc(nP10, dt10, nT10, \
     print('rmrs length',len(rmrsFine))
     print('surf length',len(grossEro))
     print('\n')
-    print('total gross eroded flux',sum(grossEro))
-    print('total redeposited flux',sum(grossDep))
-    print('total net deposited flux',sum(netDep))
-    print('self-sputtering fraction',(sum(grossEro)-sum(partSource_flux))/sum(grossEro))
+    print('total gross eroded flux',sum(grossEro*area)/sum(area))
+    print('total redeposited flux',sum(grossDep*area)/sum(area))
+    print('total net deposited flux',sum(netDep*area)/sum(area))
+    print('redeposition rate',100 * (sum(grossDep*area)/sum(area)) / (sum(grossEro*area)/sum(area)), '\%')
+    print('self-sputtering fraction',100 * (sum(grossEro)-sum(partSource_flux))/sum(grossEro), '\%')
     
     if norm=='C':
         grossEro_norm = grossEro/fluxC
@@ -1049,7 +1055,6 @@ def theoretical_sheath(profiles, W_surf):
     
     return Debye_width, Chodura_width
 
-
 def ionization_analysis(plotting, output_dir, historyFile, positionsFile, tile_shift_indices, Bangle_shift_indices, W_surf, \
                         use_coarse_surfs=0, \
                         gitr_rz='../setup/assets/gitr_rz.txt', \
@@ -1234,7 +1239,7 @@ def ionization_analysis(plotting, output_dir, historyFile, positionsFile, tile_s
                             pindex_in_Debye = np.append(pindex_in_Debye, int(p))
                             Debye_top += 1
             
-            if len(distance_to_first_ionization) ==0:
+            if len(distance_to_first_ionization) == 0:
                 avg_distance_to_first_ionization[seg] = 0
                 std_distance_to_first_ionization[seg] = 0
                 median_distance_to_first_ionization[seg] = 0
@@ -1385,37 +1390,34 @@ def ionization_analysis(plotting, output_dir, historyFile, positionsFile, tile_s
     
     return
 
-def prompt_redep_hist(inputs, fileDir, fileON, fileOFF):
+def prompt_redep_hist(inputs, fileDir, fileOFF, fileON=None):
     [nP10, dt10, nT10] = inputs
     
-    pathON = fileDir+fileON
     pathOFF = fileDir+fileOFF
-    
-    posON = netCDF4.Dataset(pathON, "r", format="NETCDF4")
     posOFF = netCDF4.Dataset(pathOFF, "r", format="NETCDF4")
-    
-    angleON = posON.variables['angle'][:]/2/np.pi #radians -> rotations
     angleOFF = posOFF.variables['angle'][:]/2/np.pi #radians -> rotations
-    timeON = posON.variables['time'][:]
     timeOFF = posOFF.variables['time'][:]
-    
-    is_promptON = angleON<=1
     is_promptOFF = angleOFF<=1
-    
-    frac_promptON = np.sum(is_promptON) / len(angleON)
     frac_promptOFF = np.sum(is_promptOFF) / len(angleOFF)
-    
-    print('Fraction promptly redeposited with SurfModel ON:', frac_promptON)
     print('Fraction promptly redeposited with SurfModel OFF:', frac_promptOFF)
     
-    if 0:
+    if fileON != None: 
+        pathON = fileDir+fileON
+        posON = netCDF4.Dataset(pathON, "r", format="NETCDF4")
+        angleON = posON.variables['angle'][:]/2/np.pi #radians -> rotations
+        timeON = posON.variables['time'][:]
+        is_promptON = angleON<=1
+        frac_promptON = np.sum(is_promptON) / len(angleON)
+        print('Fraction promptly redeposited with SurfModel ON:', frac_promptON)
+    
+    if 1:
         plt.close()
         bins = np.logspace(-3,4)
         #plt.hist(angleON, 200, (0,1), color='g', label='ON')
         #plt.hist(angleOFF, 200, (0,1), color='r', label='OFF')
         plt.axvline(x=1, color='k') #1 rotation = 2pi radians
         #setting density=True divides each bar by total counts and bin width to give a pdf
-        plt.hist(angleON, bins, color='g', label='ON', alpha=0.5, density=False)
+        if fileON != None: plt.hist(angleON, bins, color='g', label='ON', alpha=0.5, density=False)
         plt.hist(angleOFF, bins, color='r', label='OFF', alpha=0.5, density=False)
         plt.xscale('log')
         plt.xlabel('Rotations')
@@ -1424,10 +1426,10 @@ def prompt_redep_hist(inputs, fileDir, fileON, fileOFF):
                   +str(nP10)+', dt=1e-'+str(dt10)+', nT=1e'+str(nT10))
         plt.legend()
     
-    if 1: 
+    if 0: 
         plt.close()
         plt.hist(timeOFF, 200, (0,0.2), color='r', label='OFF')
-        plt.hist(timeON, 200, (0,0.2), color='g', label='ON')
+        if fileON != None: plt.hist(timeON, 200, (0,0.2), color='g', label='ON')
         plt.xlabel('Time [s]')
         plt.ylabel('Counts')
         plt.title('Flight time before striking \n nP=1e'+str(nP10))
@@ -1444,19 +1446,110 @@ def prompt_redep_hist(inputs, fileDir, fileON, fileOFF):
 
     return
 
+def particle_diagnostics_hist(nP10, pdFile, segment_counter=70, hist_plotting=0, plot_blocker=1, \
+            surfW=np.arange(11,22), \
+            tile_shift_indices = [1,9], \
+            Bangle_shift_indices = [3,8,9]):
+    
+    pps_per_nP, partSource_flux, fluxD, fluxC = makeParticleSource.distributed_source(nP=int(10**nP10), \
+                surfW=surfW, tile_shift_indices=tile_shift_indices, Bangle_shift_indices=Bangle_shift_indices)
+    
+    diagnostics = netCDF4.Dataset(pdFile, "r", format="NETCDF4")
+    bin_edges_time = diagnostics.variables['bin_edges_time'][:]
+    histogram_particle_time = diagnostics.variables['histogram_particle_time'][:][:-1]
+    bin_width = bin_edges_time[1]-bin_edges_time[0]
+    
+    profiles, W_indices, r_inner_target, z_inner_target, rmrs = init()
+    rmrsCoords = profiles.variables['rmrs_inner_target'][W_surf_indices]
+    
+    #import refined rmrs at the W surface
+    with open(rmrs_fine_file, 'r') as file:
+        rmrs_fine = file.readlines()   
+    rmrsFine = np.array(rmrs_fine,dtype='float')
+    rmrsPlotting = rmrsFine
+    
+    if hist_plotting:
+        histogram_particle_time_real = histogram_particle_time * pps_per_nP
+        nP = np.sum(histogram_particle_time_real[segment_counter])
+        
+        plt.close()
+        plt.bar(bin_edges_time[:-1], histogram_particle_time_real[segment_counter], width=bin_width, align='edge', edgecolor='k')
+        plt.xlabel('Logarithmic Time [log(sec)]')
+        plt.ylabel('Particles per Second\n')
+        plt.title('Flight Time before Striking the Surface \n Surface %i, nP=%.4E'%(segment_counter,nP))
+        plt.show(block=plot_blocker)
+        
+    num_segments = len(histogram_particle_time)
+    avg_flight_time = np.zeros(num_segments)
+    std_flight_time = np.zeros(num_segments)
+    med_flight_time = np.zeros(num_segments)
+    for seg in range(num_segments):
+        if np.sum(histogram_particle_time[seg]) == 0:
+            avg_flight_time[seg] = 0
+            std_flight_time[seg] = 0
+            med_flight_time[seg] = 0
+        else:
+            avg_flight_time[seg] = np.sum((histogram_particle_time[seg]*bin_edges_time[:-1]))/np.sum(histogram_particle_time[seg])
+            
+            time_bin_has_particles_binned = histogram_particle_time[seg]>0 #bool to zero out time bins with no particles
+            med_flight_time[seg] = np.median(time_bin_has_particles_binned * bin_edges_time[:-1])
+    
+    avg_flight_time[np.where(avg_flight_time==0)] = 'NaN'
+    avg_flight_time = 10**avg_flight_time
+    med_flight_time = 10**med_flight_time
+    print('\n'+'Median Flight Time before Striking the Surface:', med_flight_time, '\n')
+                
+    plt.close()
+    if tile_shift_indices != []:
+        for i,v in enumerate(tile_shift_indices):
+            if i==0: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', label='Walll\nVertices')
+            else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
+    if Bangle_shift_indices != []:
+        for i,v in enumerate(Bangle_shift_indices):
+            if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\Psi_B$')
+            else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
+    
+    plt.plot(rmrsPlotting, avg_flight_time)
+    plt.yscale('log')
+    plt.xlabel('D-Dsep [m]')
+    plt.ylabel('Flight Time [s]')
+    plt.title('Average Flight Time before Striking the Surface')
+    plt.legend()
+    plt.show(block=plot_blocker)
+    if not plot_blocker: plt.savefig('plots/agv_flight_time.png')
+    
+    plt.plot(rmrsPlotting, med_flight_time)
+    plt.yscale('log')
+    plt.xlabel('D-Dsep [m]')
+    plt.ylabel('Flight Time [s]')
+    plt.title('Median Flight Time before Striking the Surface')
+    plt.show(block=plot_blocker)    
+    
+    #make histogram of all particles binned into the time bins
+    histogram_particle_time_AllSegs = np.sum(histogram_particle_time, axis=0) * pps_per_nP
+    nP = np.sum(histogram_particle_time_AllSegs)
+    
+    plt.close()
+    plt.bar(bin_edges_time[:-1], histogram_particle_time_AllSegs, width=bin_width, align='edge', edgecolor='k')
+    plt.xlabel('Logarithmic Time [log(sec)]')
+    plt.ylabel('Particles per Second\n')
+    plt.title('Flight Time before Striking the Surface \n nP=%.4E'%(nP))
+    plt.show(block=plot_blocker)
+        
+    return
+
 if __name__ == "__main__":
-    #plot_history2D('perlmutter/D3p5t8T5/history.nc')
-    #plot_surf_nc(6, 9, 7, [1,9], [3,8,9], "perlmutter/surface_p6t9T7.nc", norm=None)
+    #plot_history2D('perlmutter/forces24.02.10/history_BEF.nc')
+    plot_surf_nc(6, 9, 7, 'perlmutter/surface_p6t9T7.nc', norm='D')
     #analyze_leakage('perlmutter/history_D3t6.nc')
     #analyze_forces('gradT dv', 't', rzlim=True, colorbarLimits=[], dt=1e-8)
     
     #init()
     #plot_gitr_gridspace()
     #plot_particle_source()
-    plot_history2D("../../../../GITR/scratch/output/history.nc")
-    #plot_history2D('perlmutter/historyT4_dist_first_ioniz.nc')
-    #plot_surf_nc(2, 9, 6, [1,9], [3,8,9], "../../../../GITR/scratch/output/surface.nc")
+    #plot_history2D("../../../../GITR/scratch/output/history.nc")
+    #plot_surf_nc(2, 9, 6, '../../../../GITR/scratch/output/surface.nc')
     #spectroscopy(1006929636574578.9,2,specFile='perlmutter/D3p5t9T6/spec.nc')
     #ionization_analysis([0,0], 'perlmutter/dist_first_ioniz/','historyT4_dist_first_ioniz.nc', 'positionsT4_dist_first_ioniz.nc', [1,9], [3,8,9], W_surf=np.arange(11,22))
-    #prompt_redep_hist([5,9,4], 'perlmutter/p5t9T4/','positions_SurfModelON.nc','positions_SurfModelOFF.nc')
-
+    #prompt_redep_hist([2,8,5], 'perlmutter/forces24.02.10/','positions_BEF.nc')
+    #particle_diagnostics_hist(3, '../../../../GITR/scratch/output/particle_histograms.nc')
