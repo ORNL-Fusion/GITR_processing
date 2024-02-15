@@ -27,7 +27,7 @@ print('\n',print_separator,'Making bField.nc',print_separator,'\n')
 solpsProcessing.readEquilibrium(equilibrium_filename = 'assets/dg.equ', \
                     W_indices = W_indices, \
                     solps_geom = 'assets/b2fgmtry', \
-                    flip_Bt = True, \
+                    flip_Bt = False, \
                     plot_variables = 0)
 
 shutil.move('bField.nc', run_directory+'/input/bField.nc')
