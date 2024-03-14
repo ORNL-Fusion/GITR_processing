@@ -13,7 +13,7 @@ import netCDF4
 # Import coarse variable dataset from processed SOLPS-ITER output
 ###############################################################################
 
-profiles_file = '../input/plasmaProfiles.nc'
+profiles_file = 'plasmaProfiles.nc'
 profiles = netCDF4.Dataset(profiles_file)
 W_indices_coarse = np.arange(11,22)
 
@@ -21,7 +21,7 @@ W_indices_coarse = np.arange(11,22)
 # Import refined points of interest
 ###############################################################################
 
-rmrs_fine_file = '../setup/assets/rmrs_fine.txt'
+rmrs_fine_file = 'rmrs_fine.txt'
 
 with open(rmrs_fine_file, 'r') as file:
     rmrs_fine = file.readlines()   

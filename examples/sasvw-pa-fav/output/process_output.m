@@ -39,7 +39,7 @@ title('Start Positions')
 %% endPosition
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-file = strcat(pwd,'/perlmutter/forces/positions_CConly_flipped.nc');
+file = strcat(pwd,'/perlmutter/production/positions_p5t9T6.nc');
 hitWall = ncread(file,'hitWall');
 nHit = length(find(hitWall));
 hasHit = find(hitWall);
@@ -86,7 +86,7 @@ legend('wall','hasHit','notHit')
 
 plot_tracks = 1;
 if plot_tracks
-    file = strcat('perlmutter/forces24.02.10/history_BEF.nc');
+    file = strcat('../../../../GITR/scratch/output/history.nc');
     x = ncread(file,'x');
     y = ncread(file,'y');
     z = ncread(file,'z');
@@ -103,7 +103,7 @@ if plot_tracks
     plot3(R,T,Z, 'LineWidth',2)
     hold on
 
-    for i=1:1:(length(x))
+    for i=1:1:nP
     plot3(x(:,i),y(:,i),z(:,i))
     end
 
@@ -116,10 +116,9 @@ if plot_tracks
     zlabel('z [m]')
     title('Histories')
 
-    figure(7) %2D plotting
-    plot(R,Z,'LineWidth',2)
-    hold on
-    
+%     figure(7) %2D plotting
+%     plot(R,Z,'LineWidth',2)
+%     hold on
     
 %     for i=1:1:length(x(0))
 %         if charge(i)==1
@@ -144,12 +143,12 @@ if plot_tracks
 %         end
 %     end
 
-    axis equal
-    xlim([1.43 1.56])
-    ylim([1.07 1.25])
-    xlabel('r [m]')
-    ylabel('z [m]')
-    title('Histories')
+%     axis equal
+%     xlim([1.43 1.56])
+%     ylim([1.07 1.25])
+%     xlabel('r [m]')
+%     ylabel('z [m]')
+%     title('Histories')
 
 end
 

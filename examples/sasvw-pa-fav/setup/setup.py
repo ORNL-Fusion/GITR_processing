@@ -5,7 +5,7 @@ import shutil
 import numpy as np
 import solpsProcessing, makeGeom, makeParticleSource
 
-nP = int(1e3)
+nP = int(1e5)
 run_directory = '../../../../GITR/scratch'
 W_indices = np.arange(11,22)
 
@@ -27,7 +27,7 @@ print('\n',print_separator,'Making bField.nc',print_separator,'\n')
 solpsProcessing.readEquilibrium(equilibrium_filename = 'assets/dg.equ', \
                     W_indices = W_indices, \
                     solps_geom = 'assets/b2fgmtry', \
-                    flip_Bt = False, \
+                    flip_Bt = True, \
                     plot_variables = 0)
 
 shutil.move('bField.nc', run_directory+'/input/bField.nc')
