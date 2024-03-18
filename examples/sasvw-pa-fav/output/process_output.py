@@ -181,7 +181,7 @@ def plot_history2D(history_file='history.nc', bFile='../input/bField.nc', \
             counter+=1
             while t<nT-1:
                 if r[p][t] != r[p][t+1]: 
-                    print("particle #", p, "MOVED at timestep", t)
+                    print("particle #", p, "moved at timestep", t)
                     plt.plot(r[p][t:t+2],z[p][t:t+2], colors[charge[p][t]])
                 t+=1
     print('total particles:',counter)
@@ -204,11 +204,11 @@ def plot_history2D(history_file='history.nc', bFile='../input/bField.nc', \
 
     if basic==0: plt.legend(handles=patchList, fontsize=12)
     
-    plt.xlim(1.0, 2.0)
-    plt.ylim(-1.5, 1.5)
-    #plt.xlim(1.45, 1.525)
-    #plt.ylim(1.1, 1.23)
-    plt.show(block=False)
+    #plt.xlim(1.0, 2.0)
+    #plt.ylim(-1.5, 1.5)
+    plt.xlim(1.35, 1.525)
+    plt.ylim(1.05, 1.23)
+    #plt.show(block=False)
     plt.savefig('plots/history.svg')
     plt.close()
 
@@ -1610,7 +1610,8 @@ def particle_diagnostics_hist(nP10, pdFile, segment_counter=50, hist_plotting=1,
     return
 
 if __name__ == "__main__":
-    plot_history2D('perlmutter/production/history_p5t9T6.nc')
+    #plot_history2D('perlmutter/production/history_test_old.nc')
+    plot_history2D('/pscratch/sd/h/hayes/sasvw-pa-fav/output/history.nc')
     #plot_history2D('perlmutter/forces24.02.20/histories/gradT.nc')
     #plot_surf_nc(5e2, 8, 5, 'forces24.02.20/surfaces/CConly.nc', 'forces24.02.20/positions/CConly.nc', norm='')
     #analyze_leakage('perlmutter/history_D3t6.nc')
