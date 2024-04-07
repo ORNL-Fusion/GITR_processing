@@ -141,7 +141,7 @@ def plot_history2D(history_file='history.nc', bFile='../input/bField.nc', \
 
     plt.rcParams.update({'lines.linewidth':0.3})
     plt.rcParams.update({'lines.markersize':markersize})
-    plt.rcParams.update({'font.size':16})
+    plt.rcParams.update({'font.size':11})
 
     nP = len(history.dimensions['nP'])
     print('nP:',nP)
@@ -160,7 +160,7 @@ def plot_history2D(history_file='history.nc', bFile='../input/bField.nc', \
     plt.axis('scaled')
     plt.xlabel('r [m]')
     plt.ylabel('z [m]')
-    plt.title('W Impurity Trajectories', fontsize=20)
+    plt.title('W Impurity Trajectories', fontsize=14)
         
     #define charge state to color mapping
     colors = {0:'black', 1:'firebrick', 2:'darkorange', 3:'gold', 4:'limegreen', 5:'dodgerblue', \
@@ -202,7 +202,7 @@ def plot_history2D(history_file='history.nc', bFile='../input/bField.nc', \
         data_key = mpatches.Patch(color=legend_dict[key], label=key)
         patchList.append(data_key)
 
-    if basic==0: plt.legend(handles=patchList, fontsize=12)
+    if basic==0: plt.legend(handles=patchList, fontsize=12, loc=3)
     
     #plt.xlim(1.0, 2.0)
     #plt.ylim(-1.5, 1.5)
@@ -214,7 +214,7 @@ def plot_history2D(history_file='history.nc', bFile='../input/bField.nc', \
 
     return
 
-def plot_surf_nc(nP, dt10, nT10, \
+def plot_surf_nc(nP10, dt10, nT10, \
                  surface_file="surface.nc", positions_file='', \
                  gitr_rz='../setup/assets/gitr_rz.txt', \
                  W_fine_file='../setup/assets/W_fine.txt', \
@@ -224,7 +224,7 @@ def plot_surf_nc(nP, dt10, nT10, \
     profiles, W_indices, r_inner_target, z_inner_target, rmrs = init()
     rmrsCoords = profiles.variables['rmrs_inner_target'][W_indices]
     surface = netCDF4.Dataset(surface_file, "r", format="NETCDF4")
-    pps_per_nP, partSource_flux, fluxD, fluxC = makeParticleSource.distributed_source(nP=int(nP), \
+    pps_per_nP, partSource_flux, fluxD, fluxC = makeParticleSource.distributed_source(nP=10**int(nP10), \
                 surfW=np.arange(11,22), \
                 tile_shift_indices = [1,9], \
                 Bangle_shift_indices = [3,8,9])
@@ -433,7 +433,7 @@ def plot_surf_nc(nP, dt10, nT10, \
     if norm==None: plt.ylabel('\u0393$_{W,outgoing}$')
     plt.ticklabel_format(axis='y',style='sci',scilimits=(-2,2))
     plt.legend(fontsize=20)#loc='upper left')
-    plt.title('GITR Predicted Erosion and \n Redeposition Profiles, nP=%e'%nP+', dt=1e-'+str(dt10)+', nT=1e'+str(nT10), fontsize=30)
+    plt.title('GITR Predicted Erosion and \n Redeposition Profiles, nP=1e'+str(nP10)+', dt=1e-'+str(dt10)+', nT=1e'+str(nT10), fontsize=30)
     plt.savefig('plots/surface.png')
     
     if plot_cumsum:
@@ -1203,8 +1203,8 @@ def ionization_analysis(plotting, output_dir, historyFile, positionsFile, \
         frac_ioniz_in_Debye = np.zeros(len(Z1))
         frac_prompt_Chodura = np.zeros(len(Z1))
         frac_prompt_Debye = np.zeros(len(Z1))
-        frac_netEro_Chodura = np.zeros(len(Z1))
-        frac_netEro_Debye = np.zeros(len(Z1))
+        frac_noHitWall_Chodura = np.zeros(len(Z1))
+        frac_noHitWall_Debye = np.zeros(len(Z1))
         
         z_coarse_index = 0
         print('COARSE SEGMENT: 0')
@@ -1274,7 +1274,7 @@ def ionization_analysis(plotting, output_dir, historyFile, positionsFile, \
             
             if len(pindex_in_Chodura) == 0:
                 frac_prompt_Chodura[seg] = 0
-                frac_netEro_Chodura[seg] = 0
+                frac_noHitWall_Chodura[seg] = 0
             else:
                 angle_Chodura = angle[pindex_in_Chodura]                
                 is_prompt_Chodura = angle_Chodura <= 2*np.pi                
@@ -1282,11 +1282,11 @@ def ionization_analysis(plotting, output_dir, historyFile, positionsFile, \
                 
                 hitWall_Chodura = hitWall[pindex_in_Chodura]
                 frac_hitWall_Chodura = np.sum(hitWall_Chodura)/len(pindex_in_Chodura)
-                frac_netEro_Chodura[seg] = 1-frac_hitWall_Chodura/2
+                frac_noHitWall_Chodura[seg] = 1-frac_hitWall_Chodura
     
             if len(pindex_in_Debye) == 0:
                 frac_prompt_Debye[seg] = 0
-                frac_netEro_Debye[seg] = 0
+                frac_noHitWall_Debye[seg] = 0
             else:
                 angle_Debye = angle[pindex_in_Debye]
                 is_prompt_Debye = angle_Debye <= 2*np.pi
@@ -1294,7 +1294,7 @@ def ionization_analysis(plotting, output_dir, historyFile, positionsFile, \
                 
                 hitWall_Debye = hitWall[pindex_in_Debye]
                 frac_hitWall_Debye = np.sum(hitWall_Debye)/len(pindex_in_Debye)
-                frac_netEro_Debye[seg] = 1-frac_hitWall_Debye/2
+                frac_noHitWall_Debye[seg] = 1-frac_hitWall_Debye
     
             #print('Segment #' + str(seg) + ': ' + tally_never_ionizes ' never ionizes of ' + str(particles_per_seg) ' total particles')
             print('Segment:', seg)
@@ -1309,6 +1309,10 @@ def ionization_analysis(plotting, output_dir, historyFile, positionsFile, \
                 plt.title('Histogram of Distance to 1st Ionization \n Segment: '+str(seg))
                 plt.show(block=True)
     
+    #############################################################################
+    # Plotting ### Plotting ### Plotting ### Plotting ### Plotting ### Plotting #
+    #############################################################################
+    
     plt.close()
     if tile_shift_indices != []:
         for i,v in enumerate(tile_shift_indices):
@@ -1319,13 +1323,13 @@ def ionization_analysis(plotting, output_dir, historyFile, positionsFile, \
             if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\Psi_B$')
             else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
     
-    plt.errorbar(rmrsPlotting, avg_distance_to_first_ionization*1000, std_distance_to_first_ionization*1000, ecolor='powderblue', fmt='blue')
+    plt.errorbar(rmrsPlotting, avg_distance_to_first_ionization*1000, std_distance_to_first_ionization*1000, ecolor='lightpink', fmt='saddlebrown')
     #plt.scatter(rmrsPlotting, avg_distance_to_first_ionization*1000, s=15)
     plt.xlabel('D-Dsep [m]')
     plt.ylabel('Distance [mm]')
     plt.title('Average Distance to First Ionization')
     if plotting[1]==1: plt.show(block=True)
-    else: plt.savefig(output_dir+'plots/avg_dist_to_first_ioniz.png')
+    else: plt.savefig(output_dir+'plots/ioniz_avg.png')
     
     plt.close()
     if tile_shift_indices != []:
@@ -1337,12 +1341,12 @@ def ionization_analysis(plotting, output_dir, historyFile, positionsFile, \
             if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\Psi_B$')
             else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
             
-    plt.plot(rmrsPlotting, median_distance_to_first_ionization*1000, marker='o')
+    plt.plot(rmrsPlotting, median_distance_to_first_ionization*1000, marker='o', color='saddlebrown')
     plt.xlabel('D-Dsep [m]')
     plt.ylabel('Distance [mm]')
     plt.title('Median Distance to First Ionization')
     if plotting[1]==1: plt.show(block=True)
-    else: plt.savefig(output_dir+'plots/med_dist_to_first_ioniz.png')
+    else: plt.savefig(output_dir+'plots/ioniz_med.png')
     
     plt.close()
     if tile_shift_indices != []:
@@ -1354,14 +1358,14 @@ def ionization_analysis(plotting, output_dir, historyFile, positionsFile, \
             if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\Psi_B$')
             else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
     
-    plt.plot(rmrsPlotting, frac_ioniz_in_Chodura, label='Chodura', color='orange')
-    plt.plot(rmrsPlotting, frac_ioniz_in_Debye, label='Debye', color='red')
+    plt.plot(rmrsPlotting, frac_ioniz_in_Chodura, label='Chodura', color='darkorange')
+    plt.plot(rmrsPlotting, frac_ioniz_in_Debye, label='Debye', color='crimson')
     plt.xlabel('D-Dsep [m]')
     plt.ylabel('Fraction')
     plt.title('Fraction of Particles First Ionizing in the Sheath')
     plt.legend()
     if plotting[1]==1: plt.show(block=True)
-    else: plt.savefig(output_dir+'plots/frac_ioniz_in_sheath.png')
+    else: plt.savefig(output_dir+'plots/ioniz_sheath.png')
     
     plt.close()
     if tile_shift_indices != []:
@@ -1373,14 +1377,14 @@ def ionization_analysis(plotting, output_dir, historyFile, positionsFile, \
             if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\Psi_B$')
             else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
     
-    plt.plot(rmrsPlotting, frac_prompt_Chodura, label='Chodura', color='orange')
-    plt.plot(rmrsPlotting, frac_prompt_Debye, label='Debye', color='red')
+    plt.plot(rmrsPlotting, frac_prompt_Chodura, label='Chodura', color='darkorange')
+    plt.plot(rmrsPlotting, frac_prompt_Debye, label='Debye', color='crimson')
     plt.xlabel('D-Dsep [m]')
     plt.ylabel('Fraction')
     plt.title('Fraction of First Ionizations in Sheath \n that Promptly Redeposit')
     plt.legend()
     if plotting[1]==1: plt.show(block=True)
-    else: plt.savefig(output_dir+'plots/frac_sheath_ioniz_prompt_redep.png')
+    else: plt.savefig(output_dir+'plots/ioniz_prompt.png')
     
     plt.close()
     if tile_shift_indices != []:
@@ -1392,14 +1396,60 @@ def ionization_analysis(plotting, output_dir, historyFile, positionsFile, \
             if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\Psi_B$')
             else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
     
-    plt.plot(rmrsPlotting, frac_netEro_Chodura, label='Chodura', color='orange')
-    plt.plot(rmrsPlotting, frac_netEro_Debye, label='Debye', color='red')
+    plt.plot(rmrsPlotting, frac_noHitWall_Chodura, label='Chodura', color='darkorange')
+    plt.plot(rmrsPlotting, frac_noHitWall_Debye, label='Debye', color='crimson')
     plt.xlabel('D-Dsep [m]')
     plt.ylabel('Fraction')
     plt.title('Fraction of First Ionizations in Sheath \n that Never Hit a Wall')
     plt.legend()
     if plotting[1]==1: plt.show(block=True)
-    else: plt.savefig(output_dir+'plots/frac_sheath_ioniz_netEro.png')
+    else: plt.savefig(output_dir+'plots/ioniz_nohitwall.png')
+    
+    frac_delayed_Chodura = 1 - frac_prompt_Chodura - frac_noHitWall_Chodura
+    frac_delayed_Debye = 1 - frac_prompt_Debye - frac_noHitWall_Debye
+    
+    plt.close()
+    if tile_shift_indices != []:
+        for i,v in enumerate(tile_shift_indices):
+            if i==0: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', label='Walll\nVertices')
+            else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
+    if Bangle_shift_indices != []:
+        for i,v in enumerate(Bangle_shift_indices):
+            if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\Psi_B$')
+            else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
+            
+    plt.plot(rmrsPlotting, frac_prompt_Chodura, label='Prompt Redeposition', color='saddlebrown')
+    plt.plot(rmrsPlotting, frac_delayed_Chodura, label='Delayed Redeposition', color='darkorange')
+    plt.plot(rmrsPlotting, frac_noHitWall_Chodura, label='Never Hit a Wall', color='burlywood')
+    plt.xlabel('D-Dsep [m]')
+    plt.ylabel('Fraction')
+    plt.title('Behavior of Particles that First Ionize \n in the Chodura Sheath')
+    plt.legend()
+    if plotting[1]==1: plt.show(block=True)
+    else: plt.savefig(output_dir+'plots/fracs_Chodura.png')
+    
+    plt.close()
+    if tile_shift_indices != []:
+        for i,v in enumerate(tile_shift_indices):
+            if i==0: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', label='Walll\nVertices')
+            else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
+    if Bangle_shift_indices != []:
+        for i,v in enumerate(Bangle_shift_indices):
+            if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\Psi_B$')
+            else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
+    
+    plt.plot(rmrsPlotting, frac_prompt_Debye, label='Prompt Redeposition', color='maroon')
+    plt.plot(rmrsPlotting, frac_delayed_Debye, label='Delayed Redeposition', color='crimson')
+    plt.plot(rmrsPlotting, frac_noHitWall_Debye, label='Never Hit a Wall', color='lightcoral')
+    plt.xlabel('D-Dsep [m]')
+    plt.ylabel('Fraction')
+    plt.title('Behavior of Particles that First Ionize \n in the Debye Sheath')
+    plt.legend()
+    if plotting[1]==1: plt.show(block=True)
+    else: plt.savefig(output_dir+'plots/fracs_Debye.png')
+    
+    avg_perpDistanceToSurface = np.average(perpDistanceToSurface[:,-1])
+    print('\nAverage final perpendicular distance to the surface:\n', avg_perpDistanceToSurface, 'meters')
     
     return
 
@@ -1459,7 +1509,7 @@ def prompt_redep_hist(inputs, fileDir, fileOFF, fileON=None):
 
     return
 
-def particle_diagnostics_hist(nP10, pdFile, segment_counter=50, hist_plotting=1, plot_blocker=1):
+def particle_diagnostics_hist(nP_input, pdFile, segment_counter=50, hist_plotting=1, plot_blocker=1):
     
     diagnostics = netCDF4.Dataset(pdFile, "r", format="NETCDF4")
     bin_edges_time = diagnostics.variables['bin_edges_time'][:]
@@ -1537,12 +1587,12 @@ def particle_diagnostics_hist(nP10, pdFile, segment_counter=50, hist_plotting=1,
     avg_flight_time[np.where(avg_flight_time==0)] = 'NaN'
     avg_flight_time = 10**avg_flight_time
     med_flight_time = 10**med_flight_time
-    print('\n'+'Median Flight Time before Striking the Surface:', med_flight_time, '\n')
+    #print('\n'+'Median Flight Time before Striking the Surface:', med_flight_time, '\n')
     
     avg_flight_angle[np.where(avg_flight_angle==0)] = 'NaN'
     avg_flight_angle = 10**avg_flight_angle
     med_flight_angle = 10**med_flight_angle
-    print('\n'+'Median Flight Angle before Striking the Surface:', med_flight_angle, '\n')
+    #print('\n'+'Median Flight Angle before Striking the Surface:', med_flight_angle, '\n')
     
     ###########
     # Plotting
@@ -1589,29 +1639,32 @@ def particle_diagnostics_hist(nP10, pdFile, segment_counter=50, hist_plotting=1,
     #make histogram of all particles binned into the TIME bins
     histogram_particle_time_AllSegs = np.sum(histogram_particle_time, axis=0)
     nP = np.sum(histogram_particle_time_AllSegs)
+    print('Time nP:', nP)
     
     plt.close()
-    plt.bar(bin_edges_time[:-1], histogram_particle_time_AllSegs, width=bin_width_time, color='darkviolet', align='edge', edgecolor='k')
+    plt.bar(bin_edges_time[:-1], histogram_particle_time_AllSegs/nP, width=bin_width_time, color='darkviolet', align='edge', edgecolor='k')
     plt.xlabel('Logarithmic Time [log(sec)]')
     plt.ylabel('Counts\n')
-    plt.title('Flight Time before Striking the Surface \n nP=%.4E'%(nP))
+    plt.title('Flight Time before Striking the Surface')# \n nP=%.4E'%(nP))
     plt.show(block=plot_blocker)
     
     #make histogram of all particles binned into the ANGLE bins
     histogram_particle_angle_AllSegs = np.sum(histogram_particle_angle, axis=0)
+    nP = np.sum(histogram_particle_angle_AllSegs)
+    print('Angle nP:', nP)
     
     plt.close()
-    plt.bar(bin_edges_angle[:-1], histogram_particle_angle_AllSegs, width=bin_width_angle, color='darkkhaki', align='edge', edgecolor='k')
+    plt.bar(bin_edges_angle[:-1], histogram_particle_angle_AllSegs/nP, width=bin_width_angle, color='darkkhaki', align='edge', edgecolor='k')
     plt.xlabel('Angle [rad]')
     plt.ylabel('Counts\n')
-    plt.title('Flight Angle before Striking the Surface \n nP=%.4E'%(nP))
+    plt.title('Flight Angle before Striking the Surface')# \n nP=%.4E'%(nP))
     plt.show(block=plot_blocker)
         
     return
 
 if __name__ == "__main__":
-    #plot_history2D('perlmutter/production/history_test_old.nc')
-    plot_history2D('/pscratch/sd/h/hayes/sasvw-pa-fav/output/history.nc')
+    #plot_history2D('perlmutter/production/history_H.nc')
+    plot_history2D('/pscratch/sd/h/hayes/sasvw-pa-fav-history/output/history.nc')
     #plot_history2D('perlmutter/forces24.02.20/histories/gradT.nc')
     #plot_surf_nc(5e2, 8, 5, 'forces24.02.20/surfaces/CConly.nc', 'forces24.02.20/positions/CConly.nc', norm='')
     #analyze_leakage('perlmutter/history_D3t6.nc')
@@ -1621,8 +1674,9 @@ if __name__ == "__main__":
     #plot_gitr_gridspace()
     #plot_particle_source()
     #plot_history2D("../../../../GITR/scratch/output/history.nc")
-    #plot_surf_nc(2, 9, 6, '../../../../GITR/scratch/output/surface.nc')
+    #plot_surf_nc(6, 9, 6, 'perlmutter/production/surface_S.nc', 'perlmutter/production/positions_S.nc')
     #spectroscopy(1006929636574578.9,2,specFile='perlmutter/D3p5t9T6/spec.nc')
-    #ionization_analysis([0,1], '../../../../GITR/scratch/output/','history.nc', 'positions.nc')
+    #ionization_analysis([0,0], 'perlmutter/production/','history_IFp54T4.nc', 'positions_IFp54T4.nc')
     #prompt_redep_hist([2,8,5], 'perlmutter/forces24.02.10/','positions_BEF.nc')
-    #particle_diagnostics_hist(3, '../../../../GITR/scratch/output/particle_histograms.nc')
+    #particle_diagnostics_hist(4, 'perlmutter/production/particle_histograms_test.nc')
+    #particle_diagnostics_hist(1e4, '../../../../GITR/scratch/output/particle_histograms.nc')
