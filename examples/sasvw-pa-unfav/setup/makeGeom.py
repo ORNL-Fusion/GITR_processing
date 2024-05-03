@@ -109,9 +109,7 @@ def lines_to_vectors(lines, inDir, plt, plot_variables):
         plt.quiver([x1[i] + (x2[i]-x1[i])/2], [z1[i] + (z2[i]-z1[i])/2], [rPerp/10], [zPerp/10], width=0.0015, scale=5, headwidth=4)
         plt.title('inDir')
         #if plot_variables: plt.savefig('plots/geom/inDir.png')
-    
     return
-
     
 def lines_to_gitr_geometry(filename, lines, Z, surface, inDir):
 
@@ -194,14 +192,14 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
              solps_geomfile = 'assets/sas-vw_v005_mod.ogr', \
              solps_targfile = 'assets/b2fgmtry', \
              profiles_file = '../input/plasmaProfiles.nc', \
-             W_indices_profiles = np.arange(16,25), \
-             tile_shift_indices = [2,6], \
+             W_indices_profiles = np.arange(11,22), \
+             tile_shift_indices = [1,9], \
              solps_rz = 'assets/solps_rz.txt', \
              gitr_rz = 'assets/gitr_rz.txt', \
              rmrs_fine_file = 'assets/rmrs_fine.txt', \
              W_fine_file = 'assets/W_fine.txt', \
              numAddedPoints = 100, \
-             plot_variables = 0, show_plots = 0):
+             plot_variables = 0):
     
     # This program uses the solps geometry .ogr file to create a 2d geometry for GITR
     # in which the solps plasma profiles properly match the solps divertor target.
@@ -264,7 +262,7 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
         plt.ylabel('z [m]')
         plt.title('DIII-D SAS-VW Geometry')
         plt.savefig('plots/geom/solps_final.pdf')
-        plt.show(block=show_plots)
+        plt.show(block=False)
     
     ###################################################################
     # Increase Fineness of W Divertor Surface
@@ -272,7 +270,7 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     
     rmrsCoarse = profiles.variables['rmrs_inner_target'][W_indices_profiles]
     
-    W_indicesCoarse = np.array(range(74,83)) 
+    W_indicesCoarse = np.array(range(69,80)) #80?
     print('length Coarse W_indices + numAddedPoints =',\
           len(W_indicesCoarse), '+', numAddedPoints, '=',len(W_indicesCoarse)+numAddedPoints)
     
@@ -286,14 +284,14 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
         plt.plot(r_right_target, z_right_target, '-k', label='Carbon', linewidth=5)
         plt.plot(r_final[W_indicesCoarse], z_final[W_indicesCoarse], 'violet', label='W Indices Relative to Full Wall', linewidth=3)
         plt.scatter(r_final[W_indicesCoarse], z_final[W_indicesCoarse], marker='_', color='violet')
-        plt.plot(r_right_target[W_indices_profiles], z_right_target[W_indices_profiles], 'c', label='W Indices Relative to profiles.nc', linewidth=1)
+        plt.plot(r_right_target[W_indices_profiles], z_right_target[W_indices_profiles], 'c', label='W Indices Relative to InterpValues.nc', linewidth=1)
         plt.legend()
         plt.axis('scaled')
         plt.xlabel('r [m]')
         plt.ylabel('z [m]')
         plt.title('Upper Outer SAS-VW Divertor in DIII-D \n makeGeom')
         plt.savefig('plots/geom/makeGeomCoarse.png')
-        plt.show(block=show_plots)
+        plt.show(block=False)
     
     print('\n')
     print('Vertex between Legs 1 and 2:,', \
@@ -317,7 +315,6 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     print('\n')
     print('TEST')
     rmrsMidCoarse = profiles.variables['rmrs_inner_target_midpoints'][W_indices_profiles]
-    '''
     #print(rmrsMidCoarse)
     #print(rmrsMid)
     rmrsTestCoarse = np.ones(len(rmrsMidCoarse))
@@ -329,9 +326,14 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
             plt.axvline(x=rmrsCoarse[i], color='k', linestyle='dotted')
     plt.scatter(rmrsMidCoarse, rmrsTestCoarse, s=5, color='orange', label='Coarse')
     plt.scatter(rmrsMid, rmrsTestFine, s=1, color='cyan', label='Fine')
-    '''
+    plt.title('Ones plotted rmrs midpoint values')
+    plt.xlabel('rmrs a.k.a. D-Dsep [m]')
+    plt.legend()
+    plt.show(block=False)
     plt.close()
-    tile_shift_indices = [2,6]
+    
+    rmrsCoarse = np.append(rmrsCoarse[:4],rmrsCoarse[5:]) #remove after debugging some pre-PSI nonsense
+    tile_shift_indices = [1,8]
     if tile_shift_indices != []:
         for i in tile_shift_indices:
             plt.axvline(x=rmrsCoarse[i], color='k', linestyle='dotted')
@@ -342,12 +344,12 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     rmrsTestFine = np.ones(len(rmrsFine))
     plt.scatter(rmrsCoarse, rmrsTestCoarse, s=20, color='orange', label='Coarse Coords')
     plt.scatter(rmrsFine, rmrsTestFine, s=1, color='cyan', label='Fine Coords')
-    mrsTestCoarse = np.ones(len(rmrsMidCoarse))
+    rmrsTestCoarse = np.ones(len(rmrsMidCoarse))
     rmrsTestFine = np.ones(len(rmrsMid))
-    plt.scatter(rmrsMidCoarse, rmrsTestCoarse, s=5, color='violet', label='Coarse Mids')
+    plt.scatter(rmrsMidCoarse[1:-1], rmrsTestCoarse[1:-1], s=5, color='magenta', label='Coarse Mids')
     #plt.scatter(rmrsMid, rmrsTestFine, s=1, color='magenta', label='Fine')
     
-    plt.title('Ones plotted rmrs values')
+    plt.title('Ones plotted rmrs coord values')
     plt.xlabel('rmrs a.k.a. D-Dsep [m]')
     plt.legend()
     plt.show(block=True)
@@ -389,16 +391,16 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
         plt.title('Cross Section of DIII-D Geometry')
         plt.legend()
         plt.savefig('plots/geom/gitr_final.png')
-        plt.show(block=show_plots)
+        plt.show(block=False)
     
     #define interior side of each line segment in the geometry with inDir
     inDir = np.ones(len(r_final))
-    inDir[:35] = inDir[38:49] = inDir[52] = inDir[61:74] = -1
-    inDir[189] = inDir[192] = inDir[200] = inDir[209] = inDir[213] = inDir[222] = inDir[-5:] = -1
+    inDir[:35] = inDir[38:49] = inDir[52] = inDir[59:68] = -1
+    inDir[190] = inDir[193] = inDir[201] = inDir[210] = inDir[214] = inDir[223] = inDir[-5:] = -1
     
     #populate lines and check that vectors point inward
     lines = gitr_lines_from_points(r_final, z_final)
-    if plot_variables: lines_to_vectors(lines, inDir, plt, plot_variables)
+    lines_to_vectors(lines, inDir, plt, plot_variables)
     
     #give the divertor target segments, targ_indices, a material and an interactive surface
     Z = np.zeros(len(r_final))
@@ -433,7 +435,7 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     return
 
 if __name__ == "__main__":
-    main(plot_variables = 1, show_plots=0)
+    main(plot_variables = 1)
 
 
 

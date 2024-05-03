@@ -57,7 +57,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
             ftDFile = '../setup/assets/ftridynBackgroundD.nc', \
             ftCFile = '../setup/assets/ftridynBackgroundC.nc', \
             configuration = 'random', \
-            use_fractal_tridyn_outgoing_IEADS = 1, \
+            use_fractal_tridyn_outgoing_IEADS = 0, \
             plot_variables = 0):
     
     #import wall geometry to plot over
@@ -265,7 +265,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
         plt.plot(rmrsCoarse, fluxCoarseC5, 'dodgerblue', linestyle='dotted', label='C$^{5+}$')
         plt.plot(rmrsCoarse, fluxCoarseC6, 'mediumpurple', linestyle='dotted', label='C$^{6+}$')
         '''
-        plt.xlim(-0.05)
+        #plt.xlim(-0.05)
         #plt.yscale('log')
         plt.xlabel('D-Dsep [m]', fontsize=14)
         plt.ylabel('Flux [m$^{-2}$s$^{-1}$]', fontsize=16)
@@ -287,7 +287,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
         plt.plot(rmrsFine, spyldC6, 'mediumpurple', label='C$^{6+}$')
         plt.plot(rmrsFine, spyldW1, 'rosybrown', label='W$^{1+}$')
         plt.plot(rmrsFine, spyldW2, 'burlywood', label='W$^{2+}$')
-        plt.xlim(-0.05)
+        #plt.xlim(-0.05)
         plt.legend(fontsize=12)
         plt.xlabel('D-Dsep [m]', fontsize=14)
         plt.ylabel('Sputtering Yield', fontsize=16)
@@ -353,11 +353,11 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     
     if nP_diff > 0:
         for i in range(abs(nP_diff)):
-            rand_index = np.random.choice(len(pps_weights))
+            rand_index = np.random.choice(np.where(pps_weights>0)[0])
             pps_weights[rand_index] += 1
     elif nP_diff < 0:
         while nP_diff<0:
-            rand_index = np.random.choice(len(pps_weights))
+            rand_index = np.random.choice(np.where(pps_weights>0)[0])
             if pps_weights[rand_index] - 1 > 0:
                 pps_weights[rand_index] -= 1
                 nP_diff+=1
@@ -407,8 +407,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
 
         if weight>0:
             
-            if use_fractal_tridyn_outgoing_IEADS:
-                
+            if use_fractal_tridyn_outgoing_IEADS:                
                 E = np.empty(0)
                 PolAng = np.empty(0)
                 AziAng = np.empty(0)
@@ -522,12 +521,12 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
                 #get IEADs for sputtered W
                 E = PartDist.Generate(weight, 'Thomson')
                 PolAng = PartDist.Generate(weight, 'SinCos', x=np.linspace(0,np.pi/2,10*weight))
-                AziAng = PartDist.Generate(weight, 'Uniform', x=np.linspace(0,2*np.pi,10*weight))
+                AziAng = PartDist.Generate(weight, 'Gaussian', x=np.linspace(-np.pi,np.pi,10*weight))
             
             #convert IEADs to vx,vy,vz unit vectors in particle frame of ref
             vx_prime = -np.cos(PolAng)
-            vy_prime = np.multiply(np.sin(PolAng), -np.sin(AziAng))
-            vz_prime = np.multiply(np.sin(PolAng), np.cos(AziAng))
+            vy_prime = np.multiply(np.sin(PolAng), np.cos(AziAng))
+            vz_prime = np.multiply(np.sin(PolAng), -np.sin(AziAng))
             PartDist.SetAttr('vx', vx_prime)
             PartDist.SetAttr('vy', vy_prime)
             PartDist.SetAttr('vz', vz_prime)
@@ -648,7 +647,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
         
 
     #########################################
-    #make NetCDF Particle Source file
+    # make NetCDF Particle Source file
     #########################################
     '''
     #debugging
@@ -833,6 +832,7 @@ def get_ft_IEAD(surfE, weight, ftBFile):
     cosYCDF = np.cumsum(cosYPDF)/np.sum(cosYPDF)
     
     #stretch thetaGrid to span 0 to 360
+    #skew by 45 degrees?
     thetaGrid = 2*thetaGrid-180+45
     
     if np.max(energyPDF)==0:
@@ -865,7 +865,8 @@ def get_ft_IEAD(surfE, weight, ftBFile):
         [energyXi, phiXi, thetaXi] = np.random.rand(3, weight)
         energySampled = energyFunc(energyXi)
         phiSampled = phiFunc(phiXi)
-        thetaSampled = thetaFunc(thetaXi)    
+        thetaSampled = thetaFunc(thetaXi)
+    #print('E, Phi, Theta:', energySampled, phiSampled, thetaSampled)
     
     return energySampled, phiSampled, thetaSampled
 
@@ -964,9 +965,9 @@ def get_analytic_spyld(surfE, surfA, Z1=6, M1=12, Z2=74, M2=183.84, \
 if __name__ == "__main__":
     #init()
     
-    distributed_source(nP=int(1e3), surfW=np.arange(16,25), \
-                tile_shift_indices = [2,6], \
-                Bangle_shift_indices = [3,6], \
+    distributed_source(nP=int(1e5), surfW=np.arange(11,22), \
+                tile_shift_indices = [1,9], \
+                Bangle_shift_indices = [3,8,9], \
                 geom = '../input/gitrGeometry.cfg', \
                 profiles_file = '../input/plasmaProfiles.nc', \
                 gitr_rz = 'assets/gitr_rz.txt', \

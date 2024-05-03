@@ -312,13 +312,14 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     W_indices = np.array(range(W_indicesCoarse[0], W_indicesCoarse[-1]+numAddedPoints+1)) #+1 may need to be added because range function is exclusive
     print('length Fine W_indices:',len(W_indices))
     
-    '''
+    
     #test to check that the refined rmrsMid fall between the matching coarse rmrs midpoint values
     print('\n')
     print('TEST')
     rmrsMidCoarse = profiles.variables['rmrs_inner_target_midpoints'][W_indices_profiles]
     #print(rmrsMidCoarse)
     #print(rmrsMid)
+    '''
     rmrsTestCoarse = np.ones(len(rmrsMidCoarse))
     rmrsTestFine = np.ones(len(rmrsMid))
     plt.close()
@@ -328,14 +329,32 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
             plt.axvline(x=rmrsCoarse[i], color='k', linestyle='dotted')
     plt.scatter(rmrsMidCoarse, rmrsTestCoarse, s=5, color='orange', label='Coarse')
     plt.scatter(rmrsMid, rmrsTestFine, s=1, color='cyan', label='Fine')
+    '''
+    plt.close()
+    tile_shift_indices = [1,9]
+    if tile_shift_indices != []:
+        for i in tile_shift_indices:
+            plt.axvline(x=rmrsCoarse[i], color='k', linestyle='dotted')
+    
+    print('coarse coords', len(rmrsCoarse))
+    print('coarse mid', len(rmrsMidCoarse))
+    rmrsTestCoarse = np.ones(len(rmrsMidCoarse))
+    rmrsTestFine = np.ones(len(rmrsFine))
+    plt.scatter(rmrsCoarse, rmrsTestCoarse, s=20, color='orange', label='Coarse')
+    plt.scatter(rmrsFine, rmrsTestFine, s=1, color='cyan', label='Fine')
+    mrsTestCoarse = np.ones(len(rmrsMidCoarse))
+    rmrsTestFine = np.ones(len(rmrsMid))
+    plt.scatter(rmrsMidCoarse, rmrsTestCoarse, s=5, color='violet', label='Coarse')
+    #plt.scatter(rmrsMid, rmrsTestFine, s=1, color='magenta', label='Fine')
+    
     plt.title('Ones plotted rmrs values')
     plt.xlabel('rmrs a.k.a. D-Dsep [m]')
     plt.legend()
-    plt.show(block=False)
+    plt.show(block=True)
     plt.close()
     print('TEST')
     print('\n')
-    '''
+    
     
     #find strikepoint
     strikepoint_index = np.where(rmrsFine==0)[0]
