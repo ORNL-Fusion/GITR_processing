@@ -56,6 +56,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
             W_fine_file = '../setup/assets/W_fine.txt', \
             ftDFile = '../setup/assets/ftridynBackgroundD.nc', \
             ftCFile = '../setup/assets/ftridynBackgroundC.nc', \
+            ftWFile = '../input/ftridynSelf.nc', \
             configuration = 'random', \
             use_fractal_tridyn_outgoing_IEADS = 1, \
             plot_variables = 0):
@@ -181,7 +182,6 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     spyldC4 = get_ft_spyld(0, energyC4, angleC4, ftCFile)
     spyldC5 = get_ft_spyld(0, energyC5, angleC5, ftCFile)
     spyldC6 = get_ft_spyld(0, energyC6, angleC6, ftCFile)
-    ftWFile = '../input/ftridynSelf.nc'
     spyldW1 = get_ft_spyld(0, energyC1, angleC1, ftWFile)
     spyldW2 = get_ft_spyld(0, energyC2, angleC2, ftWFile)
     

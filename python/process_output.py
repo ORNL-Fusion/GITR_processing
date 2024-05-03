@@ -1,7 +1,4 @@
 import sys, os
-sys.path.insert(0, os.path.abspath('../../../python/'))
-sys.path.insert(0, os.path.abspath('../setup/'))
-
 import numpy as np
 from scipy import special
 import matplotlib.pyplot as plt
@@ -9,16 +6,21 @@ import matplotlib.patches as mpatches
 import matplotlib.path as path
 import netCDF4
 import solps
+
+run_directory = '../examples/sasvw-vertex-fav'
+
+W_surf_indices = np.arange(16,25)
+tile_shift_indices = [2,6]
+Bangle_shift_indices = [3,6]
+#r_sp, z_sp = 1.49829829, 1.19672716 #prog angle & favorable
+r_sp, z_sp = 1.50230407, 1.23187366 #vertex & favorable
+#r_sp, z_sp = 1.49829824, 1.19672712 #prog angle & unfavorable
+
+sys.path.insert(0, os.path.abspath(run_directory+'/setup/'))
 import makeParticleSource
 
-tile_shift_indices = [1,9]
-Bangle_shift_indices = [3,8,9]
-W_surf_indices = np.arange(11,22)
-
-rmrs_fine_file = '../setup/assets/rmrs_fine.txt'
-
-def init(W_indices = np.arange(11,22), plot_rz=False):
-    profilesFile = '../input/plasmaProfiles.nc'
+def init(W_indices = W_surf_indices, plot_rz=False):
+    profilesFile = run_directory+'/input/plasmaProfiles.nc'
     profiles = netCDF4.Dataset(profilesFile)
     
     #check which target is the region of interest
@@ -38,9 +40,9 @@ def init(W_indices = np.arange(11,22), plot_rz=False):
 
     return profiles, W_indices, r_inner_target, z_inner_target, rmrs_coarse
 
-def init_geom(gitr_rz = '../setup/assets/gitr_rz.txt', \
-              rmrs_fine_file = '../setup/assets/rmrs_fine.txt', \
-              W_fine_file = '../setup/assets/W_fine.txt'):
+def init_geom(gitr_rz = run_directory+'/setup/assets/gitr_rz.txt', \
+              rmrs_fine_file = run_directory+'/setup/assets/rmrs_fine.txt', \
+              W_fine_file = run_directory+'/setup/assets/W_fine.txt'):
     
     #import refined rmrs at the W surface
     with open(rmrs_fine_file, 'r') as file:
@@ -118,12 +120,12 @@ def plot_particle_source():
     plt.title('Spatial Particle Source \n nP='+str(len(x)))
     plt.savefig('plots/particleSource.png')
 
-def plot_history2D(history_file='history.nc', bFile='../input/bField.nc', \
+def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
                    basic=0, continuousChargeState=1, endChargeState=0, \
                    plot_particle_source=0, markersize=0):
     
     if plot_particle_source:
-        particleSource = netCDF4.Dataset("../input/particleSource.nc", "r", format="NETCDF4")
+        particleSource = netCDF4.Dataset(run_directory+"/input/particleSource.nc", "r", format="NETCDF4")
         x0 = particleSource.variables['x'][:]
         z0 = particleSource.variables['z'][:]
     
@@ -182,7 +184,7 @@ def plot_history2D(history_file='history.nc', bFile='../input/bField.nc', \
             while t<nT-1:
                 if r[p][t] != r[p][t+1]: 
                     print("particle #", p, "moved at timestep", t, "with charge", charge[p][t])
-                    plt.plot(r[p][t:t+2],z[p][t:t+2], colors[charge[p][t]])
+                    plt.plot(r[p][t:t+2],z[p][t:t+2], colors[np.round(charge[p][t])])
                 t+=1
     print('total particles:',counter)
 
@@ -209,26 +211,38 @@ def plot_history2D(history_file='history.nc', bFile='../input/bField.nc', \
     plt.xlim(1.35, 1.525)
     plt.ylim(1.05, 1.23)
     #plt.show(block=False)
-    plt.savefig('plots/history.svg')
+    plt.savefig(run_directory+'/output/plots/history.svg')
     plt.close()
 
     return
 
 def plot_surf_nc(nP10, dt10, nT10, \
                  surface_file="surface.nc", positions_file='', \
-                 gitr_rz='../setup/assets/gitr_rz.txt', \
-                 W_fine_file='../setup/assets/W_fine.txt', \
-                 rmrs_fine_file='../setup/assets/rmrs_fine.txt', \
+                 gitr_rz=run_directory+'/setup/assets/gitr_rz.txt', \
+                 W_fine_file=run_directory+'/setup/assets/W_fine.txt', \
+                 rmrs_fine_file=run_directory+'/setup/assets/rmrs_fine.txt', \
                  norm=None, plot_cumsum=0):
     
     profiles, W_indices, r_inner_target, z_inner_target, rmrs = init()
     rmrsCoords = profiles.variables['rmrs_inner_target'][W_indices]
     surface = netCDF4.Dataset(surface_file, "r", format="NETCDF4")
     pps_per_nP, partSource_flux, fluxD, fluxC = makeParticleSource.distributed_source(nP=10**int(nP10), \
-                surfW=np.arange(11,22), \
-                tile_shift_indices = [1,9], \
-                Bangle_shift_indices = [3,8,9])
-    #print(surface.variables['grossErosion'][:])
+                surfW = W_surf_indices, \
+                tile_shift_indices = tile_shift_indices, \
+                Bangle_shift_indices = Bangle_shift_indices, \
+                geom = run_directory+'/input/gitrGeometry.cfg', \
+                profiles_file = run_directory+'/input/plasmaProfiles.nc', \
+                gitr_rz = run_directory+'/setup/assets/gitr_rz.txt', \
+                rmrs_fine_file = run_directory+'/setup/assets/rmrs_fine.txt', \
+                W_fine_file = run_directory+'/setup/assets/W_fine.txt', \
+                ftDFile = run_directory+'/setup/assets/ftridynBackgroundD.nc', \
+                ftCFile = run_directory+'/setup/assets/ftridynBackgroundC.nc', \
+                ftWFile = run_directory+'/input/ftridynSelf.nc', \
+                configuration = 'random', \
+                use_fractal_tridyn_outgoing_IEADS = 1, \
+                plot_variables = 0)
+    
+        #print(surface.variables['grossErosion'][:])
     
     #calculate area from wall
     #import wall geometry to plot over
@@ -316,12 +330,10 @@ def plot_surf_nc(nP10, dt10, nT10, \
     netDep_cumsum = np.cumsum(netDep)
     
     #take gross erosion of a slice in the filterscope range
-    r_sp, z_sp = 1.49829829, 1.19672716
-    
     r1_start, z1_start = 1.491288, 1.21629
     r1_end, z1_end = 1.49274, 1.22149
-    rmrs1_start = -1*np.sqrt((z1_start-z_sp)**2 + (r1_start-r_sp)**2)
-    rmrs1_end = -1*np.sqrt((z1_end-z_sp)**2 + (r1_end-r_sp)**2)
+    rmrs1_start = 1*np.sqrt((z1_start-z_sp)**2 + (r1_start-r_sp)**2)
+    rmrs1_end = 1*np.sqrt((z1_end-z_sp)**2 + (r1_end-r_sp)**2)
     
     r2_start, z2_start = 1.492041, 1.19418 
     r2_end, z2_end = 1.492716, 1.18709 
@@ -434,7 +446,8 @@ def plot_surf_nc(nP10, dt10, nT10, \
     plt.ticklabel_format(axis='y',style='sci',scilimits=(-2,2))
     plt.legend(fontsize=20)#loc='upper left')
     plt.title('GITR Predicted Erosion and \n Redeposition Profiles, nP=1e'+str(nP10)+', dt=1e-'+str(dt10)+', nT=1e'+str(nT10), fontsize=30)
-    plt.savefig('plots/surface.png')
+    plt.show(block=True)
+    #plt.savefig('plots/surface.png')
     
     if plot_cumsum:
         plt.close()
@@ -1663,9 +1676,8 @@ def particle_diagnostics_hist(nP_input, pdFile, segment_counter=50, hist_plottin
     return
 
 if __name__ == "__main__":
-    #plot_history2D('perlmutter/production/history_H.nc')
-    #plot_history2D('/pscratch/sd/h/hayes/sasvw-pa-fav-history/output/history.nc')
-    plot_history2D('perlmutter/production/forces24.02.20/histories/gradT.nc')
+    #plot_history2D(run_directory+'/output/history.nc')
+    plot_surf_nc(4, 9, 5, run_directory+'/output/surface.nc', run_directory+'/output/positions.nc')
     #plot_surf_nc(5e2, 8, 5, 'forces24.02.20/surfaces/CConly.nc', 'forces24.02.20/positions/CConly.nc', norm='')
     #analyze_leakage('perlmutter/history_D3t6.nc')
     #analyze_forces('gradT dv', 't', rzlim=True, colorbarLimits=[], dt=1e-8)
@@ -1674,7 +1686,6 @@ if __name__ == "__main__":
     #plot_gitr_gridspace()
     #plot_particle_source()
     #plot_history2D("../../../../GITR/scratch/output/history.nc")
-    #plot_surf_nc(6, 9, 6, 'perlmutter/production/surface_S.nc', 'perlmutter/production/positions_S.nc')
     #spectroscopy(1006929636574578.9,2,specFile='perlmutter/D3p5t9T6/spec.nc')
     #ionization_analysis([0,0], 'perlmutter/production/','history_IFp54T4.nc', 'positions_IFp54T4.nc')
     #prompt_redep_hist([2,8,5], 'perlmutter/forces24.02.10/','positions_BEF.nc')
