@@ -350,7 +350,7 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     plt.title('Ones plotted rmrs values')
     plt.xlabel('rmrs a.k.a. D-Dsep [m]')
     plt.legend()
-    plt.show(block=True)
+    plt.show(block=False)
     plt.close()
     print('TEST')
     print('\n')

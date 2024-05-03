@@ -5,8 +5,9 @@ import shutil
 import numpy as np
 import solpsProcessing, makeGeom, makeParticleSource
 
-nP = int(1e5)
+nP = int(1e4)
 run_directory = '..'
+
 W_indices = np.arange(11,22)
 tile_shift_indices = [1,8] #change to [1,9] after debugging
 Bangle_shift_indices = [2,7] #change to [2,8,9] after debugging
@@ -43,8 +44,8 @@ makeParticleSource.point_source(nP)
 '''
 print('\n',print_separator,'Making particleSource.nc',print_separator,'\n')
 makeParticleSource.distributed_source(nP, surfW = W_indices, \
-                    tile_shift_indices = tile_shift_indices, \
-                    Bangle_shift_indices = Bangle_shift_indices, \
+                    tile_shift_indices = [1,9], \
+                    Bangle_shift_indices = [3,8,9], \
                     geom = run_directory+'/input/gitrGeometry.cfg', \
                     profiles_file = run_directory+'/input/plasmaProfiles.nc', \
                     ftDFile = 'assets/ftridynBackgroundD.nc', \
