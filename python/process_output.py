@@ -7,14 +7,14 @@ import matplotlib.path as path
 import netCDF4
 import solps
 
-run_directory = '../examples/sasvw-vertex-fav'
+run_directory = '../examples/sasvw-pa-unfav'
 
-W_surf_indices = np.arange(16,25)
-tile_shift_indices = [2,6]
-Bangle_shift_indices = [3,6]
+W_surf_indices = np.arange(11,22)
+tile_shift_indices = [1,9]
+Bangle_shift_indices = [3,8,9]
 #r_sp, z_sp = 1.49829829, 1.19672716 #prog angle & favorable
-r_sp, z_sp = 1.50230407, 1.23187366 #vertex & favorable
-#r_sp, z_sp = 1.49829824, 1.19672712 #prog angle & unfavorable
+#r_sp, z_sp = 1.50230407, 1.23187366 #vertex & favorable
+r_sp, z_sp = 1.49829824, 1.19672712 #prog angle & unfavorable
 
 sys.path.insert(0, os.path.abspath(run_directory+'/setup/'))
 import makeParticleSource
@@ -1676,8 +1676,8 @@ def particle_diagnostics_hist(nP_input, pdFile, segment_counter=50, hist_plottin
     return
 
 if __name__ == "__main__":
-    #plot_history2D(run_directory+'/output/history.nc')
-    plot_surf_nc(4, 9, 5, run_directory+'/output/surface.nc', run_directory+'/output/positions.nc')
+    plot_history2D(run_directory+'/output/history.nc')
+    #plot_surf_nc(4, 9, 5, run_directory+'/output/surface.nc', run_directory+'/output/positions.nc')
     #plot_surf_nc(5e2, 8, 5, 'forces24.02.20/surfaces/CConly.nc', 'forces24.02.20/positions/CConly.nc', norm='')
     #analyze_leakage('perlmutter/history_D3t6.nc')
     #analyze_forces('gradT dv', 't', rzlim=True, colorbarLimits=[], dt=1e-8)
