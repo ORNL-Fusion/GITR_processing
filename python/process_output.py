@@ -7,7 +7,7 @@ import matplotlib.path as path
 import netCDF4
 import solps
 
-run_directory = '../examples/sasvw-pa-unfav'
+run_directory = '/pscratch/sd/h/hayes/sasvw-pa-fav-surface'
 
 W_surf_indices = np.arange(16,25)
 tile_shift_indices = [2,6]
@@ -226,7 +226,7 @@ def plot_surf_nc(nP10, dt10, nT10, \
     profiles, W_indices, r_inner_target, z_inner_target, rmrs = init()
     rmrsCoords = profiles.variables['rmrs_inner_target'][W_indices]
     surface = netCDF4.Dataset(surface_file, "r", format="NETCDF4")
-    pps_per_nP, partSource_flux, fluxD, fluxC = makeParticleSource.distributed_source(nP=10**int(nP10), \
+    pps_per_nP, partSource_flux, fluxD, fluxC = makeParticleSource.distributed_source(nP=nP10[0] * (10**int(nP10[1])), \
                 surfW = W_surf_indices, \
                 tile_shift_indices = tile_shift_indices, \
                 Bangle_shift_indices = Bangle_shift_indices, \
@@ -418,7 +418,7 @@ def plot_surf_nc(nP10, dt10, nT10, \
     plt.xlabel('D-Dsep [m]')
     plt.ylabel('Percentage')
     plt.title('Percentage of Gross Erosion from Self-Sputtering')
-    plt.show(block=True)
+    plt.show(block=False)
     
     #plot main surface plot with 3 views
     plt.close()
@@ -445,8 +445,9 @@ def plot_surf_nc(nP10, dt10, nT10, \
     if norm==None: plt.ylabel('\u0393$_{W,outgoing}$')
     plt.ticklabel_format(axis='y',style='sci',scilimits=(-2,2))
     plt.legend(fontsize=20)#loc='upper left')
-    plt.title('GITR Predicted Erosion and \n Redeposition Profiles, nP=1e'+str(nP10)+', dt=1e-'+str(dt10)+', nT=1e'+str(nT10), fontsize=30)
-    plt.show(block=True)
+    plt.title('GITR Predicted Erosion and \n Redeposition Profiles, \
+            nP='+str(nP10[0])+'e'+str(nP10[1])+', dt=1e-'+str(dt10)+', nT='+str(nT10[0])+'e'+str(nT10[1]), fontsize=30)
+    plt.show(block=False)
     #plt.savefig('plots/surface.png')
     
     if plot_cumsum:
@@ -1676,8 +1677,8 @@ def particle_diagnostics_hist(nP_input, pdFile, segment_counter=50, hist_plottin
     return
 
 if __name__ == "__main__":
-    plot_history2D(run_directory+'/output/history.nc')
-    #plot_surf_nc(4, 9, 5, run_directory+'/output/surface.nc', run_directory+'/output/positions.nc')
+    #plot_history2D(run_directory+'/output/history.nc')
+    plot_surf_nc([1,6], 9, [1,6], run_directory+'/output/surface.nc', run_directory+'/output/positions.nc')
     #plot_surf_nc(5e2, 8, 5, 'forces24.02.20/surfaces/CConly.nc', 'forces24.02.20/positions/CConly.nc', norm='')
     #analyze_leakage('perlmutter/history_D3t6.nc')
     #analyze_forces('gradT dv', 't', rzlim=True, colorbarLimits=[], dt=1e-8)
