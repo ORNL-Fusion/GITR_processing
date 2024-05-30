@@ -367,13 +367,14 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
         plt.scatter(rSurfCoarse, zSurfCoarse, marker='.', s=20, color='green')
         plt.scatter(r_final[W_indices], z_final[W_indices], marker='.', s=10, color='violet')
         plt.scatter(rSurfFine[strikepoint_index], zSurfFine[strikepoint_index], label='Strikepoint', marker='x', color='k', s=150, zorder=5)
-        plt.legend()
+        plt.legend(loc=2)
         plt.axis('scaled')
+        plt.xlim(1.43,1.52)
         plt.xlabel('r [m]')
         plt.ylabel('z [m]')
-        plt.title('Cross Section of SAS-VW Divertor')
+        plt.title('Case 2: Progressive Angle OSP \n and upward Bx▽B drift ')
         plt.savefig('plots/geom/makeGeom.png')
-        plt.show(block=False)
+        plt.show(block=True)
     
     #print('length of 3rd leg:',np.sqrt((rSurfCoarse[-1]-rSurfCoarse[-2])**2+(zSurfCoarse[-1]-zSurfCoarse[-2])**2))
     

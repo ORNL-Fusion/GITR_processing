@@ -9,12 +9,12 @@ import solps
 
 run_directory = '/pscratch/sd/h/hayes/sasvw-pa-fav-surface'
 
-W_surf_indices = np.arange(16,25)
-tile_shift_indices = [2,6]
-Bangle_shift_indices = [3,6]
+W_surf_indices = np.arange(11,22)
+tile_shift_indices = [1,9]
+Bangle_shift_indices = [3,8,9]
 #r_sp, z_sp = 1.49829829, 1.19672716 #prog angle & favorable
-r_sp, z_sp = 1.50230407, 1.23187366 #vertex & favorable
-#r_sp, z_sp = 1.49829824, 1.19672712 #prog angle & unfavorable
+#r_sp, z_sp = 1.50230407, 1.23187366 #vertex & favorable
+r_sp, z_sp = 1.49829824, 1.19672712 #prog angle & unfavorable
 
 sys.path.insert(0, os.path.abspath(run_directory+'/setup/'))
 import makeParticleSource
@@ -122,7 +122,7 @@ def plot_particle_source():
 
 def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
                    basic=0, continuousChargeState=1, endChargeState=0, \
-                   plot_particle_source=0, markersize=0):
+                   plot_particle_source=1, markersize=0):
     
     if plot_particle_source:
         particleSource = netCDF4.Dataset(run_directory+"/input/particleSource.nc", "r", format="NETCDF4")
@@ -154,7 +154,6 @@ def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
     r = np.sqrt(x**2 + y**2)
     charge = history.variables['charge'][:]
 
-    #plt.close()
     plt.close()
     if plot_particle_source: plt.scatter(x0,z0,marker='o',s=10)
     plt.plot(r_wall, z_wall,'-k',linewidth=1.5)
@@ -163,6 +162,7 @@ def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
     plt.xlabel('r [m]')
     plt.ylabel('z [m]')
     plt.title('W Impurity Trajectories', fontsize=14)
+    plt.show(block=True)
         
     #define charge state to color mapping
     colors = {0:'black', 1:'firebrick', 2:'darkorange', 3:'gold', 4:'limegreen', 5:'dodgerblue', \
@@ -332,13 +332,16 @@ def plot_surf_nc(nP10, dt10, nT10, \
     #take gross erosion of a slice in the filterscope range
     r1_start, z1_start = 1.491288, 1.21629
     r1_end, z1_end = 1.49274, 1.22149
-    rmrs1_start = 1*np.sqrt((z1_start-z_sp)**2 + (r1_start-r_sp)**2)
-    rmrs1_end = 1*np.sqrt((z1_end-z_sp)**2 + (r1_end-r_sp)**2)
+    #account for when View 1 is before or after OSP
+    is_neg = -1
+    if 'vertex' in run_directory: is_neg=1
+    rmrs1_start = is_neg*np.sqrt((z1_start-z_sp)**2 + (r1_start-r_sp)**2)
+    rmrs1_end = is_neg*np.sqrt((z1_end-z_sp)**2 + (r1_end-r_sp)**2)
     
     r2_start, z2_start = 1.492041, 1.19418 
     r2_end, z2_end = 1.492716, 1.18709 
-    rmrs2_start = 1*np.sqrt((z2_start-z_sp)**2 + (r2_start-r_sp)**2)
-    rmrs2_end = 1*np.sqrt((z2_end-z_sp)**2 + (r2_end-r_sp)**2)
+    rmrs2_start = np.sqrt((z2_start-z_sp)**2 + (r2_start-r_sp)**2)
+    rmrs2_end = np.sqrt((z2_end-z_sp)**2 + (r2_end-r_sp)**2)
     
     r3_start, z3_start = 1.493556, 1.16204
     r3_end, z3_end = 1.490536, 1.1552 
@@ -444,7 +447,7 @@ def plot_surf_nc(nP10, dt10, nT10, \
     if norm!=None: plt.ylabel('\u0393$_{W,outgoing}$ / \u0393$_{%s,incoming}$'%norm)
     if norm==None: plt.ylabel('\u0393$_{W,outgoing}$')
     plt.ticklabel_format(axis='y',style='sci',scilimits=(-2,2))
-    plt.legend(fontsize=20)#loc='upper left')
+    plt.legend(fontsize=28)#loc='upper left')
     plt.title('GITR Predicted Erosion and \n Redeposition Profiles, \
             nP='+str(nP10[0])+'e'+str(nP10[1])+', dt=1e-'+str(dt10)+', nT='+str(nT10[0])+'e'+str(nT10[1]), fontsize=30)
     plt.show(block=False)

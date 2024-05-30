@@ -332,7 +332,7 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     plt.show(block=False)
     plt.close()
     
-    rmrsCoarse = np.append(rmrsCoarse[:4],rmrsCoarse[5:]) #remove after debugging some pre-PSI nonsense
+    #rmrsCoarse = np.append(rmrsCoarse[:4],rmrsCoarse[5:]) #remove after debugging some pre-PSI nonsense
     tile_shift_indices = [1,8]
     if tile_shift_indices != []:
         for i in tile_shift_indices:
@@ -346,13 +346,13 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     plt.scatter(rmrsFine, rmrsTestFine, s=1, color='cyan', label='Fine Coords')
     rmrsTestCoarse = np.ones(len(rmrsMidCoarse))
     rmrsTestFine = np.ones(len(rmrsMid))
-    plt.scatter(rmrsMidCoarse[1:-1], rmrsTestCoarse[1:-1], s=5, color='magenta', label='Coarse Mids')
+    plt.scatter(rmrsMidCoarse[:-1], rmrsTestCoarse[:-1], s=5, color='magenta', label='Coarse Mids')
     #plt.scatter(rmrsMid, rmrsTestFine, s=1, color='magenta', label='Fine')
     
     plt.title('Ones plotted rmrs coord values')
     plt.xlabel('rmrs a.k.a. D-Dsep [m]')
     plt.legend()
-    plt.show(block=False)
+    plt.show(block=True)
     plt.close()
     print('TEST')
     print('\n')
@@ -369,11 +369,12 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
         plt.scatter(rSurfCoarse, zSurfCoarse, marker='.', s=20, color='green')
         plt.scatter(r_final[W_indices], z_final[W_indices], marker='.', s=10, color='violet')
         plt.scatter(rSurfFine[strikepoint_index], zSurfFine[strikepoint_index], label='Strikepoint', marker='x', color='k', s=150, zorder=5)
-        plt.legend()
+        plt.legend(loc=2)
         plt.axis('scaled')
+        plt.xlim(1.43,1.52)
         plt.xlabel('r [m]')
         plt.ylabel('z [m]')
-        plt.title('Cross Section of SAS-VW Divertor')
+        plt.title('Case 3: Progressive Angle OSP \n and downward Bx▽B drift ')
         plt.savefig('plots/geom/makeGeom.png')
         plt.show(block=True)
     
