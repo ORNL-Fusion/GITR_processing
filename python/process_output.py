@@ -7,16 +7,17 @@ import matplotlib.path as path
 import netCDF4
 import solps
 
-run_directory = '/pscratch/sd/h/hayes/sasvw-pa-fav-surface'
+run_directory = '../../GITR/scratch'
 
 W_surf_indices = np.arange(11,22)
 tile_shift_indices = [1,9]
 Bangle_shift_indices = [3,8,9]
-#r_sp, z_sp = 1.49829829, 1.19672716 #prog angle & favorable
+r_sp, z_sp = 1.49829829, 1.19672716 #prog angle & favorable
 #r_sp, z_sp = 1.50230407, 1.23187366 #vertex & favorable
-r_sp, z_sp = 1.49829824, 1.19672712 #prog angle & unfavorable
+#r_sp, z_sp = 1.49829824, 1.19672712 #prog angle & unfavorable
 
 sys.path.insert(0, os.path.abspath(run_directory+'/setup/'))
+sys.path.insert(0, os.path.abspath('../examples/sasvw-pa-fav/setup/'))
 import makeParticleSource
 
 def init(W_indices = W_surf_indices, plot_rz=False):
@@ -1526,7 +1527,7 @@ def prompt_redep_hist(inputs, fileDir, fileOFF, fileON=None):
 
     return
 
-def particle_diagnostics_hist(nP_input, pdFile, segment_counter=50, hist_plotting=1, plot_blocker=1):
+def particle_diagnostics_hist(nP_input, pdFile, segment_counter=50, hist_plotting=0, plot_blocker=1):
     
     diagnostics = netCDF4.Dataset(pdFile, "r", format="NETCDF4")
     bin_edges_time = diagnostics.variables['bin_edges_time'][:]
@@ -1535,11 +1536,13 @@ def particle_diagnostics_hist(nP_input, pdFile, segment_counter=50, hist_plottin
     bin_edges_angle = diagnostics.variables['bin_edges_angle'][:]
     histogram_particle_angle = diagnostics.variables['histogram_particle_angle'][:][:-1]
     bin_width_angle = bin_edges_angle[1]-bin_edges_angle[0]
+    print('TEST', bin_edges_angle)
     
     profiles, W_indices, r_inner_target, z_inner_target, rmrs = init()
     rmrsCoords = profiles.variables['rmrs_inner_target'][W_surf_indices]
     
     #import refined rmrs at the W surface
+    rmrs_fine_file='../examples/sasvw-pa-fav/setup/assets/rmrs_fine.txt'
     with open(rmrs_fine_file, 'r') as file:
         rmrs_fine = file.readlines()   
     rmrsFine = np.array(rmrs_fine,dtype='float')
@@ -1559,14 +1562,14 @@ def particle_diagnostics_hist(nP_input, pdFile, segment_counter=50, hist_plottin
         plt.xlabel('Logarithmic Time [log(sec)]')
         plt.ylabel('Counts\n')
         plt.title('Flight Time before Striking the Surface \n Surface %i, nP=%.4E'%(segment_counter,nP))
-        plt.show(block=plot_blocker)
+        plt.show(block=False)
         
         plt.close()
         plt.bar(bin_edges_angle[:-1], histogram_particle_angle_real[segment_counter], width=bin_width_angle, color='darkkhaki', align='edge', edgecolor='k')
         plt.xlabel('Angle [rad]')
         plt.ylabel('Counts')
         plt.title('Flight Angle before Striking the Surface \n Surface %i, nP=%.4E'%(segment_counter,nP))
-        plt.show(block=plot_blocker)
+        plt.show(block=False)
         
     ###################################################################
     # Calculate average, std, and median flight times and flight angles
@@ -1632,7 +1635,7 @@ def particle_diagnostics_hist(nP_input, pdFile, segment_counter=50, hist_plottin
     plt.title('Average Flight Time before Striking the Surface')
     plt.legend()
     plt.show(block=plot_blocker)
-    if not plot_blocker: plt.savefig('plots/avg_flight_time.png')
+    #if not plot_blocker: plt.savefig('plots/avg_flight_time.png')
     
     plt.close()
     if tile_shift_indices != []:
@@ -1651,7 +1654,7 @@ def particle_diagnostics_hist(nP_input, pdFile, segment_counter=50, hist_plottin
     plt.title('Average Flight Angle before Striking the Surface')
     plt.legend()
     plt.show(block=plot_blocker)
-    if not plot_blocker: plt.savefig('plots/avg_flight_angle.png')
+    #if not plot_blocker: plt.savefig('plots/avg_flight_angle.png')
     
     #make histogram of all particles binned into the TIME bins
     histogram_particle_time_AllSegs = np.sum(histogram_particle_time, axis=0)
@@ -1672,7 +1675,7 @@ def particle_diagnostics_hist(nP_input, pdFile, segment_counter=50, hist_plottin
     
     plt.close()
     plt.bar(bin_edges_angle[:-1], histogram_particle_angle_AllSegs/nP, width=bin_width_angle, color='darkkhaki', align='edge', edgecolor='k')
-    plt.xlabel('Angle [rad]')
+    plt.xlabel('Logarithmic Angle [rad]')
     plt.ylabel('Counts\n')
     plt.title('Flight Angle before Striking the Surface')# \n nP=%.4E'%(nP))
     plt.show(block=plot_blocker)
@@ -1681,7 +1684,7 @@ def particle_diagnostics_hist(nP_input, pdFile, segment_counter=50, hist_plottin
 
 if __name__ == "__main__":
     #plot_history2D(run_directory+'/output/history.nc')
-    plot_surf_nc([1,6], 9, [1,6], run_directory+'/output/surface.nc', run_directory+'/output/positions.nc')
+    #plot_surf_nc([1,6], 9, [1,6], run_directory+'/output/surface.nc', run_directory+'/output/positions.nc')
     #plot_surf_nc(5e2, 8, 5, 'forces24.02.20/surfaces/CConly.nc', 'forces24.02.20/positions/CConly.nc', norm='')
     #analyze_leakage('perlmutter/history_D3t6.nc')
     #analyze_forces('gradT dv', 't', rzlim=True, colorbarLimits=[], dt=1e-8)
@@ -1694,4 +1697,4 @@ if __name__ == "__main__":
     #ionization_analysis([0,0], 'perlmutter/production/','history_IFp54T4.nc', 'positions_IFp54T4.nc')
     #prompt_redep_hist([2,8,5], 'perlmutter/forces24.02.10/','positions_BEF.nc')
     #particle_diagnostics_hist(4, 'perlmutter/production/particle_histograms_test.nc')
-    #particle_diagnostics_hist(1e4, '../../../../GITR/scratch/output/particle_histograms.nc')
+    particle_diagnostics_hist(1e4, run_directory+'/output/particle_histograms_p4t5.nc')
