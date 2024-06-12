@@ -7,7 +7,7 @@ A = readmatrix("sas-vw_v005_mod.txt")./1000;
 figure(1)
 hold on
 for i=1:length(A)-1
-    ogr = plot(A(i:i+1,1),A(i:i+1,2),'-oc','Linewidth',1,'HandleVisibility','off');
+    ogr = plot(A(i:i+1,1),A(i:i+1,2),'-ob','Linewidth',1,'HandleVisibility','off');
 end
 %plot([A(end,1),A(1,1)],[A(end,2),A(1,2)],'-om','DisplayName','closing point');
 %print 'plotted ogr'
@@ -63,17 +63,27 @@ end
 
 %get from gitrGeometry.cfg
 
-fid = fopen('gitrGeometry.cfg');
+fid = fopen('../../input/gitrGeometry.cfg');
 
+tline = fgetl(fid);
+tline = fgetl(fid);
 tline = fgetl(fid);
 tline = fgetl(fid);
 
 W_indices = [70:70+110];
+x1 = [];
+z1 = [];
 
-for i=1:2
-    tline = fgetl(fid);
-    
-    evalc(tline);
+for i = 5:241
+    x1 = [x1, str2double(strip(fgetl(fid)))];
+end
+
+tline = fgetl(fid);
+tline = fgetl(fid);
+tline = fgetl(fid);
+
+for i = 245:481
+    z1 = [z1, str2double(strip(fgetl(fid)))];
 end
 
 %set real wall coords for adjusted 3rd leg
@@ -81,7 +91,7 @@ r_real = [1502, 1485.5, 1491.05, 1499.909817]/1000;
 z_real = [1163, 1123, 1112.75, 1110.921234]/1000;
 
 hold on
-gitr = plot(x1,z1,'c','linewidth',1);
+gitr = plot(x1,z1,'b','linewidth',1);
 W = plot(x1(W_indices),z1(W_indices),'m','linewidth',1);
 scatter(x1(W_indices),z1(W_indices),50,'.','m');
 real_leg = plot(r_real, z_real, 'color', "#77AC30", 'linewidth',2);
@@ -89,12 +99,18 @@ strikepoint = plot([1.49829829],[1.19672716],'pentagram');
 strikepoint.MarkerFaceColor = [1 0.5 0];
 strikepoint.MarkerSize = 20;
 %legend([ogr,b2f,gitr], 'ogr wall','b2fgmtry target','GITR boundary')
-[h, icons] = legend([gitr,W,real_leg,strikepoint],'Carbon','Tungsten','Real W 3rd Leg','Strikepoint','fontsize',30);
+%[h, icons] = legend([gitr,W],'Carbon','Tungsten','fontsize',40);
+[h, icons] = legend([gitr,W,real_leg,strikepoint],'Carbon','Tungsten','Real W 3rd Leg','Strikepoint','fontsize',40,'Location','northwest');
 
 axis equal
-title('Cross Section of SAS-VW Geometry and SOLPS-ITER Grid','fontsize',30)
-xlabel('r [m]','fontsize',30)
-ylabel('z [m]','fontsize',30)
+title('Cross Section of SAS-VW Geometry and SOLPS-ITER Grid','fontsize',40)
+%title('Cross Section of SOLPS-ITER Grid','fontsize',40)
+xlabel('R [m]','fontsize',40)
+ylabel('z [m]','fontsize',40)
+ax = gca;
+ax.FontSize = 30; 
+xlim([0.9, 2.5]);
+ylim([-1, 1]);
 
 
 %%

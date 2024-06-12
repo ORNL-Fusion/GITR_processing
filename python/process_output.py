@@ -7,7 +7,9 @@ import matplotlib.path as path
 import netCDF4
 import solps
 
-run_directory = '../../GITR/scratch'
+run_directory = '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav/output/perlmutter/production'
+setup_directory = '../examples/sasvw-pa-fav/setup'
+rmrs_fine_file='../examples/sasvw-pa-fav/setup/assets/rmrs_fine.txt'
 
 W_surf_indices = np.arange(11,22)
 tile_shift_indices = [1,9]
@@ -21,7 +23,7 @@ sys.path.insert(0, os.path.abspath('../examples/sasvw-pa-fav/setup/'))
 import makeParticleSource
 
 def init(W_indices = W_surf_indices, plot_rz=False):
-    profilesFile = run_directory+'/input/plasmaProfiles.nc'
+    profilesFile = setup_directory+'/../input/plasmaProfiles.nc'
     profiles = netCDF4.Dataset(profilesFile)
     
     #check which target is the region of interest
@@ -41,9 +43,9 @@ def init(W_indices = W_surf_indices, plot_rz=False):
 
     return profiles, W_indices, r_inner_target, z_inner_target, rmrs_coarse
 
-def init_geom(gitr_rz = run_directory+'/setup/assets/gitr_rz.txt', \
-              rmrs_fine_file = run_directory+'/setup/assets/rmrs_fine.txt', \
-              W_fine_file = run_directory+'/setup/assets/W_fine.txt'):
+def init_geom(gitr_rz = setup_directory+'/assets/gitr_rz.txt', \
+              rmrs_fine_file = setup_directory+'/assets/rmrs_fine.txt', \
+              W_fine_file = setup_directory+'/assets/W_fine.txt'):
     
     #import refined rmrs at the W surface
     with open(rmrs_fine_file, 'r') as file:
@@ -123,7 +125,7 @@ def plot_particle_source():
 
 def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
                    basic=0, continuousChargeState=1, endChargeState=0, \
-                   plot_particle_source=1, markersize=0):
+                   plot_particle_source=0, markersize=0):
     
     if plot_particle_source:
         particleSource = netCDF4.Dataset(run_directory+"/input/particleSource.nc", "r", format="NETCDF4")
@@ -160,10 +162,8 @@ def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
     plt.plot(r_wall, z_wall,'-k',linewidth=1.5)
     plt.plot(r_target_fine, z_target_fine,'-m',linewidth=2)
     plt.axis('scaled')
-    plt.xlabel('r [m]')
+    plt.xlabel('R [m]')
     plt.ylabel('z [m]')
-    plt.title('W Impurity Trajectories', fontsize=14)
-    plt.show(block=True)
         
     #define charge state to color mapping
     colors = {0:'black', 1:'firebrick', 2:'darkorange', 3:'gold', 4:'limegreen', 5:'dodgerblue', \
@@ -205,23 +205,23 @@ def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
         data_key = mpatches.Patch(color=legend_dict[key], label=key)
         patchList.append(data_key)
 
-    if basic==0: plt.legend(handles=patchList, fontsize=12, loc=3)
+    if basic==0: plt.legend(handles=patchList, fontsize=8, loc=2) #upper-left=2, lower-left=3
     
     #plt.xlim(1.0, 2.0)
     #plt.ylim(-1.5, 1.5)
     plt.xlim(1.35, 1.525)
     plt.ylim(1.05, 1.23)
     #plt.show(block=False)
-    plt.savefig(run_directory+'/output/plots/history.svg')
+    plt.title('W Impurity Trajectories', fontsize=14)
+    plt.savefig('history.svg')
     plt.close()
-
     return
 
 def plot_surf_nc(nP10, dt10, nT10, \
-                 surface_file="surface.nc", positions_file='', \
-                 gitr_rz=run_directory+'/setup/assets/gitr_rz.txt', \
-                 W_fine_file=run_directory+'/setup/assets/W_fine.txt', \
-                 rmrs_fine_file=run_directory+'/setup/assets/rmrs_fine.txt', \
+                 surface_file="surface.nc", positions_file='positions.nc', \
+                 gitr_rz=setup_directory+'/assets/gitr_rz.txt', \
+                 W_fine_file=setup_directory+'/assets/W_fine.txt', \
+                 rmrs_fine_file=setup_directory+'/assets/rmrs_fine.txt', \
                  norm=None, plot_cumsum=0):
     
     profiles, W_indices, r_inner_target, z_inner_target, rmrs = init()
@@ -231,14 +231,14 @@ def plot_surf_nc(nP10, dt10, nT10, \
                 surfW = W_surf_indices, \
                 tile_shift_indices = tile_shift_indices, \
                 Bangle_shift_indices = Bangle_shift_indices, \
-                geom = run_directory+'/input/gitrGeometry.cfg', \
-                profiles_file = run_directory+'/input/plasmaProfiles.nc', \
-                gitr_rz = run_directory+'/setup/assets/gitr_rz.txt', \
-                rmrs_fine_file = run_directory+'/setup/assets/rmrs_fine.txt', \
-                W_fine_file = run_directory+'/setup/assets/W_fine.txt', \
-                ftDFile = run_directory+'/setup/assets/ftridynBackgroundD.nc', \
-                ftCFile = run_directory+'/setup/assets/ftridynBackgroundC.nc', \
-                ftWFile = run_directory+'/input/ftridynSelf.nc', \
+                geom = setup_directory+'/../input/gitrGeometry.cfg', \
+                profiles_file = setup_directory+'/../input/plasmaProfiles.nc', \
+                gitr_rz = setup_directory+'/assets/gitr_rz.txt', \
+                rmrs_fine_file = setup_directory+'/assets/rmrs_fine.txt', \
+                W_fine_file = setup_directory+'/assets/W_fine.txt', \
+                ftDFile = setup_directory+'/assets/ftridynBackgroundD.nc', \
+                ftCFile = setup_directory+'/assets/ftridynBackgroundC.nc', \
+                ftWFile = setup_directory+'/../input/ftridynSelf.nc', \
                 configuration = 'random', \
                 use_fractal_tridyn_outgoing_IEADS = 1, \
                 plot_variables = 0)
@@ -437,7 +437,7 @@ def plot_surf_nc(nP10, dt10, nT10, \
             else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
     if Bangle_shift_indices != []:
         for i,v in enumerate(Bangle_shift_indices):
-            if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\Psi_B$')
+            if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\\alpha_B$')
             else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
     
     plt.plot(rmrsFine,grossEro_norm,'r', label='Gross Erosion')
@@ -449,8 +449,7 @@ def plot_surf_nc(nP10, dt10, nT10, \
     if norm==None: plt.ylabel('\u0393$_{W,outgoing}$')
     plt.ticklabel_format(axis='y',style='sci',scilimits=(-2,2))
     plt.legend(fontsize=28)#loc='upper left')
-    plt.title('GITR Predicted Erosion and \n Redeposition Profiles, \
-            nP='+str(nP10[0])+'e'+str(nP10[1])+', dt=1e-'+str(dt10)+', nT='+str(nT10[0])+'e'+str(nT10[1]), fontsize=30)
+    plt.title('GITR Predicted Erosion and Redeposition Profiles,\nnP='+str(nP10[0])+'e'+str(nP10[1])+', dt=1e-'+str(dt10)+', nT='+str(nT10[0])+'e'+str(nT10[1]), fontsize=30)
     plt.show(block=False)
     #plt.savefig('plots/surface.png')
     
@@ -1542,7 +1541,6 @@ def particle_diagnostics_hist(nP_input, pdFile, segment_counter=50, hist_plottin
     rmrsCoords = profiles.variables['rmrs_inner_target'][W_surf_indices]
     
     #import refined rmrs at the W surface
-    rmrs_fine_file='../examples/sasvw-pa-fav/setup/assets/rmrs_fine.txt'
     with open(rmrs_fine_file, 'r') as file:
         rmrs_fine = file.readlines()   
     rmrsFine = np.array(rmrs_fine,dtype='float')
@@ -1682,9 +1680,10 @@ def particle_diagnostics_hist(nP_input, pdFile, segment_counter=50, hist_plottin
         
     return
 
+
 if __name__ == "__main__":
     #plot_history2D(run_directory+'/output/history.nc')
-    #plot_surf_nc([1,6], 9, [1,6], run_directory+'/output/surface.nc', run_directory+'/output/positions.nc')
+    #plot_surf_nc([1,6], 9, [1,6], run_directory+'/surface_S.nc', run_directory+'/positions_S.nc')
     #plot_surf_nc(5e2, 8, 5, 'forces24.02.20/surfaces/CConly.nc', 'forces24.02.20/positions/CConly.nc', norm='')
     #analyze_leakage('perlmutter/history_D3t6.nc')
     #analyze_forces('gradT dv', 't', rzlim=True, colorbarLimits=[], dt=1e-8)
@@ -1692,9 +1691,10 @@ if __name__ == "__main__":
     #init()
     #plot_gitr_gridspace()
     #plot_particle_source()
-    #plot_history2D("../../../../GITR/scratch/output/history.nc")
+    plot_history2D(setup_directory+"/../output/perlmutter/production/forces24.02.20/histories/gradT.nc",\
+                   bFile=setup_directory+'/../input/bField.nc')
     #spectroscopy(1006929636574578.9,2,specFile='perlmutter/D3p5t9T6/spec.nc')
     #ionization_analysis([0,0], 'perlmutter/production/','history_IFp54T4.nc', 'positions_IFp54T4.nc')
     #prompt_redep_hist([2,8,5], 'perlmutter/forces24.02.10/','positions_BEF.nc')
     #particle_diagnostics_hist(4, 'perlmutter/production/particle_histograms_test.nc')
-    particle_diagnostics_hist(1e4, run_directory+'/output/particle_histograms_p4t5.nc')
+    #particle_diagnostics_hist(1e4, run_directory+'/output/particle_histograms.nc')

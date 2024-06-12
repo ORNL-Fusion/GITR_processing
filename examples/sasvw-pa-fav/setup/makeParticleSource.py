@@ -248,7 +248,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
                 else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
         if Bangle_shift_indices != []:
             for i,v in enumerate(Bangle_shift_indices):
-                if i==0: plt.axvline(x=rmrsCoarse[v], color='k', linestyle='dotted', label='$\Delta\Psi_B$')
+                if i==0: plt.axvline(x=rmrsCoarse[v], color='k', linestyle='dotted', label='$\Delta\\alpha_B$')
                 else: plt.axvline(x=rmrsCoarse[v], color='k', linestyle='dotted')
         
         plt.plot(rmrsFine, fluxC1, 'firebrick', label='C$^{1+}$')
@@ -271,12 +271,18 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
         plt.ylabel('Flux [m$^{-2}$s$^{-1}$]', fontsize=16)
         plt.legend(loc='upper left', fontsize=12)
         plt.title('C flux to W surface', fontsize=24)
-        plt.show(block=False)
+        plt.show(block=True)
         plt.savefig('plots/particle-source/incident_flux.png')
 
         plt.close()
-        #plt.rcParams.update({'font.size':16})
-        #plt.rcParams.update({'lines.linewidth':3})
+        if tile_shift_indices != []:
+            for i,v in enumerate(tile_shift_indices):
+                if i==0: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', label='Wall\nVertices')
+                else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
+        if Bangle_shift_indices != []:
+            for i,v in enumerate(Bangle_shift_indices):
+                if i==0: plt.axvline(x=rmrsCoarse[v], color='k', linestyle='dotted', label='$\Delta\\alpha_B$')
+                else: plt.axvline(x=rmrsCoarse[v], color='k', linestyle='dotted')
         
         plt.plot(rmrsFine, spyldD, 'black', label='D$^{1+}$')
         plt.plot(rmrsFine, spyldC1, 'firebrick', label='C$^{1+}$')
@@ -292,7 +298,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
         plt.xlabel('D-Dsep [m]', fontsize=14)
         plt.ylabel('Sputtering Yield', fontsize=16)
         plt.title('W sputtering yield by incident ions',fontsize=24)
-        plt.show(block=False)
+        plt.show(block=True)
         plt.savefig('plots/particle-source/spyld.png')
         
         plt.close()
@@ -302,7 +308,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
                 else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
         if Bangle_shift_indices != []:
             for i,v in enumerate(Bangle_shift_indices):
-                if i==0: plt.axvline(x=rmrsCoarse[v], color='k', linestyle='dotted', label='$\Delta\Psi_B$')
+                if i==0: plt.axvline(x=rmrsCoarse[v], color='k', linestyle='dotted', label='$\Delta\\alpha_B$')
                 else: plt.axvline(x=rmrsCoarse[v], color='k', linestyle='dotted')
         
         plt.plot(rmrsFine, sputt_fluxD, 'black', label='D$^{1+}$')
@@ -317,7 +323,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
         plt.ylabel('Flux [m$^{-2}$s$^{-1}$]', fontsize=16)
         plt.legend(loc='upper left', fontsize=12)
         plt.title('Flux of sputtered W', fontsize=24)
-        plt.show(block=False)
+        plt.show(block=True)
         plt.savefig('plots/particle-source/sputt_flux_charge_dependent.png')
 
         plt.close()
@@ -976,7 +982,7 @@ if __name__ == "__main__":
                 ftDFile = 'assets/ftridynBackgroundD.nc', \
                 ftCFile = 'assets/ftridynBackgroundC.nc', \
                 configuration = 'random', \
-                plot_variables = 0)
+                plot_variables = 1)
 
 
 
