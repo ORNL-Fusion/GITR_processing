@@ -229,7 +229,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     sputt_fluxC5 = spyldC5*fluxC5
     sputt_fluxC6 = spyldC6*fluxC6
     sputt_flux = sputt_fluxD + sputt_fluxC1 + sputt_fluxC2 + sputt_fluxC3 + sputt_fluxC4 + sputt_fluxC5 + sputt_fluxC6
-    #print('SPUTT FLUX',len(sputt_flux),'\n',sputt_flux)
+    print('SPUTT FLUX',len(sputt_flux),'\n',sputt_flux)
     print('\n')
     print('W eroded flux per nP:', np.sum(sputt_flux)/nP, 'm-2 s-1')
 
@@ -967,7 +967,7 @@ if __name__ == "__main__":
     
     distributed_source(nP=int(1e5), surfW=np.arange(11,22), \
                 tile_shift_indices = [1,9], \
-                Bangle_shift_indices = [3,8,9], \
+                Bangle_shift_indices = [2,8,9], \
                 geom = '../input/gitrGeometry.cfg', \
                 profiles_file = '../input/plasmaProfiles.nc', \
                 gitr_rz = 'assets/gitr_rz.txt', \

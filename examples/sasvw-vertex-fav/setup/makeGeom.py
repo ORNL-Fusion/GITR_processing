@@ -260,11 +260,16 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
         plt.plot(r_right_target, z_right_target, 'red')
         plt.scatter(r_final, z_final, s=0.1)
         plt.axis('scaled')
-        plt.xlabel('r [m]')
+        plt.xlabel('R [m]')
         plt.ylabel('z [m]')
         plt.title('DIII-D SAS-VW Geometry')
         plt.savefig('plots/geom/solps_final.pdf')
         plt.show(block=show_plots)
+    
+    #find strikepoint
+    rmrs_target = profiles.variables['rmrs_inner_target'][:]
+    strikepoint_index = np.where(rmrs_target==0)[0]
+    print('Strikepoint Coords:', r_right_target[strikepoint_index], z_right_target[strikepoint_index])
     
     ###################################################################
     # Increase Fineness of W Divertor Surface
@@ -289,7 +294,7 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
         plt.plot(r_right_target[W_indices_profiles], z_right_target[W_indices_profiles], 'c', label='W Indices Relative to profiles.nc', linewidth=1)
         plt.legend()
         plt.axis('scaled')
-        plt.xlabel('r [m]')
+        plt.xlabel('R [m]')
         plt.ylabel('z [m]')
         plt.title('Upper Outer SAS-VW Divertor in DIII-D \n makeGeom')
         plt.savefig('plots/geom/makeGeomCoarse.png')
@@ -317,21 +322,8 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     print('\n')
     print('TEST')
     rmrsMidCoarse = profiles.variables['rmrs_inner_target_midpoints'][W_indices_profiles]
-    '''
-    #print(rmrsMidCoarse)
-    #print(rmrsMid)
-    rmrsTestCoarse = np.ones(len(rmrsMidCoarse))
-    rmrsTestFine = np.ones(len(rmrsMid))
+
     plt.close()
-    tile_shift_indices = [1,9]
-    if tile_shift_indices != []:
-        for i in tile_shift_indices:
-            plt.axvline(x=rmrsCoarse[i], color='k', linestyle='dotted')
-    plt.scatter(rmrsMidCoarse, rmrsTestCoarse, s=5, color='orange', label='Coarse')
-    plt.scatter(rmrsMid, rmrsTestFine, s=1, color='cyan', label='Fine')
-    '''
-    plt.close()
-    tile_shift_indices = [2,6]
     if tile_shift_indices != []:
         for i in tile_shift_indices:
             plt.axvline(x=rmrsCoarse[i], color='k', linestyle='dotted')
@@ -345,21 +337,15 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     mrsTestCoarse = np.ones(len(rmrsMidCoarse))
     rmrsTestFine = np.ones(len(rmrsMid))
     plt.scatter(rmrsMidCoarse, rmrsTestCoarse, s=5, color='violet', label='Coarse Mids')
-    #plt.scatter(rmrsMid, rmrsTestFine, s=1, color='magenta', label='Fine')
+    #plt.scatter(rmrsMid, rmrsTestFine, s=1, color='magenta', label='Fine Mids')
     
     plt.title('Ones plotted rmrs values')
     plt.xlabel('rmrs a.k.a. D-Dsep [m]')
     plt.legend()
-    plt.show(block=False)
+    plt.show(block=True)
     plt.close()
     print('TEST')
     print('\n')
-    
-    
-    #find strikepoint
-    strikepoint_index = np.where(rmrsFine==0)[0]
-    if strikepoint_index.size == 0: strikepoint_index = 0
-    print('Strikepoint Coords:', rSurfFine[strikepoint_index], zSurfFine[strikepoint_index])
     
     if plot_variables:
         plt.close()
@@ -367,16 +353,16 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
         plt.plot(r_final[W_indices], z_final[W_indices], 'violet', label='Tungsten', linewidth=0.5)
         plt.scatter(rSurfCoarse, zSurfCoarse, marker='.', s=20, color='green')
         plt.scatter(r_final[W_indices], z_final[W_indices], marker='.', s=10, color='violet')
-        plt.scatter(rSurfFine[strikepoint_index], zSurfFine[strikepoint_index], label='Strikepoint', marker='x', color='k', s=150, zorder=5)
+        plt.scatter(r_right_target[strikepoint_index], z_right_target[strikepoint_index], label='Strikepoint', marker='x', color='k', s=150, zorder=5)
         plt.legend(loc=2)
         plt.axis('scaled')
         plt.xlim(1.43,1.52)
-        plt.xlabel('r [m]')
+        plt.xlabel('R [m]')
         plt.ylabel('z [m]')
         plt.title('Case 1: Vertex OSP \n and upward Bx▽B drift')
         #plt.title('Cross Section of SAS-VW Divertor')
         plt.savefig('plots/geom/makeGeom.png')
-        plt.show(block=True)
+        plt.show(block=show_plots)
     
     #print('length of 3rd leg:',np.sqrt((rSurfCoarse[-1]-rSurfCoarse[-2])**2+(zSurfCoarse[-1]-zSurfCoarse[-2])**2))
     
@@ -387,7 +373,7 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
         #plt.scatter(r_final, z_final, s=1)
         plt.plot(r_final[W_indices], z_final[W_indices], 'orchid', label='Tungsten')
         plt.axis('scaled')
-        plt.xlabel('r [m]')
+        plt.xlabel('R [m]')
         plt.ylabel('z [m]')
         plt.title('Cross Section of DIII-D Geometry')
         plt.legend()
@@ -436,7 +422,7 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     return
 
 if __name__ == "__main__":
-    main(plot_variables = 1, show_plots=0)
+    main(plot_variables=1, show_plots=1)
 
 
 

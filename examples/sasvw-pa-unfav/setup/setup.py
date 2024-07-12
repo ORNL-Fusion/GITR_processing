@@ -9,8 +9,8 @@ nP = int(1e4)
 run_directory = '..'
 
 W_indices = np.arange(11,22)
-tile_shift_indices = [1,8] #change to [1,9] after debugging
-Bangle_shift_indices = [2,7] #change to [2,8,9] after debugging
+tile_shift_indices = [1,9] #change to [1,9] after debugging
+Bangle_shift_indices = [2,8,9] #change to [2,8,9] after debugging
 
 print_separator = '\n-------------------------------------------------\n'
 

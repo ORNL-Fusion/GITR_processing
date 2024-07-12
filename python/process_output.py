@@ -7,9 +7,14 @@ import matplotlib.path as path
 import netCDF4
 import solps
 
-run_directory = '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav/output/perlmutter/production'
+################################################
+# setting directories and special constants
+################################################
+
+run_directory = '/Users/Alyssa/Dev/GITR/scratch'
+#run_directory = '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav/output/perlmutter/production'
 setup_directory = '../examples/sasvw-pa-fav/setup'
-rmrs_fine_file='../examples/sasvw-pa-fav/setup/assets/rmrs_fine.txt'
+rmrs_fine_file = setup_directory+'/assets/rmrs_fine.txt'
 
 W_surf_indices = np.arange(11,22)
 tile_shift_indices = [1,9]
@@ -21,6 +26,10 @@ r_sp, z_sp = 1.49829829, 1.19672716 #prog angle & favorable
 sys.path.insert(0, os.path.abspath(run_directory+'/setup/'))
 sys.path.insert(0, os.path.abspath('../examples/sasvw-pa-fav/setup/'))
 import makeParticleSource
+
+################################################
+# function definitions
+################################################
 
 def init(W_indices = W_surf_indices, plot_rz=False):
     profilesFile = setup_directory+'/../input/plasmaProfiles.nc'
@@ -209,11 +218,11 @@ def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
     
     #plt.xlim(1.0, 2.0)
     #plt.ylim(-1.5, 1.5)
-    plt.xlim(1.35, 1.525)
-    plt.ylim(1.05, 1.23)
-    #plt.show(block=False)
-    plt.title('W Impurity Trajectories', fontsize=14)
-    plt.savefig('history.svg')
+    plt.xlim(1.4, 1.525)
+    plt.ylim(1.1, 1.23)
+    plt.title('W trajectories with\n friction force off', fontsize=14)
+    plt.show(block=True)
+    #plt.savefig('history.svg')
     plt.close()
     return
 
@@ -415,7 +424,7 @@ def plot_surf_nc(nP10, dt10, nT10, \
             else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
     if Bangle_shift_indices != []:
         for i,v in enumerate(Bangle_shift_indices):
-            if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\Psi_B$')
+            if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\alpha_B$')
             else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
     
     plt.plot(rmrsFine, 100*(grossEro-partSource_flux)/grossEro)
@@ -705,7 +714,7 @@ def analyze_leakage(historyFile, bFile = '../input/bField.nc'):
 
 def analyze_forces(varString, component, rzlim=True, colorbarLimits=[], dt=1e-8):
     #import wall geometry to plot over
-    gitr_rz='../setup/assets/gitr_rz.txt'
+    gitr_rz=setup_directory+'/assets/gitr_rz.txt'
     with open(gitr_rz, 'r') as file:
         wall = file.readlines()
         
@@ -716,7 +725,7 @@ def analyze_forces(varString, component, rzlim=True, colorbarLimits=[], dt=1e-8)
         r_wall[i] = float(point[0])
         z_wall[i] = float(point[1])
     
-    profilesFile = '../input/plasmaProfiles.nc'
+    profilesFile = setup_directory+'/../input/plasmaProfiles.nc'
     profiles = netCDF4.Dataset(profilesFile)
     gridr = profiles.variables['gridr'][:]
     gridz = profiles.variables['gridz'][:]
@@ -1015,7 +1024,7 @@ def analyze_forces(varString, component, rzlim=True, colorbarLimits=[], dt=1e-8)
 def plot_forces(var, titleString, gridrz, vartype='F', rzlim=True, colorbarLimits=[]):
     [gridr, gridz, r_wall, z_wall] = gridrz
     plt.rcParams.update({'pcolor.shading':'auto'})
-    plt.rcParams.update({'image.cmap':'rainbow'})
+    plt.rcParams.update({'image.cmap':'coolwarm'})
     rlim = [1.375, 1.575]
     zlim = [1.05, 1.25]
     
@@ -1042,7 +1051,7 @@ def plot_forces(var, titleString, gridrz, vartype='F', rzlim=True, colorbarLimit
     if colorbarLimits != []: plot.set_clim(vmin=colorbarLimits[0],vmax=colorbarLimits[1])
     if vartype=='F': plt.colorbar(label='\n Force [N]')
     if vartype=='v': plt.colorbar(label='\n Velocity [m/s]')
-    plt.xlabel('r [m]')
+    plt.xlabel('R [m]')
     plt.ylabel('z [m]')
     plt.title(titleString)
     plt.axis('Scaled')
@@ -1082,9 +1091,9 @@ def theoretical_sheath(profiles, W_surf):
 
 def ionization_analysis(plotting, output_dir, historyFile, positionsFile, \
                         use_coarse_surfs=0, \
-                        gitr_rz='../setup/assets/gitr_rz.txt', \
-                        W_fine_file='../setup/assets/W_fine.txt', \
-                        rmrs_fine_file='../setup/assets/rmrs_fine.txt'):    
+                        gitr_rz=setup_directory+'/assets/gitr_rz.txt', \
+                        W_fine_file=setup_directory+'/assets/W_fine.txt', \
+                        rmrs_fine_file=setup_directory+'/assets/rmrs_fine.txt'):    
     profiles, W_indices, r_inner_target, z_inner_target, rmrs = init(W_surf_indices)
     history = netCDF4.Dataset(output_dir+historyFile)
     positions = netCDF4.Dataset(output_dir+positionsFile)
@@ -1337,7 +1346,7 @@ def ionization_analysis(plotting, output_dir, historyFile, positionsFile, \
             else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
     if Bangle_shift_indices != []:
         for i,v in enumerate(Bangle_shift_indices):
-            if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\Psi_B$')
+            if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\\alpha_B$')
             else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
     
     plt.errorbar(rmrsPlotting, avg_distance_to_first_ionization*1000, std_distance_to_first_ionization*1000, ecolor='lightpink', fmt='saddlebrown')
@@ -1355,7 +1364,7 @@ def ionization_analysis(plotting, output_dir, historyFile, positionsFile, \
             else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
     if Bangle_shift_indices != []:
         for i,v in enumerate(Bangle_shift_indices):
-            if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\Psi_B$')
+            if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\\alpha_B$')
             else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
             
     plt.plot(rmrsPlotting, median_distance_to_first_ionization*1000, marker='o', color='saddlebrown')
@@ -1372,7 +1381,7 @@ def ionization_analysis(plotting, output_dir, historyFile, positionsFile, \
             else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
     if Bangle_shift_indices != []:
         for i,v in enumerate(Bangle_shift_indices):
-            if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\Psi_B$')
+            if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\\alpha_B$')
             else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
     
     plt.plot(rmrsPlotting, frac_ioniz_in_Chodura, label='Chodura', color='darkorange')
@@ -1391,7 +1400,7 @@ def ionization_analysis(plotting, output_dir, historyFile, positionsFile, \
             else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
     if Bangle_shift_indices != []:
         for i,v in enumerate(Bangle_shift_indices):
-            if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\Psi_B$')
+            if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\\alpha_B$')
             else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
     
     plt.plot(rmrsPlotting, frac_prompt_Chodura, label='Chodura', color='darkorange')
@@ -1410,7 +1419,7 @@ def ionization_analysis(plotting, output_dir, historyFile, positionsFile, \
             else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
     if Bangle_shift_indices != []:
         for i,v in enumerate(Bangle_shift_indices):
-            if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\Psi_B$')
+            if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\\alpha_B$')
             else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
     
     plt.plot(rmrsPlotting, frac_noHitWall_Chodura, label='Chodura', color='darkorange')
@@ -1432,7 +1441,7 @@ def ionization_analysis(plotting, output_dir, historyFile, positionsFile, \
             else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
     if Bangle_shift_indices != []:
         for i,v in enumerate(Bangle_shift_indices):
-            if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\Psi_B$')
+            if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\\alpha_B$')
             else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
             
     plt.plot(rmrsPlotting, frac_prompt_Chodura, label='Prompt Redeposition', color='saddlebrown')
@@ -1444,6 +1453,11 @@ def ionization_analysis(plotting, output_dir, historyFile, positionsFile, \
     plt.legend()
     if plotting[1]==1: plt.show(block=True)
     else: plt.savefig(output_dir+'plots/fracs_Chodura.png')
+    rmrsMidpoints = rmrsPlotting[1:] + (rmrsPlotting[1:]-rmrsPlotting[:-1])/2
+    top = frac_prompt_Chodura[1:-1] * (rmrsMidpoints[1:]-rmrsMidpoints[:-1])
+    bottom = rmrsMidpoints[-1]-rmrsMidpoints[1]
+    print('Unweighted Average Prompt Fraction (Chodura):', np.average(frac_prompt_Chodura))
+    print('Weighted Average Prompt Fraction (Chodura):', np.sum(top) / bottom)
     
     plt.close()
     if tile_shift_indices != []:
@@ -1452,7 +1466,7 @@ def ionization_analysis(plotting, output_dir, historyFile, positionsFile, \
             else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
     if Bangle_shift_indices != []:
         for i,v in enumerate(Bangle_shift_indices):
-            if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\Psi_B$')
+            if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\\alpha_B$')
             else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
     
     plt.plot(rmrsPlotting, frac_prompt_Debye, label='Prompt Redeposition', color='maroon')
@@ -1535,7 +1549,6 @@ def particle_diagnostics_hist(nP_input, pdFile, segment_counter=50, hist_plottin
     bin_edges_angle = diagnostics.variables['bin_edges_angle'][:]
     histogram_particle_angle = diagnostics.variables['histogram_particle_angle'][:][:-1]
     bin_width_angle = bin_edges_angle[1]-bin_edges_angle[0]
-    print('TEST', bin_edges_angle)
     
     profiles, W_indices, r_inner_target, z_inner_target, rmrs = init()
     rmrsCoords = profiles.variables['rmrs_inner_target'][W_surf_indices]
@@ -1623,7 +1636,7 @@ def particle_diagnostics_hist(nP_input, pdFile, segment_counter=50, hist_plottin
             else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
     if Bangle_shift_indices != []:
         for i,v in enumerate(Bangle_shift_indices):
-            if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\Psi_B$')
+            if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\alpha_B$')
             else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
     
     plt.plot(rmrsPlotting, avg_flight_time, 'darkviolet')
@@ -1631,7 +1644,7 @@ def particle_diagnostics_hist(nP_input, pdFile, segment_counter=50, hist_plottin
     plt.xlabel('D-Dsep [m]')
     plt.ylabel('Flight Time [s]')
     plt.title('Average Flight Time before Striking the Surface')
-    plt.legend()
+    #plt.legend()
     plt.show(block=plot_blocker)
     #if not plot_blocker: plt.savefig('plots/avg_flight_time.png')
     
@@ -1642,7 +1655,7 @@ def particle_diagnostics_hist(nP_input, pdFile, segment_counter=50, hist_plottin
             else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
     if Bangle_shift_indices != []:
         for i,v in enumerate(Bangle_shift_indices):
-            if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\Psi_B$')
+            if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\alpha_B$')
             else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
     
     plt.plot(rmrsPlotting, avg_flight_angle, 'darkkhaki')
@@ -1650,17 +1663,17 @@ def particle_diagnostics_hist(nP_input, pdFile, segment_counter=50, hist_plottin
     plt.xlabel('D-Dsep [m]')
     plt.ylabel('Flight Angle [rad]')
     plt.title('Average Flight Angle before Striking the Surface')
-    plt.legend()
+    #plt.legend()
     plt.show(block=plot_blocker)
     #if not plot_blocker: plt.savefig('plots/avg_flight_angle.png')
     
     #make histogram of all particles binned into the TIME bins
     histogram_particle_time_AllSegs = np.sum(histogram_particle_time, axis=0)
-    nP = np.sum(histogram_particle_time_AllSegs)
-    print('Time nP:', nP)
+    nP_time = np.sum(histogram_particle_time_AllSegs)
+    print('Time nP:', nP_time)
     
     plt.close()
-    plt.bar(bin_edges_time[:-1], histogram_particle_time_AllSegs/nP, width=bin_width_time, color='darkviolet', align='edge', edgecolor='k')
+    plt.bar(bin_edges_time[:-1], histogram_particle_time_AllSegs/nP_time, width=bin_width_time, color='darkviolet', align='edge', edgecolor='k')
     plt.xlabel('Logarithmic Time [log(sec)]')
     plt.ylabel('Counts\n')
     plt.title('Flight Time before Striking the Surface')# \n nP=%.4E'%(nP))
@@ -1668,15 +1681,30 @@ def particle_diagnostics_hist(nP_input, pdFile, segment_counter=50, hist_plottin
     
     #make histogram of all particles binned into the ANGLE bins
     histogram_particle_angle_AllSegs = np.sum(histogram_particle_angle, axis=0)
-    nP = np.sum(histogram_particle_angle_AllSegs)
-    print('Angle nP:', nP)
+    nP_angle = np.sum(histogram_particle_angle_AllSegs)
+    print('Angle nP:', nP_angle)
     
     plt.close()
-    plt.bar(bin_edges_angle[:-1], histogram_particle_angle_AllSegs/nP, width=bin_width_angle, color='darkkhaki', align='edge', edgecolor='k')
-    plt.xlabel('Logarithmic Angle [rad]')
+    plt.bar(bin_edges_angle[:-1], histogram_particle_angle_AllSegs/nP_angle, width=bin_width_angle, color='darkkhaki', align='edge', edgecolor='k')
+    plt.axvline(np.log10(2*np.pi), 0,1, color='darkviolet')
+    plt.xlabel('Logarithmic Angle [log(rad)]')
     plt.ylabel('Counts\n')
     plt.title('Flight Angle before Striking the Surface')# \n nP=%.4E'%(nP))
     plt.show(block=plot_blocker)
+    
+    ########################################################
+    # Calculate percentage under a peak
+    ########################################################
+    
+    cutoff = -5.5
+    peak_edge_time = np.where((np.abs(bin_edges_time - cutoff) == np.min(np.abs(bin_edges_time - cutoff))))[0][0]
+    prompt_redep_time = np.sum(histogram_particle_time_AllSegs[:round(peak_edge_time)])/nP_time
+    print('Fraction Promptly Redeposited by Flight Time:', prompt_redep_time)
+    
+    cutoff = np.log10(2*np.pi)
+    peak_edge_angle = np.where((np.abs(bin_edges_angle - cutoff) == np.min(np.abs(bin_edges_angle - cutoff))))[0][0]
+    prompt_redep_angle = np.sum(histogram_particle_angle_AllSegs[:round(peak_edge_angle)])/nP_angle
+    print('Fraction Promptly Redeposited by Flight Angle:', prompt_redep_angle)
         
     return
 
@@ -1686,15 +1714,15 @@ if __name__ == "__main__":
     #plot_surf_nc([1,6], 9, [1,6], run_directory+'/surface_S.nc', run_directory+'/positions_S.nc')
     #plot_surf_nc(5e2, 8, 5, 'forces24.02.20/surfaces/CConly.nc', 'forces24.02.20/positions/CConly.nc', norm='')
     #analyze_leakage('perlmutter/history_D3t6.nc')
-    #analyze_forces('gradT dv', 't', rzlim=True, colorbarLimits=[], dt=1e-8)
+    #analyze_forces('ExB drift', 'z', rzlim=True, colorbarLimits=[-500,500], dt=1e-9)
     
     #init()
     #plot_gitr_gridspace()
     #plot_particle_source()
-    plot_history2D(setup_directory+"/../output/perlmutter/production/forces24.02.20/histories/gradT.nc",\
+    plot_history2D(setup_directory+"/../output/perlmutter/production/forces24.02.20/histories/BET.nc",\
                    bFile=setup_directory+'/../input/bField.nc')
     #spectroscopy(1006929636574578.9,2,specFile='perlmutter/D3p5t9T6/spec.nc')
-    #ionization_analysis([0,0], 'perlmutter/production/','history_IFp54T4.nc', 'positions_IFp54T4.nc')
+    #ionization_analysis([0,0], '../examples/sasvw-pa-fav/output/perlmutter/production/','history_IFp54T4.nc', 'positions_IFp54T4.nc')
     #prompt_redep_hist([2,8,5], 'perlmutter/forces24.02.10/','positions_BEF.nc')
     #particle_diagnostics_hist(4, 'perlmutter/production/particle_histograms_test.nc')
-    #particle_diagnostics_hist(1e4, run_directory+'/output/particle_histograms.nc')
+    #particle_diagnostics_hist(1e4, run_directory+'/output/particle_histograms.nc', plot_blocker=False)

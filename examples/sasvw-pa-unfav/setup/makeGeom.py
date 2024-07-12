@@ -199,7 +199,7 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
              rmrs_fine_file = 'assets/rmrs_fine.txt', \
              W_fine_file = 'assets/W_fine.txt', \
              numAddedPoints = 100, \
-             plot_variables = 0):
+             plot_variables = 0, show_plots = 0):
     
     # This program uses the solps geometry .ogr file to create a 2d geometry for GITR
     # in which the solps plasma profiles properly match the solps divertor target.
@@ -262,7 +262,7 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
         plt.ylabel('z [m]')
         plt.title('DIII-D SAS-VW Geometry')
         plt.savefig('plots/geom/solps_final.pdf')
-        plt.show(block=False)
+        plt.show(block=show_plots)
     
     ###################################################################
     # Increase Fineness of W Divertor Surface
@@ -291,7 +291,7 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
         plt.ylabel('z [m]')
         plt.title('Upper Outer SAS-VW Divertor in DIII-D \n makeGeom')
         plt.savefig('plots/geom/makeGeomCoarse.png')
-        plt.show(block=False)
+        plt.show(block=show_plots)
     
     print('\n')
     print('Vertex between Legs 1 and 2:,', \
@@ -315,24 +315,7 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     print('\n')
     print('TEST')
     rmrsMidCoarse = profiles.variables['rmrs_inner_target_midpoints'][W_indices_profiles]
-    #print(rmrsMidCoarse)
-    #print(rmrsMid)
-    rmrsTestCoarse = np.ones(len(rmrsMidCoarse))
-    rmrsTestFine = np.ones(len(rmrsMid))
-    plt.close()
-    tile_shift_indices = [1,9]
-    if tile_shift_indices != []:
-        for i in tile_shift_indices:
-            plt.axvline(x=rmrsCoarse[i], color='k', linestyle='dotted')
-    plt.scatter(rmrsMidCoarse, rmrsTestCoarse, s=5, color='orange', label='Coarse')
-    plt.scatter(rmrsMid, rmrsTestFine, s=1, color='cyan', label='Fine')
-    plt.title('Ones plotted rmrs midpoint values')
-    plt.xlabel('rmrs a.k.a. D-Dsep [m]')
-    plt.legend()
-    plt.show(block=False)
-    plt.close()
     
-    #rmrsCoarse = np.append(rmrsCoarse[:4],rmrsCoarse[5:]) #remove after debugging some pre-PSI nonsense
     tile_shift_indices = [1,8]
     if tile_shift_indices != []:
         for i in tile_shift_indices:
@@ -352,7 +335,7 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     plt.title('Ones plotted rmrs coord values')
     plt.xlabel('rmrs a.k.a. D-Dsep [m]')
     plt.legend()
-    plt.show(block=True)
+    plt.show(block=show_plots)
     plt.close()
     print('TEST')
     print('\n')
@@ -376,7 +359,7 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
         plt.ylabel('z [m]')
         plt.title('Case 3: Progressive Angle OSP \n and downward Bx▽B drift ')
         plt.savefig('plots/geom/makeGeom.png')
-        plt.show(block=True)
+        plt.show(block=show_plots)
     
     #print('length of 3rd leg:',np.sqrt((rSurfCoarse[-1]-rSurfCoarse[-2])**2+(zSurfCoarse[-1]-zSurfCoarse[-2])**2))
     
@@ -392,7 +375,7 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
         plt.title('Cross Section of DIII-D Geometry')
         plt.legend()
         plt.savefig('plots/geom/gitr_final.png')
-        plt.show(block=False)
+        plt.show(block=show_plots)
     
     #define interior side of each line segment in the geometry with inDir
     inDir = np.ones(len(r_final))
@@ -436,7 +419,7 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     return
 
 if __name__ == "__main__":
-    main(plot_variables = 1)
+    main(plot_variables = 1, show_plots = 1)
 
 
 
