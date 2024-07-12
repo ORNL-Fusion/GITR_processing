@@ -5,7 +5,7 @@ import shutil
 import numpy as np
 import solpsProcessing, makeGeom, makeParticleSource
 
-nP = int(1e4)
+nP = int(2e3)
 run_directory = '..'
 
 W_indices = np.arange(16,25)

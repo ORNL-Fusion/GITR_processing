@@ -11,8 +11,7 @@ import solps
 # setting directories and special constants
 ################################################
 
-run_directory = '/Users/Alyssa/Dev/GITR/scratch'
-#run_directory = '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav/output/perlmutter/production'
+run_directory = '/pscratch/sd/h/hayes/sasvw-pa-fav-history/'
 setup_directory = '../examples/sasvw-pa-fav/setup'
 rmrs_fine_file = setup_directory+'/assets/rmrs_fine.txt'
 
@@ -1719,7 +1718,8 @@ if __name__ == "__main__":
     #init()
     #plot_gitr_gridspace()
     #plot_particle_source()
-    plot_history2D(setup_directory+"/../output/perlmutter/production/forces24.02.20/histories/BET.nc",\
+    #plot_history2D(setup_directory+"/../output/perlmutter/production/forces24.02.20/histories/BET.nc",\
+    plot_history2D("/pscratch/sd/h/hayes/sasvw-pa-fav-history/output/history.nc",\
                    bFile=setup_directory+'/../input/bField.nc')
     #spectroscopy(1006929636574578.9,2,specFile='perlmutter/D3p5t9T6/spec.nc')
     #ionization_analysis([0,0], '../examples/sasvw-pa-fav/output/perlmutter/production/','history_IFp54T4.nc', 'positions_IFp54T4.nc')
