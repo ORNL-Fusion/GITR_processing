@@ -11,7 +11,7 @@ import solps
 # setting directories and special constants
 ################################################
 
-run_directory = '/pscratch/sd/h/hayes/sasvw-pa-fav-history/'
+run_directory = '/Users/Alyssa/Dev/GITR/scratch'
 setup_directory = '../examples/sasvw-pa-fav/setup'
 rmrs_fine_file = setup_directory+'/assets/rmrs_fine.txt'
 
@@ -1539,7 +1539,7 @@ def prompt_redep_hist(inputs, fileDir, fileOFF, fileON=None):
 
     return
 
-def particle_diagnostics_hist(nP_input, pdFile, segment_counter=50, hist_plotting=0, plot_blocker=1):
+def particle_diagnostics_hist(nP_input, pdFile, segment_counter=50, seg_hist_plotting=0, plot_blocker=1):
     
     diagnostics = netCDF4.Dataset(pdFile, "r", format="NETCDF4")
     bin_edges_time = diagnostics.variables['bin_edges_time'][:]
@@ -1562,7 +1562,7 @@ def particle_diagnostics_hist(nP_input, pdFile, segment_counter=50, hist_plottin
     # Option for plotting flight time and flight angle histograms over 1 surface segment
     ####################################################################################
     
-    if hist_plotting:
+    if seg_hist_plotting:
         histogram_particle_time_real = histogram_particle_time
         histogram_particle_angle_real = histogram_particle_angle
         nP = np.sum(histogram_particle_time_real[segment_counter])
@@ -1709,7 +1709,7 @@ def particle_diagnostics_hist(nP_input, pdFile, segment_counter=50, hist_plottin
 
 
 if __name__ == "__main__":
-    #plot_history2D(run_directory+'/output/history.nc')
+    plot_history2D(run_directory+'/output/history.nc')
     #plot_surf_nc([1,6], 9, [1,6], run_directory+'/surface_S.nc', run_directory+'/positions_S.nc')
     #plot_surf_nc(5e2, 8, 5, 'forces24.02.20/surfaces/CConly.nc', 'forces24.02.20/positions/CConly.nc', norm='')
     #analyze_leakage('perlmutter/history_D3t6.nc')
@@ -1719,10 +1719,10 @@ if __name__ == "__main__":
     #plot_gitr_gridspace()
     #plot_particle_source()
     #plot_history2D(setup_directory+"/../output/perlmutter/production/forces24.02.20/histories/BET.nc",\
-    plot_history2D("/pscratch/sd/h/hayes/sasvw-pa-fav-history/output/history.nc",\
-                   bFile=setup_directory+'/../input/bField.nc')
+    #plot_history2D("/pscratch/sd/h/hayes/sasvw-pa-fav-history/output/history.nc",\
+                   #bFile=setup_directory+'/../input/bField.nc')
     #spectroscopy(1006929636574578.9,2,specFile='perlmutter/D3p5t9T6/spec.nc')
     #ionization_analysis([0,0], '../examples/sasvw-pa-fav/output/perlmutter/production/','history_IFp54T4.nc', 'positions_IFp54T4.nc')
     #prompt_redep_hist([2,8,5], 'perlmutter/forces24.02.10/','positions_BEF.nc')
-    #particle_diagnostics_hist(4, 'perlmutter/production/particle_histograms_test.nc')
+    #particle_diagnostics_hist(4, run_directory+'/output/particle_histograms.nc')
     #particle_diagnostics_hist(1e4, run_directory+'/output/particle_histograms.nc', plot_blocker=False)

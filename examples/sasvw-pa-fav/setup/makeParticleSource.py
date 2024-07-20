@@ -532,7 +532,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
             
             #convert IEADs to vx,vy,vz unit vectors in particle frame of ref
             vx_prime = -np.cos(PolAng)
-            vy_prime = np.multiply(np.sin(PolAng), -np.sin(AziAng))
+            vy_prime = np.multiply(np.sin(PolAng), np.sin(AziAng)) #-np.sin(AziAng))
             vz_prime = np.multiply(np.sin(PolAng), np.cos(AziAng))
             PartDist.SetAttr('vx', vx_prime)
             PartDist.SetAttr('vy', vy_prime)
@@ -971,7 +971,7 @@ def get_analytic_spyld(surfE, surfA, Z1=6, M1=12, Z2=74, M2=183.84, \
 if __name__ == "__main__":
     #init()
     
-    distributed_source(nP=int(1e5), surfW=np.arange(11,22), \
+    distributed_source(nP=int(1e4), surfW=np.arange(11,22), \
                 tile_shift_indices = [1,9], \
                 Bangle_shift_indices = [3,8,9], \
                 geom = '../input/gitrGeometry.cfg', \
