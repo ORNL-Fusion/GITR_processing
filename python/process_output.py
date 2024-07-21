@@ -217,11 +217,11 @@ def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
     
     #plt.xlim(1.0, 2.0)
     #plt.ylim(-1.5, 1.5)
-    plt.xlim(1.4, 1.525)
-    plt.ylim(1.1, 1.23)
-    plt.title('W trajectories with\n friction force off', fontsize=14)
-    plt.show(block=True)
-    #plt.savefig('history.svg')
+    plt.xlim(1.35, 1.525)
+    plt.ylim(1.05, 1.23)
+    plt.title('W Impurity Trajectories', fontsize=14)
+    #plt.show(block=False)
+    plt.savefig('history.svg')
     plt.close()
     return
 
