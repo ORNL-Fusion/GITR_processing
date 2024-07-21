@@ -171,7 +171,7 @@ def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
     plt.plot(r_target_fine, z_target_fine,'-m',linewidth=2)
     plt.axis('scaled')
     plt.xlabel('R [m]')
-    plt.ylabel('z [m]')
+    plt.ylabel('Z [m]')
         
     #define charge state to color mapping
     colors = {0:'black', 1:'firebrick', 2:'darkorange', 3:'gold', 4:'limegreen', 5:'dodgerblue', \
@@ -217,8 +217,8 @@ def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
     
     #plt.xlim(1.0, 2.0)
     #plt.ylim(-1.5, 1.5)
-    plt.xlim(1.35, 1.525)
-    plt.ylim(1.05, 1.23)
+    plt.xlim(1.35, 1.515)
+    plt.ylim(1.06, 1.23)
     plt.title('W Impurity Trajectories', fontsize=14)
     #plt.show(block=False)
     plt.savefig('history.svg')
