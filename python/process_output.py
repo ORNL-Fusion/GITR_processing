@@ -12,6 +12,7 @@ import solps
 ################################################
 
 run_directory = '/Users/Alyssa/Dev/GITR/scratch'
+#run_directory = '/pscratch/sd/h/hayes/sasvw-pa-fav-history'
 setup_directory = '../examples/sasvw-pa-fav/setup'
 rmrs_fine_file = setup_directory+'/assets/rmrs_fine.txt'
 
@@ -217,9 +218,9 @@ def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
     
     #plt.xlim(1.0, 2.0)
     #plt.ylim(-1.5, 1.5)
-    plt.xlim(1.35, 1.515)
-    plt.ylim(1.06, 1.23)
-    plt.title('W Impurity Trajectories', fontsize=14)
+    plt.xlim(1.36, 1.54)
+    plt.ylim(0.92, 1.23)
+    plt.title('W trajectories with only the\n temperature gradient force on', fontsize=14)
     #plt.show(block=False)
     plt.savefig('history.svg')
     plt.close()
@@ -1709,7 +1710,7 @@ def particle_diagnostics_hist(nP_input, pdFile, segment_counter=50, seg_hist_plo
 
 
 if __name__ == "__main__":
-    plot_history2D(run_directory+'/output/history.nc')
+    #plot_history2D(run_directory+'/output/history.nc')
     #plot_surf_nc([1,6], 9, [1,6], run_directory+'/surface_S.nc', run_directory+'/positions_S.nc')
     #plot_surf_nc(5e2, 8, 5, 'forces24.02.20/surfaces/CConly.nc', 'forces24.02.20/positions/CConly.nc', norm='')
     #analyze_leakage('perlmutter/history_D3t6.nc')
@@ -1718,11 +1719,11 @@ if __name__ == "__main__":
     #init()
     #plot_gitr_gridspace()
     #plot_particle_source()
-    #plot_history2D(setup_directory+"/../output/perlmutter/production/forces24.02.20/histories/BET.nc",\
+    #plot_history2D(setup_directory+"/../output/perlmutter/production/forces24.07.21/histories/gradT.nc",\
     #plot_history2D("/pscratch/sd/h/hayes/sasvw-pa-fav-history/output/history.nc",\
                    #bFile=setup_directory+'/../input/bField.nc')
     #spectroscopy(1006929636574578.9,2,specFile='perlmutter/D3p5t9T6/spec.nc')
     #ionization_analysis([0,0], '../examples/sasvw-pa-fav/output/perlmutter/production/','history_IFp54T4.nc', 'positions_IFp54T4.nc')
     #prompt_redep_hist([2,8,5], 'perlmutter/forces24.02.10/','positions_BEF.nc')
-    #particle_diagnostics_hist(4, run_directory+'/output/particle_histograms.nc')
+    particle_diagnostics_hist(4, '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav/output/perlmutter/particle_histograms.nc', plot_blocker=True)
     #particle_diagnostics_hist(1e4, run_directory+'/output/particle_histograms.nc', plot_blocker=False)

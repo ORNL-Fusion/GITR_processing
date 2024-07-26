@@ -7,6 +7,7 @@ import solpsProcessing, makeGeom, makeParticleSource
 
 nP = int(5e4)
 run_directory = '/Users/Alyssa/Dev/GITR/scratch'
+#run_directory = '/pscratch/sd/h/hayes/forces/BET'
 
 W_indices = np.arange(11,22)
 

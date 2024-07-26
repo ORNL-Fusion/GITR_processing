@@ -83,10 +83,12 @@ legend('wall','hasHit','notHit')
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% history
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+set(groot, 'defaultAxesFontSize', 11.5, 'defaultTextFontSize', 11.5);
 
 plot_tracks = 1;
 if plot_tracks
-    file = strcat('../../../../GITR/scratch/output/history.nc');
+    %file = strcat('../../../../GITR/scratch/output/history.nc');
+    file = strcat('perlmutter/production/forces24.07.21/histories/BET.nc');
     x = ncread(file,'x');
     y = ncread(file,'y');
     z = ncread(file,'z');
@@ -108,12 +110,12 @@ if plot_tracks
     end
 
     axis equal
-    xlim([1.43 1.56])
-    ylim([-0.05 0.05])
-    zlim([1.07 1.25])
-    xlabel('r [m]')
-    ylabel('y [m]')
-    zlabel('z [m]')
+    xlim([0.0 2.5])
+    ylim([-0.2 2.5])
+    zlim([-1.5 1.5])
+    xlabel('R [m]')
+    ylabel('T [m]')
+    zlabel('Z [m]')
     title('Histories')
 
 %     figure(7) %2D plotting
