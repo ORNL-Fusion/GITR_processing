@@ -5,12 +5,12 @@ import shutil
 import numpy as np
 import solpsProcessing, makeGeom, makeParticleSource
 
-nP = int(1e4)
+nP = int(2e3)
 run_directory = '..'
 
-W_indices = np.arange(11,22)
-tile_shift_indices = [1,9] #change to [1,9] after debugging
-Bangle_shift_indices = [2,8,9] #change to [2,8,9] after debugging
+W_indices = np.arange(16,25)
+tile_shift_indices = [2,6]
+Bangle_shift_indices = [3,6]
 
 print_separator = '\n-------------------------------------------------\n'
 '''
@@ -27,7 +27,7 @@ makeGeom.main(gitr_geometry_filename='gitrGeometry.cfg', \
 
 os.remove('gitrGeometry.cfg0')
 shutil.move('gitrGeometry.cfg', run_directory+'/input/gitrGeometry.cfg')
-'''
+
 print('\n',print_separator,'Making bField.nc',print_separator,'\n')
 solpsProcessing.readEquilibrium(equilibrium_filename = 'assets/dg.equ', \
                     W_indices = W_indices, \
@@ -36,24 +36,22 @@ solpsProcessing.readEquilibrium(equilibrium_filename = 'assets/dg.equ', \
                     plot_variables = 1)
 
 shutil.move('bField.nc', run_directory+'/input/bField.nc')
-'''
+
 solpsProcessing.plot_surf_plasma_params(W_surf = W_indices, \
                     tile_shift_indices = tile_shift_indices, \
                     Bangle_shift_indices = Bangle_shift_indices)
 
 makeParticleSource.point_source(nP)
-
+'''
 print('\n',print_separator,'Making particleSource.nc',print_separator,'\n')
 makeParticleSource.distributed_source(nP, surfW = W_indices, \
-                    tile_shift_indices = [1,9], \
-                    Bangle_shift_indices = [3,8,9], \
+                    tile_shift_indices = tile_shift_indices, \
+                    Bangle_shift_indices = Bangle_shift_indices, \
                     geom = run_directory+'/input/gitrGeometry.cfg', \
                     profiles_file = run_directory+'/input/plasmaProfiles.nc', \
                     ftDFile = 'assets/ftridynBackgroundD.nc', \
                     ftCFile = 'assets/ftridynBackgroundC.nc', \
                     configuration = 'random', \
-                    use_fractal_tridyn_outgoing_IEADS = 0, \
-                    plot_variables = 0)
+                    plot_variables = 1)
 
 shutil.move('particleSource.nc', run_directory+'/input/particleSource.nc')
-'''

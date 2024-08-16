@@ -91,28 +91,28 @@ r_real = [1502, 1485.5, 1491.05, 1499.909817]/1000;
 z_real = [1163, 1123, 1112.75, 1110.921234]/1000;
 
 hold on
-gitr = plot(x1,z1,'b','linewidth',1);
-W = plot(x1(W_indices),z1(W_indices),'m','linewidth',1);
+gitr = plot(x1,z1,'b','linewidth',7);
+W = plot(x1(W_indices),z1(W_indices),'m','linewidth',7);
 scatter(x1(W_indices),z1(W_indices),50,'.','m');
-%real_leg = plot(r_real, z_real, 'color', "#77AC30", 'linewidth',2);
-%strikepoint = plot([1.49829829],[1.19672716],'pentagram');
-%strikepoint.MarkerFaceColor = [1 0.5 0];
-%strikepoint.MarkerSize = 20;
+real_leg = plot(r_real, z_real, 'color', "#77AC30", 'linewidth',7);
+strikepoint = plot([1.49829829],[1.19672716],'pentagram');
+strikepoint.MarkerFaceColor = [1 0.5 0];
+strikepoint.MarkerSize = 40;
 %legend([ogr,b2f,gitr], 'ogr wall','b2fgmtry target','GITR boundary')
-[h, icons] = legend([gitr,W],'Carbon','Tungsten','fontsize',40);
-%[h, icons] = legend([gitr,W,real_leg,strikepoint],'Carbon','Tungsten','Real W 3rd Leg','Strikepoint','fontsize',40,'Location','northwest');
+%[h, icons] = legend([gitr,W],'Carbon','Tungsten','fontsize',40);
+[h, icons] = legend([gitr,W,real_leg,strikepoint],'Carbon','Tungsten','Real W 3rd Leg','Strikepoint','fontsize',40,'Location','northwest');
 
 axis equal
-%title({'Cross Section of SAS-VW Geometry', 'and SOLPS-ITER Grid'},'fontsize',40)
-title('Cross Section of SOLPS-ITER Grid','fontsize',40)
+title({'Cross Section of SAS-VW Geometry', 'and SOLPS-ITER Grid'},'fontsize',40)
+%title('Cross Section of SOLPS-ITER Grid','fontsize',40)
 xlabel('R [m]','fontsize',40)
 ylabel('Z [m]','fontsize',40)
 ax = gca;
 ax.FontSize = 30; 
-xlim([0.9, 2.5]);
-ylim([-1.4, 1.46]);
-%xlim([1.39, 1.51]);
-%ylim([1.09, 1.24]);
+%xlim([0.9, 2.5]);
+%ylim([-1.4, 1.46]);
+xlim([1.39, 1.51]);
+ylim([1.09, 1.24]);
 
 
 %%

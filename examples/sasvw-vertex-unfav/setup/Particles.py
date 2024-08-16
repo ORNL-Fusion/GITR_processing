@@ -26,7 +26,7 @@ class Distribs():
     #         f = f/Integrale(f, x, Array=False)
     #     return f
 
-    def Thompson(x: np.ndarray = np.linspace(0, 300, 10000), xb: float = 8.64, xc: float = 100, Normalized=True):
+    def Thomson(x: np.ndarray = np.linspace(0, 300, 10000), xb: float = 8.64, xc: float = 100, Normalized=True):
         assert not (xc <= xb), "xc cannot be <= xb"
         f = x/(x + xb) ** 3*(1.0-np.sqrt((x+xb)/(xc+xb)))
         f[np.argwhere(x > xc)] = 0.0

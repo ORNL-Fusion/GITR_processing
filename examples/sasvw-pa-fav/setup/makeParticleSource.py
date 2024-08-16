@@ -982,7 +982,7 @@ if __name__ == "__main__":
                 ftDFile = 'assets/ftridynBackgroundD.nc', \
                 ftCFile = 'assets/ftridynBackgroundC.nc', \
                 configuration = 'random', \
-                plot_variables = 1)
+                plot_variables = 0)
 
 
 

@@ -5,14 +5,14 @@ import shutil
 import numpy as np
 import solpsProcessing, makeGeom, makeParticleSource
 
-nP = int(5e4)
+nP = int(1e4)
 run_directory = '/Users/Alyssa/Dev/GITR/scratch'
 #run_directory = '/pscratch/sd/h/hayes/forces/BET'
 
 W_indices = np.arange(11,22)
 
 print_separator = '\n-------------------------------------------------\n'
-
+'''
 print('\n',print_separator,'Making gitrGeometry.cfg',print_separator,'\n')
 makeGeom.main(gitr_geometry_filename='gitrGeometry.cfg', \
                     solps_geomfile = 'assets/sas-vw_v005_mod.ogr', \
@@ -24,13 +24,13 @@ makeGeom.main(gitr_geometry_filename='gitrGeometry.cfg', \
 
 os.remove('gitrGeometry.cfg0')
 shutil.move('gitrGeometry.cfg', run_directory+'/input/gitrGeometry.cfg')
-
+'''
 print('\n',print_separator,'Making bField.nc',print_separator,'\n')
 solpsProcessing.readEquilibrium(equilibrium_filename = 'assets/dg.equ', \
                     W_indices = W_indices, \
                     solps_geom = 'assets/b2fgmtry', \
                     flip_Bt = True, \
-                    plot_variables = 0)
+                    plot_variables = 1)
 
 shutil.move('bField.nc', run_directory+'/input/bField.nc')
 '''
@@ -39,7 +39,7 @@ solpsProcessing.plot_surf_plasma_params(W_surf = W_indices, \
                     Bangle_shift_indices = [3,8,9])
 
 makeParticleSource.point_source(nP)
-'''
+
 print('\n',print_separator,'Making particleSource.nc',print_separator,'\n')
 makeParticleSource.distributed_source(nP, surfW = W_indices, \
                     tile_shift_indices = [1,9], \
@@ -52,3 +52,4 @@ makeParticleSource.distributed_source(nP, surfW = W_indices, \
                     plot_variables = 0)
 
 shutil.move('particleSource.nc', run_directory+'/input/particleSource.nc')
+'''
