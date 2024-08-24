@@ -465,7 +465,7 @@ def plot_surf_nc(nP10, dt10, nT10, \
     if plot_cumsum:
         plt.close()
         plt.plot(rmrsFine,grossEro_cumsum,'r', label='Gross Erosion')
-        plt.plot(rmrsFine,grossDep_cumsum,'g', label='Redeposition')
+        plt.plot(rmrsFine,grossDep_cumsum,'g', label='Gross Deposition')
         plt.plot(rmrsFine,netDep_cumsum,'k', label='Net Erosion')
         plt.yscale('log')
         plt.xlabel('D-Dsep [m]')
@@ -1674,6 +1674,8 @@ def particle_diagnostics_hist(nP_input, pdFile, segment_counter=50, seg_hist_plo
     
     plt.close()
     plt.bar(bin_edges_time[:-1], histogram_particle_time_AllSegs/nP_time, width=bin_width_time, color='darkviolet', align='edge', edgecolor='k')
+    plt.axvline(np.log10(3e-6), 0,1, color='darkkhaki')
+    plt.axvline(np.log10(30e-6), 0,1, color='darkkhaki')
     plt.xlabel('Logarithmic Time [log(sec)]')
     plt.ylabel('Counts\n')
     plt.title('Flight Time before Striking the Surface')# \n nP=%.4E'%(nP))

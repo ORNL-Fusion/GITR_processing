@@ -59,7 +59,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
             ftWFile = '../input/ftridynSelf.nc', \
             configuration = 'random', \
             use_fractal_tridyn_outgoing_IEADS = 1, \
-            plot_variables = 0):
+            plot_variables = 1, blockplots = 0):
     
     #import wall geometry to plot over
     with open(gitr_rz, 'r') as file:
@@ -271,7 +271,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
         plt.ylabel('Flux [m$^{-2}$s$^{-1}$]', fontsize=16)
         plt.legend(loc='upper left', fontsize=12)
         plt.title('C flux to W surface', fontsize=24)
-        plt.show(block=True)
+        plt.show(block=blockplots)
         plt.savefig('plots/particle-source/incident_flux.png')
 
         plt.close()
@@ -298,7 +298,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
         plt.xlabel('D-Dsep [m]', fontsize=14)
         plt.ylabel('Sputtering Yield', fontsize=16)
         plt.title('W sputtering yield by incident ions',fontsize=24)
-        plt.show(block=True)
+        plt.show(block=blockplots)
         plt.savefig('plots/particle-source/spyld.png')
         
         plt.close()
@@ -323,7 +323,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
         plt.ylabel('Flux [m$^{-2}$s$^{-1}$]', fontsize=16)
         plt.legend(loc='upper left', fontsize=12)
         plt.title('Flux of sputtered W', fontsize=24)
-        plt.show(block=True)
+        plt.show(block=blockplots)
         plt.savefig('plots/particle-source/sputt_flux_charge_dependent.png')
 
         plt.close()
