@@ -33,11 +33,11 @@ solpsProcessing.readEquilibrium(equilibrium_filename = 'assets/dg.equ', \
                     plot_variables = 1)
 
 shutil.move('bField.nc', run_directory+'/input/bField.nc')
-'''
+
 solpsProcessing.plot_surf_plasma_params(W_surf = W_indices, \
                     tile_shift_indices = [1,9], \
                     Bangle_shift_indices = [3,8,9])
-
+'''
 makeParticleSource.point_source(nP)
 '''
 print('\n',print_separator,'Making particleSource.nc',print_separator,'\n')

@@ -1721,11 +1721,11 @@ if __name__ == "__main__":
     #init()
     #plot_gitr_gridspace()
     #plot_particle_source()
-    #plot_history2D(setup_directory+"/../output/perlmutter/production/forces24.07.21/histories/gradT.nc",\
+    plot_history2D(setup_directory+"/../output/perlmutter/production/forces24.08.25/histories/force.nc",\
     #plot_history2D("/pscratch/sd/h/hayes/sasvw-pa-fav-history/output/history.nc",\
-                   #bFile=setup_directory+'/../input/bField.nc')
+                   bFile=setup_directory+'/../input/bField.nc')
     #spectroscopy(1006929636574578.9,2,specFile='perlmutter/D3p5t9T6/spec.nc')
     #ionization_analysis([0,0], '../examples/sasvw-pa-fav/output/perlmutter/production/','history_IFp54T4.nc', 'positions_IFp54T4.nc')
     #prompt_redep_hist([2,8,5], 'perlmutter/forces24.02.10/','positions_BEF.nc')
-    particle_diagnostics_hist(4, '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav/output/perlmutter/particle_histograms.nc', plot_blocker=True)
+    #particle_diagnostics_hist(4, '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav/output/perlmutter/particle_histograms.nc', plot_blocker=True)
     #particle_diagnostics_hist(1e4, run_directory+'/output/particle_histograms.nc', plot_blocker=False)

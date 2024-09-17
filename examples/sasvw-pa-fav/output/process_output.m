@@ -88,7 +88,7 @@ set(groot, 'defaultAxesFontSize', 11.5, 'defaultTextFontSize', 11.5);
 plot_tracks = 1;
 if plot_tracks
     %file = strcat('../../../../GITR/scratch/output/history.nc');
-    file = strcat('perlmutter/production/forces24.07.21/histories/BET.nc');
+    file = strcat('perlmutter/production/forces24.08.25/histories/gradT.nc');
     x = ncread(file,'x');
     y = ncread(file,'y');
     z = ncread(file,'z');
