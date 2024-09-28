@@ -218,9 +218,9 @@ def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
     
     #plt.xlim(1.0, 2.0)
     #plt.ylim(-1.5, 1.5)
-    plt.xlim(1.36, 1.54)
-    plt.ylim(0.92, 1.23)
-    plt.title('W trajectories with only the\n temperature gradient force on', fontsize=14)
+    plt.xlim(1.35, 1.55)
+    plt.ylim(0.9, 1.23)
+    plt.title('W trajectories with only the \n temperature gradient force on', fontsize=14)
     #plt.show(block=False)
     plt.savefig('history.svg')
     plt.close()
@@ -236,7 +236,7 @@ def plot_surf_nc(nP10, dt10, nT10, \
     profiles, W_indices, r_inner_target, z_inner_target, rmrs = init()
     rmrsCoords = profiles.variables['rmrs_inner_target'][W_indices]
     surface = netCDF4.Dataset(surface_file, "r", format="NETCDF4")
-    pps_per_nP, partSource_flux, fluxD, fluxC = makeParticleSource.distributed_source(nP=nP10[0] * (10**int(nP10[1])), \
+    pps_per_nP, partSource_flux, fluxD, fluxC = makeParticleSource.distributed_source(nP=(nP10[0] * (10**int(nP10[1]))), \
                 surfW = W_surf_indices, \
                 tile_shift_indices = tile_shift_indices, \
                 Bangle_shift_indices = Bangle_shift_indices, \
@@ -431,7 +431,7 @@ def plot_surf_nc(nP10, dt10, nT10, \
     plt.xlabel('D-Dsep [m]')
     plt.ylabel('Percentage')
     plt.title('Percentage of Gross Erosion from Self-Sputtering')
-    plt.show(block=False)
+    plt.show(block=True)
     
     #plot main surface plot with 3 views
     plt.close()
@@ -455,7 +455,7 @@ def plot_surf_nc(nP10, dt10, nT10, \
     
     plt.xlabel('D-Dsep [m]')
     if norm!=None: plt.ylabel('\u0393$_{W,outgoing}$ / \u0393$_{%s,incoming}$'%norm)
-    if norm==None: plt.ylabel('\u0393$_{W,outgoing}$')
+    if norm==None: plt.ylabel('\u0393$_{W,outgoing}$ [m$^{-2}$s$^{-1}$]')
     plt.ticklabel_format(axis='y',style='sci',scilimits=(-2,2))
     plt.legend(fontsize=28)#loc='upper left')
     plt.title('GITR Predicted Erosion and Redeposition Profiles,\nnP='+str(nP10[0])+'e'+str(nP10[1])+', dt=1e-'+str(dt10)+', nT='+str(nT10[0])+'e'+str(nT10[1]), fontsize=30)
@@ -1052,7 +1052,7 @@ def plot_forces(var, titleString, gridrz, vartype='F', rzlim=True, colorbarLimit
     if vartype=='F': plt.colorbar(label='\n Force [N]')
     if vartype=='v': plt.colorbar(label='\n Velocity [m/s]')
     plt.xlabel('R [m]')
-    plt.ylabel('z [m]')
+    plt.ylabel('Z [m]')
     plt.title(titleString)
     plt.axis('Scaled')
     plt.xlim(rlim)
@@ -1325,7 +1325,7 @@ def ionization_analysis(plotting, output_dir, historyFile, positionsFile, \
             #print('Segment #' + str(seg) + ': ' + tally_never_ionizes ' never ionizes of ' + str(particles_per_seg) ' total particles')
             print('Segment:', seg)
             print('Never ionized:',tally_never_ionizes[seg])
-            print('Total particles per segment:', particles_per_seg[seg])
+            print('Particles so far:', np.sum(particles_per_seg[:seg+1]))
             
             if plotting[0]==1:
                 plt.close()
@@ -1350,7 +1350,6 @@ def ionization_analysis(plotting, output_dir, historyFile, positionsFile, \
             else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
     
     plt.errorbar(rmrsPlotting, avg_distance_to_first_ionization*1000, std_distance_to_first_ionization*1000, ecolor='lightpink', fmt='saddlebrown')
-    #plt.scatter(rmrsPlotting, avg_distance_to_first_ionization*1000, s=15)
     plt.xlabel('D-Dsep [m]')
     plt.ylabel('Distance [mm]')
     plt.title('Average Distance to First Ionization')
@@ -1384,7 +1383,7 @@ def ionization_analysis(plotting, output_dir, historyFile, positionsFile, \
             if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\\alpha_B$')
             else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
     
-    plt.plot(rmrsPlotting, frac_ioniz_in_Chodura, label='Chodura', color='darkorange')
+    plt.plot(rmrsPlotting[31:], frac_ioniz_in_Chodura[31:], label='Chodura', color='darkorange')
     plt.plot(rmrsPlotting, frac_ioniz_in_Debye, label='Debye', color='crimson')
     plt.xlabel('D-Dsep [m]')
     plt.ylabel('Fraction')
@@ -1452,7 +1451,7 @@ def ionization_analysis(plotting, output_dir, historyFile, positionsFile, \
     plt.title('Behavior of Particles that First Ionize \n in the Chodura Sheath')
     plt.legend()
     if plotting[1]==1: plt.show(block=True)
-    else: plt.savefig(output_dir+'plots/fracs_Chodura.png')
+    else: plt.savefig(output_dir+'plots/ioniz_Chodura.png')
     rmrsMidpoints = rmrsPlotting[1:] + (rmrsPlotting[1:]-rmrsPlotting[:-1])/2
     top = frac_prompt_Chodura[1:-1] * (rmrsMidpoints[1:]-rmrsMidpoints[:-1])
     bottom = rmrsMidpoints[-1]-rmrsMidpoints[1]
@@ -1477,11 +1476,29 @@ def ionization_analysis(plotting, output_dir, historyFile, positionsFile, \
     plt.title('Behavior of Particles that First Ionize \n in the Debye Sheath')
     plt.legend()
     if plotting[1]==1: plt.show(block=True)
-    else: plt.savefig(output_dir+'plots/fracs_Debye.png')
+    else: plt.savefig(output_dir+'plots/ioniz_Debye.png')
     
-    avg_perpDistanceToSurface = np.average(perpDistanceToSurface[:,-1])
-    print('\nAverage final perpendicular distance to the surface:\n', avg_perpDistanceToSurface, 'meters')
+    overall_avg = np.average(avg_distance_to_first_ionization[:])
+    leg2_avg = np.average(avg_distance_to_first_ionization[15:70])
+    leg3_avg = np.average(avg_distance_to_first_ionization[70:])
+    print('\nOverall average perpendicular distance to first ionization:\n', overall_avg, 'meters')
+    print('\nLeg 2 average perpendicular distance to first ionization:\n', leg2_avg, 'meters')
+    print('\nLeg3 average perpendicular distance to first ionization:\n', leg3_avg, 'meters')
     
+    print('\nFraction that first ionize in the Debye sheath past OSP:')
+    print('Min:', np.min(frac_ioniz_in_Debye[32:]))
+    print('Max:', np.max(frac_ioniz_in_Debye[31:]))
+    print('Average:', np.average(frac_ioniz_in_Debye[31:]))
+    
+    print('\nFraction that first ionize in the Chodura sheath past OSP:')
+    print('Min:', np.min(frac_ioniz_in_Chodura[31:]))
+    print('Max:', np.max(frac_ioniz_in_Chodura[31:]))
+    print('Average:', np.average(frac_ioniz_in_Chodura[31:]))  
+    
+    print('\nFraction of first ionizations in the Chodura sheath that promptly redeposit past OSP:')
+    print('Min:', np.min(frac_prompt_Chodura[31:]))
+    print('Max:', np.max(frac_prompt_Chodura[31:]))
+    print('Average:', np.average(frac_prompt_Chodura[31:])) 
     return
 
 def prompt_redep_hist(inputs, fileDir, fileOFF, fileON=None):
@@ -1675,7 +1692,7 @@ def particle_diagnostics_hist(nP_input, pdFile, segment_counter=50, seg_hist_plo
     plt.close()
     plt.bar(bin_edges_time[:-1], histogram_particle_time_AllSegs/nP_time, width=bin_width_time, color='darkviolet', align='edge', edgecolor='k')
     plt.axvline(np.log10(3e-6), 0,1, color='darkkhaki')
-    plt.axvline(np.log10(30e-6), 0,1, color='darkkhaki')
+    plt.axvline(np.log10(50e-6), 0,1, color='darkkhaki')
     plt.xlabel('Logarithmic Time [log(sec)]')
     plt.ylabel('Counts\n')
     plt.title('Flight Time before Striking the Surface')# \n nP=%.4E'%(nP))
@@ -1713,19 +1730,21 @@ def particle_diagnostics_hist(nP_input, pdFile, segment_counter=50, seg_hist_plo
 
 if __name__ == "__main__":
     #plot_history2D(run_directory+'/output/history.nc')
-    #plot_surf_nc([1,6], 9, [1,6], run_directory+'/surface_S.nc', run_directory+'/positions_S.nc')
-    #plot_surf_nc(5e2, 8, 5, 'forces24.02.20/surfaces/CConly.nc', 'forces24.02.20/positions/CConly.nc', norm='')
+    #plot_surf_nc([1,6], 9, [1,6], '../examples/sasvw-pa-fav/output/perlmutter/production/surface_S1.nc', \
+                 #'../examples/sasvw-pa-fav/output/perlmutter/production/positions_S1.nc')
+    #plot_surf_nc([5,2], 8, [1,5], setup_directory+"/../output/perlmutter/production/forces24.09.19/surfaces/BFT.nc", \
+                 #setup_directory+'/../output/perlmutter/production/forces24.09.19/positions/BFT.nc', norm='')
     #analyze_leakage('perlmutter/history_D3t6.nc')
     #analyze_forces('ExB drift', 'z', rzlim=True, colorbarLimits=[-500,500], dt=1e-9)
     
     #init()
     #plot_gitr_gridspace()
     #plot_particle_source()
-    plot_history2D(setup_directory+"/../output/perlmutter/production/forces24.08.25/histories/force.nc",\
+    #plot_history2D(setup_directory+"/../output/perlmutter/production/forces24.09.19/histories/gradT.nc",\
     #plot_history2D("/pscratch/sd/h/hayes/sasvw-pa-fav-history/output/history.nc",\
-                   bFile=setup_directory+'/../input/bField.nc')
+                   #bFile=setup_directory+'/../input/bField.nc')
     #spectroscopy(1006929636574578.9,2,specFile='perlmutter/D3p5t9T6/spec.nc')
-    #ionization_analysis([0,0], '../examples/sasvw-pa-fav/output/perlmutter/production/','history_IFp54T4.nc', 'positions_IFp54T4.nc')
-    #prompt_redep_hist([2,8,5], 'perlmutter/forces24.02.10/','positions_BEF.nc')
-    #particle_diagnostics_hist(4, '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav/output/perlmutter/particle_histograms.nc', plot_blocker=True)
+    ionization_analysis([0,0], '../examples/sasvw-pa-fav/output/perlmutter/production/','history_IF.nc', 'positions_IF.nc')
+    #prompt_redep_hist([2,8,5], '../examples/sasvw-pa-fav/output/perlmutter/production/forces24.09.19/positions/','BEF.nc')
+    #particle_diagnostics_hist(4, '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav/output/perlmutter/production/particle_histograms_PR1.nc', plot_blocker=True)
     #particle_diagnostics_hist(1e4, run_directory+'/output/particle_histograms.nc', plot_blocker=False)

@@ -971,7 +971,7 @@ def get_analytic_spyld(surfE, surfA, Z1=6, M1=12, Z2=74, M2=183.84, \
 if __name__ == "__main__":
     #init()
     
-    distributed_source(nP=int(1e4), surfW=np.arange(11,22), \
+    distributed_source(nP=int(5e3), surfW=np.arange(11,22), \
                 tile_shift_indices = [1,9], \
                 Bangle_shift_indices = [3,8,9], \
                 geom = '../input/gitrGeometry.cfg', \
@@ -982,7 +982,7 @@ if __name__ == "__main__":
                 ftDFile = 'assets/ftridynBackgroundD.nc', \
                 ftCFile = 'assets/ftridynBackgroundC.nc', \
                 configuration = 'random', \
-                plot_variables = 0)
+                plot_variables = 1)
 
 
 
