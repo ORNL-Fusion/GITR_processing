@@ -12,7 +12,7 @@ import Particles
 
 def init():
     #set plotting style defaults
-    plt.rcParams.update({'font.size':11.5})
+    plt.rcParams.update({'font.size':11})
     plt.rcParams.update({'lines.linewidth':1.2})
     plt.rcParams.update({'lines.markersize':1})
 
@@ -240,7 +240,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     pps_weights = nP*pps/np.sum(pps)
 
     if plot_variables == 1: 
-        plt.rcParams.update({'font.size':14})
+        plt.rcParams.update({'font.size':13})
         plt.close()
         if tile_shift_indices != []:
             for i,v in enumerate(tile_shift_indices):
@@ -290,10 +290,11 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
         plt.plot(rmrsFine, spyldW1, 'rosybrown', label='W$^{1+}$')
         plt.plot(rmrsFine, spyldW2, 'burlywood', label='W$^{2+}$')
         #plt.xlim(-0.025)
+        plt.ticklabel_format(axis='y', style='scientific', scilimits=(-3,-3))
         plt.legend(fontsize=12)
         plt.xlabel('D-Dsep [m]', fontsize=14)
-        plt.ylabel('Sputtering Yield', fontsize=16)
-        plt.title('W sputtering yield by incident ions',fontsize=24)
+        plt.ylabel('Sputtering Yield', fontsize=14)
+        plt.title('W sputtering yield \nby incident ions',fontsize=14)
         plt.show(block=False)
         plt.savefig('plots/particle-source/spyld.png')
         
@@ -316,7 +317,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
         plt.plot(rmrsFine, sputt_fluxC6, 'mediumpurple', label='C$^{6+}$')
         #plt.xlim(-0.05)
         plt.xlabel('D-Dsep [m]', fontsize=14)
-        plt.ylabel('Flux [m$^{-2}$s$^{-1}$]', fontsize=16)
+        plt.ylabel('Flux [m$^{-2}$s$^{-1}$]', fontsize=14)
         plt.legend(loc='upper right', fontsize=12)
         plt.title('Flux of sputtered W', fontsize=24)
         plt.show(block=False)

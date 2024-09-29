@@ -5,9 +5,9 @@ import shutil
 import numpy as np
 import solpsProcessing, makeGeom, makeParticleSource
 
-nP = int(1e4)
-run_directory = '/Users/Alyssa/Dev/GITR/scratch'
-#run_directory = '/pscratch/sd/h/hayes/forces/BET'
+nP = int(5e3)
+#run_directory = '/Users/Alyssa/Dev/GITR/scratch'
+run_directory = '/pscratch/sd/h/hayes/forces/BET'
 
 W_indices = np.arange(11,22)
 
@@ -30,14 +30,14 @@ solpsProcessing.readEquilibrium(equilibrium_filename = 'assets/dg.equ', \
                     W_indices = W_indices, \
                     solps_geom = 'assets/b2fgmtry', \
                     flip_Bt = True, \
-                    plot_variables = 1)
+                    plot_variables = 0)
 
 shutil.move('bField.nc', run_directory+'/input/bField.nc')
-
+'''
 solpsProcessing.plot_surf_plasma_params(W_surf = W_indices, \
                     tile_shift_indices = [1,9], \
                     Bangle_shift_indices = [3,8,9])
-'''
+
 makeParticleSource.point_source(nP)
 '''
 print('\n',print_separator,'Making particleSource.nc',print_separator,'\n')
@@ -49,6 +49,6 @@ makeParticleSource.distributed_source(nP, surfW = W_indices, \
                     ftDFile = 'assets/ftridynBackgroundD.nc', \
                     ftCFile = 'assets/ftridynBackgroundC.nc', \
                     configuration = 'random', \
-                    plot_variables = 1, blockplots = 0)
+                    plot_variables = 0, blockplots = 0)
 
 shutil.move('particleSource.nc', run_directory+'/input/particleSource.nc')
