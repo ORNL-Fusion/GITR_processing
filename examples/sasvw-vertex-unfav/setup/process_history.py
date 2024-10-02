@@ -183,7 +183,7 @@ def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
     if basic==0: plt.legend(handles=patchList, fontsize=8, loc=2) #upper-left=2, lower-left=3
     
     plt.xlim(1.37, 1.52)
-    plt.ylim(1.06, 1.23)
+    plt.ylim(1.08, 1.25)
     plt.title('Case 4: W Trajectories', fontsize=20)
     #plt.show(block=False)
     plt.savefig('history.svg')
