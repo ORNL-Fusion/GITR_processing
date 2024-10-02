@@ -5,14 +5,13 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import matplotlib.path as path
 import netCDF4
-import solps
 
 ################################################
 # setting directories and special constants
 ################################################
 
-setup_directory = '../examples/sasvw-pa-fav/setup'
-run_directory = '/pscratch/sd/h/hayes/sasvw-pa-fav-history'
+setup_directory = '.'
+run_directory = '/pscratch/sd/h/hayes/sasvw-pa-fav/sasvw-pa-fav-history'
 rmrs_fine_file = setup_directory+'/assets/rmrs_fine.txt'
 
 W_surf_indices = np.arange(11,22)
@@ -20,8 +19,9 @@ tile_shift_indices = [1,9]
 Bangle_shift_indices = [3,8,9]
 r_sp, z_sp = 1.49829829, 1.19672716 #prog angle & favorable
 
-sys.path.insert(0, os.path.abspath(run_directory+'/setup/'))
-sys.path.insert(0, os.path.abspath('../examples/sasvw-pa-fav/setup/'))
+sys.path.insert(0, os.path.abspath(setup_directory))
+sys.path.insert(0, os.path.abspath('../../../python'))
+import solps
 import makeParticleSource
 
 ################################################
@@ -125,7 +125,7 @@ def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
 
     plt.rcParams.update({'lines.linewidth':0.3})
     plt.rcParams.update({'lines.markersize':markersize})
-    plt.rcParams.update({'font.size':16})
+    plt.rcParams.update({'font.size':14})
 
     nP = len(history.dimensions['nP'])
     print('nP:',nP)
@@ -188,9 +188,9 @@ def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
     
     plt.xlim(1.37, 1.52)
     plt.ylim(1.06, 1.23)
-    plt.title('Case 1: W Trajectories', fontsize=24)
+    plt.title('Case 1: W Trajectories', fontsize=20)
     #plt.show(block=False)
-    plt.savefig('pa-fav.svg')
+    plt.savefig('history.svg')
     plt.close()
     return
 
