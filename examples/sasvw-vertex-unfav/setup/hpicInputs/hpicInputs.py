@@ -17,8 +17,8 @@ import scipy.interpolate as scii
 import netCDF4
 import matplotlib.pyplot as plt
 
-case_number = 1
-W_indices_coarse = np.arange(11,22)
+case_number = 4
+W_indices_coarse = np.arange(16,25)
 
 rmrs_fine_file = 'rmrs_fine.txt'
 gitr_rz = 'gitr_rz.txt'
@@ -138,7 +138,7 @@ te_coarse = profiles.variables['te_inner_target'][W_indices_coarse]
 ti_coarse = profiles.variables['ti_inner_target'][W_indices_coarse]
 
 ne_func = scii.interp1d(rmrsCoarse, ne_coarse, fill_value='extrapolate')
-te_func = scii.interp1d(rmrsCoarse, te_coarse, fill_value='extrapolate')
+te_func = scii.interp1d(rmrsCoarse, te_coarse, fill_value=te_coarse[0], bounds_error=False)
 ti_func = scii.interp1d(rmrsCoarse, ti_coarse, fill_value='extrapolate')
 
 ne = ne_func(rmrsFine)

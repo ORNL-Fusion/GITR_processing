@@ -5,9 +5,10 @@ import shutil
 import numpy as np
 import solpsProcessing, makeGeom, makeParticleSource
 
-nP = int(5e3)
+nP = int(5e2)
+run_directory = '..'
 #run_directory = '/Users/Alyssa/Dev/GITR/scratch'
-run_directory = '/pscratch/sd/h/hayes/forces/BET'
+#run_directory = '/pscratch/sd/h/hayes/forces/force'
 
 W_indices = np.arange(11,22)
 

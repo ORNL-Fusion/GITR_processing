@@ -58,7 +58,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
             ftCFile = '../setup/assets/ftridynBackgroundC.nc', \
             ftWFile = '../input/ftridynSelf.nc', \
             configuration = 'random', \
-            use_fractal_tridyn_outgoing_IEADS = 1, \
+            use_fractal_tridyn_outgoing_IEADS = 0, \
             plot_variables = 1, blockplots = 0):
     
     #import wall geometry to plot over
@@ -122,7 +122,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
             Alpha[i] = np.pi/2
 
     Alpha = np.abs(Alpha) #np.abs(np.rad2deg(Alpha[W_fine[:-1]]))
-    #print('alpha:',np.rad2deg(Alpha))
+    print('alpha:',np.rad2deg(Alpha))
     Beta = np.abs(np.pi/2 - Alpha)
 
     dist = np.sqrt(np.power(r1-r2,2) + np.power(z1-z2,2))
@@ -526,14 +526,14 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
             else:
             
                 #get IEADs for sputtered W
-                E = PartDist.Generate(weight, 'Thomson')
+                E = PartDist.Generate(weight, 'Thompson')
                 PolAng = PartDist.Generate(weight, 'SinCos', x=np.linspace(0,np.pi/2,10*weight))
-                AziAng = PartDist.Generate(weight, 'Uniform', x=np.linspace(0,2*np.pi,10*weight))
+                AziAng = PartDist.Generate(weight, 'Gaussian', x=np.linspace(-np.pi,np.pi,10*weight))
             
             #convert IEADs to vx,vy,vz unit vectors in particle frame of ref
             vx_prime = -np.cos(PolAng)
-            vy_prime = np.multiply(np.sin(PolAng), np.sin(AziAng)) #-np.sin(AziAng))
-            vz_prime = np.multiply(np.sin(PolAng), np.cos(AziAng))
+            vy_prime = np.multiply(np.sin(PolAng), -np.cos(AziAng))
+            vz_prime = np.multiply(np.sin(PolAng), -np.sin(AziAng))
             PartDist.SetAttr('vx', vx_prime)
             PartDist.SetAttr('vy', vy_prime)
             PartDist.SetAttr('vz', vz_prime)

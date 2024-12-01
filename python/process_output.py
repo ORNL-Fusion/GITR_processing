@@ -16,15 +16,20 @@ run_directory = '/Users/Alyssa/Dev/GITR/scratch'
 setup_directory = '../examples/sasvw-pa-fav/setup'
 rmrs_fine_file = setup_directory+'/assets/rmrs_fine.txt'
 
+#prog angle
 W_surf_indices = np.arange(11,22)
 tile_shift_indices = [1,9]
 Bangle_shift_indices = [3,8,9]
 r_sp, z_sp = 1.49829829, 1.19672716 #prog angle & favorable
-#r_sp, z_sp = 1.50230407, 1.23187366 #vertex & favorable
 #r_sp, z_sp = 1.49829824, 1.19672712 #prog angle & unfavorable
-
-sys.path.insert(0, os.path.abspath(run_directory+'/setup/'))
-sys.path.insert(0, os.path.abspath('../examples/sasvw-pa-fav/setup/'))
+'''
+#vertex
+W_surf_indices = np.arange(16,25)
+tile_shift_indices = [2,6]
+Bangle_shift_indices = [3,6]
+r_sp, z_sp = 1.50230407, 1.23187366 #vertex & favorable
+'''
+sys.path.insert(0, os.path.abspath(setup_directory))
 import makeParticleSource
 
 ################################################
@@ -155,7 +160,7 @@ def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
 
     plt.rcParams.update({'lines.linewidth':0.3})
     plt.rcParams.update({'lines.markersize':markersize})
-    plt.rcParams.update({'font.size':11})
+    plt.rcParams.update({'font.size':14})
 
     nP = len(history.dimensions['nP'])
     print('nP:',nP)
@@ -216,13 +221,22 @@ def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
 
     if basic==0: plt.legend(handles=patchList, fontsize=8, loc=2) #upper-left=2, lower-left=3
     
+    #whole device
     #plt.xlim(1.0, 2.0)
     #plt.ylim(-1.5, 1.5)
-    plt.xlim(1.35, 1.55)
-    plt.ylim(0.9, 1.23)
-    plt.title('W trajectories with only the \n temperature gradient force on', fontsize=14)
+    #pa-fav
+    plt.xlim(1.37, 1.52)
+    plt.ylim(1.06, 1.23)
+    #vertex-fav
+    #plt.xlim(1.0, 1.53)
+    #plt.ylim(1.0, 1.23)
+    #vertex-unfav
+    #plt.xlim(1.0, 1.53)
+    #plt.ylim(1.0, 1.23)
+    
+    plt.title('W Trajectories', fontsize=24)
     #plt.show(block=False)
-    plt.savefig('history.svg')
+    plt.savefig(run_directory+'/output/history.svg')
     plt.close()
     return
 
@@ -236,6 +250,8 @@ def plot_surf_nc(nP10, dt10, nT10, \
     profiles, W_indices, r_inner_target, z_inner_target, rmrs = init()
     rmrsCoords = profiles.variables['rmrs_inner_target'][W_indices]
     surface = netCDF4.Dataset(surface_file, "r", format="NETCDF4")
+    #pps_per_nP = 1394457587.59747
+    
     pps_per_nP, partSource_flux, fluxD, fluxC = makeParticleSource.distributed_source(nP=(nP10[0] * (10**int(nP10[1]))), \
                 surfW = W_surf_indices, \
                 tile_shift_indices = tile_shift_indices, \
@@ -320,8 +336,8 @@ def plot_surf_nc(nP10, dt10, nT10, \
     print('total net deposited flux',sum(netDep*area)/sum(area))
     print('redeposition rate',100 * (sum(grossDep*area)/sum(area)) / (sum(grossEro*area)/sum(area)), '%')
     print('prompt redeposition rate', 100 * prompt_redep_rate, '%')
-    print('self-sputtering fraction',100 * (sum(grossEro)-sum(partSource_flux))/sum(grossEro), '%')
-    
+    #print('self-sputtering fraction',100 * (sum(grossEro)-sum(partSource_flux))/sum(grossEro), '%')
+    '''
     if norm=='C':
         grossEro_norm = grossEro/fluxC
         grossDep_norm = grossDep/fluxC
@@ -330,10 +346,10 @@ def plot_surf_nc(nP10, dt10, nT10, \
         grossEro_norm = grossEro/fluxD
         grossDep_norm = grossDep/fluxD
         netDep_norm = netDep/fluxD
-    else: 
-        grossEro_norm = grossEro
-        grossDep_norm = grossDep
-        netDep_norm = netDep
+    else: '''
+    grossEro_norm = grossEro
+    grossDep_norm = grossDep
+    netDep_norm = netDep
     
     grossEro_cumsum = np.cumsum(grossEro)
     grossDep_cumsum = np.cumsum(grossDep)
@@ -344,7 +360,10 @@ def plot_surf_nc(nP10, dt10, nT10, \
     r1_end, z1_end = 1.49274, 1.22149
     #account for when View 1 is before or after OSP
     is_neg = -1
-    if 'vertex' in run_directory: is_neg=1
+    if 'vertex' in setup_directory:
+        r1_start, z1_start = 1.49274, 1.22149
+        r1_end, z1_end = 1.491288, 1.21629
+        is_neg=1
     rmrs1_start = is_neg*np.sqrt((z1_start-z_sp)**2 + (r1_start-r_sp)**2)
     rmrs1_end = is_neg*np.sqrt((z1_end-z_sp)**2 + (r1_end-r_sp)**2)
     
@@ -369,8 +388,15 @@ def plot_surf_nc(nP10, dt10, nT10, \
     V2_area = 0
     V3_area = 0
     
+    if 'vertex' in setup_directory:
+        lower_bound = rmrs1_start
+        upper_bound = rmrs1_end
+    else:
+        lower_bound = rmrs1_end
+        upper_bound = rmrs1_start
+        
     for i,v in enumerate(rmrsFine):
-        if v >= rmrs1_end and v <= rmrs1_start:
+        if v >= lower_bound and v <= upper_bound:
             V1_indices = np.append(V1_indices, i)
         elif v >= rmrs2_start and v <= rmrs2_end:
             V2_indices = np.append(V2_indices, i)
@@ -389,15 +415,21 @@ def plot_surf_nc(nP10, dt10, nT10, \
         V3_area += rmrsFine[i+1] - rmrsFine[i]
     
     #add fraction of previous cell ending inside the view
-    V1_grossEro += grossEro[V1_indices[0]-1] * (rmrs1_end-rmrsFine[V1_indices[0]])
-    V1_area += rmrs1_end-rmrsFine[V1_indices[0]]
+    if 'vertex' in setup_directory:
+        V1_grossEro += grossEro[V1_indices[0]-1] * (rmrs1_start-rmrsFine[V1_indices[0]])
+    else:
+        V1_grossEro += grossEro[V1_indices[0]-1] * (rmrs1_end-rmrsFine[V1_indices[0]])
+    V1_area += rmrs1_start-rmrsFine[V1_indices[0]]
     V2_grossEro += grossEro[V2_indices[0]-1] * (rmrs2_start-rmrsFine[V2_indices[0]])
     V2_area += rmrs2_start-rmrsFine[V2_indices[0]]
     V3_grossEro += grossEro[V3_indices[0]-1] * (rmrs3_start-rmrsFine[V3_indices[0]])
     V3_area += rmrs3_start-rmrsFine[V3_indices[0]]
 
     #subtract fraction of last cell starting inside the view
-    V1_grossEro -= grossEro[V1_indices[-1]] * (rmrs1_start-rmrsFine[V1_indices[-1]+1])
+    if 'vertex' in setup_directory:
+        V1_grossEro -= grossEro[V1_indices[-1]] * (rmrs1_end-rmrsFine[V1_indices[-1]+1])
+    else:
+        V1_grossEro -= grossEro[V1_indices[-1]] * (rmrs1_start-rmrsFine[V1_indices[-1]+1])
     V1_area -= rmrs1_start-rmrsFine[V1_indices[-1]+1] 
     V2_grossEro -= grossEro[V2_indices[-1]] * (rmrs2_end-rmrsFine[V2_indices[-1]+1])
     V2_area -= rmrs2_end-rmrsFine[V2_indices[-1]+1]
@@ -408,14 +440,33 @@ def plot_surf_nc(nP10, dt10, nT10, \
     V2_grossEro = V2_grossEro / V2_area
     V3_grossEro = V3_grossEro / V3_area
     
+    #filterscope_diameter1 = 0.005404199 #option to replace V1_area in the toroidal_fraction1
+    tokamak_circumference1 = 2 * np.pi * 1.492014
+    toroidal_fraction1 = V1_area / tokamak_circumference1
+    view_fraction1 = toroidal_fraction1 * np.pi/4
+
+    #filterscope_diameter2 = 0.007125431
+    tokamak_circumference2 = 2 * np.pi * 1.4923785
+    toroidal_fraction2 = V2_area / tokamak_circumference2
+    view_fraction2 = toroidal_fraction2 * np.pi/4
+
+    #filterscope_diameter3 = 0.007476819
+    tokamak_circumference3 = 2 * np.pi * 1.492046
+    toroidal_fraction3 = V3_area / tokamak_circumference3
+    view_fraction3 = toroidal_fraction3 * np.pi/4
+    
+    V1_grossEro = view_fraction1 * V1_grossEro
+    V2_grossEro = view_fraction2 * V2_grossEro
+    V3_grossEro = view_fraction3 * V3_grossEro
+    
     print('\n')
     print('gross erosion in View 1:', V1_grossEro)
     print('gross erosion in View 2:', V2_grossEro)
     print('gross erosion in View 3:', V3_grossEro)
     
-    plt.rcParams.update({'font.size':30})
+    plt.rcParams.update({'font.size':14})
     plt.rcParams.update({'lines.linewidth':5}) 
-    
+    '''
     #plot self-sputtering
     plt.close()
     if tile_shift_indices != []:
@@ -432,7 +483,7 @@ def plot_surf_nc(nP10, dt10, nT10, \
     plt.ylabel('Percentage')
     plt.title('Percentage of Gross Erosion from Self-Sputtering')
     plt.show(block=True)
-    
+    '''
     #plot main surface plot with 3 views
     plt.close()
     plt.axvspan(rmrs1_start, rmrs1_end, color='#f7bc00', alpha=0.5)
@@ -440,6 +491,7 @@ def plot_surf_nc(nP10, dt10, nT10, \
     plt.axvspan(rmrs3_start, rmrs3_end, color='#f99301', alpha=0.5)
     
     plt.plot(rmrsFine,np.zeros(len(rmrsFine)),'gray')
+    '''
     if tile_shift_indices != []:
         for i,v in enumerate(tile_shift_indices):
             if i==0: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', label='Walll\nVertices')
@@ -448,18 +500,19 @@ def plot_surf_nc(nP10, dt10, nT10, \
         for i,v in enumerate(Bangle_shift_indices):
             if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\\alpha_B$')
             else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
-    
+    '''
     plt.plot(rmrsFine,grossEro_norm,'r', label='Gross Erosion')
-    plt.plot(rmrsFine,grossDep_norm,'g', label='Redeposition')
+    plt.plot(rmrsFine,grossDep_norm,'g', label='Gross Deposition')
     plt.plot(rmrsFine,netDep_norm,'k', label='Net Deposition')
     
     plt.xlabel('D-Dsep [m]')
     if norm!=None: plt.ylabel('\u0393$_{W,outgoing}$ / \u0393$_{%s,incoming}$'%norm)
-    if norm==None: plt.ylabel('\u0393$_{W,outgoing}$ [m$^{-2}$s$^{-1}$]')
+    if norm==None: plt.ylabel('\u0393$_{W}$ [m$^{-2}$s$^{-1}$]')
     plt.ticklabel_format(axis='y',style='sci',scilimits=(-2,2))
-    plt.legend(fontsize=28)#loc='upper left')
-    plt.title('GITR Predicted Erosion and Redeposition Profiles,\nnP='+str(nP10[0])+'e'+str(nP10[1])+', dt=1e-'+str(dt10)+', nT='+str(nT10[0])+'e'+str(nT10[1]), fontsize=30)
-    plt.show(block=False)
+    plt.legend(fontsize=10)#loc='upper left')
+    plt.title('GITR-Predicted Erosion and Deposition', fontsize=20)
+    #plt.title('GITR Predicted Erosion and Redeposition Profiles,\nnP='+str(nP10[0])+'e'+str(nP10[1])+', dt=1e-'+str(dt10)+', nT='+str(nT10[0])+'e'+str(nT10[1]), fontsize=30)
+    plt.show(block=True)
     #plt.savefig('plots/surface.png')
     
     if plot_cumsum:
@@ -477,7 +530,7 @@ def plot_surf_nc(nP10, dt10, nT10, \
     return
         
 def spectroscopy(pps_per_nP, View=3, \
-                 specFile='spec.nc',plotting=0):
+                 specFile='spec.nc',plotting=1):
     
     spec = netCDF4.Dataset(specFile, "r", format="NETCDF4")
     profiles, W_indices, R, Z, rmrs = init()
@@ -490,23 +543,33 @@ def spectroscopy(pps_per_nP, View=3, \
     gridz = np.append(gridz, gridz[-1]+dz)
     rr, zz = np.meshgrid(gridr,gridz)
     density_unitless = spec.variables['n'][:]
-    density_neutrals_unitless = density_unitless[0]
+    #density_neutrals_unitless = density_unitless[0]
+    #temporarily make this a summation over all W charge states
+    density_neutrals_unitless = np.sum(density_unitless,axis=0) 
     
     plt.pcolor(gridr,gridz,density_neutrals_unitless)
     plt.axis('Scaled')
-    plt.xlabel('r [m]')
-    plt.ylabel('z [m]')
+    plt.xlabel('R [m]')
+    plt.ylabel('Z [m]')
     plt.colorbar(label='# Computational Neutrals')
     plt.title('Raw W0 Spec Output form GITR')
     plt.savefig('plots/spec_compNeutrals.png')
     
-    filterscope_diameter = 0.00702068
-    tokamak_circumference = 2 * np.pi * 1.4925
+    if View==1:
+        filterscope_diameter = 0.005404199
+        tokamak_circumference = 2 * np.pi * 1.492014
+    elif View==2:
+        filterscope_diameter = 0.007125431
+        tokamak_circumference = 2 * np.pi * 1.4923785
+    elif View==3:
+        filterscope_diameter = 0.007476819
+        tokamak_circumference = 2 * np.pi * 1.492046
+    
     toroidal_fraction = filterscope_diameter / tokamak_circumference
     view_fraction = toroidal_fraction * np.pi/4
     
     dA = np.pi * (filterscope_diameter/2)**2
-    neutral_flux = density_neutrals_unitless * pps_per_nP / dA
+    neutral_flux = density_neutrals_unitless * pps_per_nP / dA # W0 m-2 s-1
     neutral_flux_sliced = view_fraction * neutral_flux
 
     '''
@@ -557,7 +620,7 @@ def spectroscopy(pps_per_nP, View=3, \
         line2 = -0.790843*gridr + 2.395664
         
         fscope[np.where(fscope==0)] = 'NaN'
-        fscope[:,0] = fscope[-1,5:] = fscope[-2,6:] = fscope[-3:,7:] = 'NaN'
+        fscope[-1,1] = fscope[-1,5:] = fscope[-2,6:] = fscope[-3:,7:] = 'NaN'
         for i in range(0,8):
             fscope[i,:-i-2] = 'NaN'
         
@@ -574,8 +637,8 @@ def spectroscopy(pps_per_nP, View=3, \
             plt.axis('Scaled')
             plt.xlim(gridr[0],gridr[-1])
             plt.ylim(gridz[0],gridz[-1])
-            plt.xlabel('r [m]')
-            plt.ylabel('z [m]')
+            plt.xlabel('R [m]')
+            plt.ylabel('Z [m]')
             plt.colorbar(label='\n Density [m$^{-3}$ s$^{-1}$]')
             plt.title('Toroidal Slice of W0 Density')
             plt.savefig('plots/spec_density_sliced.png')
@@ -618,8 +681,8 @@ def spectroscopy(pps_per_nP, View=3, \
             plt.axis('Scaled')
             plt.xlim(gridr[0],gridr[-1])
             plt.ylim(gridz[0],gridz[-1])
-            plt.xlabel('r [m]')
-            plt.ylabel('z [m]')
+            plt.xlabel('R [m]')
+            plt.ylabel('Z [m]')
             plt.colorbar(label='\n Density [m$^{-3}$ s$^{-1}$]')
             plt.title('Toroidal Slice of W0 Density')
             plt.savefig('plots/spec_density_sliced.png')
@@ -641,7 +704,10 @@ def spectroscopy(pps_per_nP, View=3, \
             fscope[i,:-1-i] = 'NaN'
         for i in range(0,20):
             fscope[-i-4,:i] = 'NaN'
+        for i in range(0,16):
+            fscope[24-i,17+i] = 'NaN'
         fscope[9:,-2:] = fscope[11:,-4:] = 'NaN'
+        fscope[12,28] = fscope[13,19] = fscope[12,20] = 'NaN'
     
     if True:
         plt.close()
@@ -652,12 +718,12 @@ def spectroscopy(pps_per_nP, View=3, \
         plt.axis('Scaled')
         plt.xlim(gridr[0],gridr[-1])
         plt.ylim(gridz[0],gridz[-1])
-        plt.xlabel('r [m]')
-        plt.ylabel('z [m]')
+        plt.xlabel('R [m]')
+        plt.ylabel('Z [m]')
         plt.colorbar(label='\n Gross Eroded W Flux [m$^{-2}$ s$^{-1}$]') #'\n Density [m$^{-3}$ s$^{-1}$]')
 
         fscope[np.isnan(fscope)] = 0
-        print('W0 Neutral Flux:', np.sum(fscope)) # in units of m-3 s-1
+        print('W0 Neutral Flux:', np.sum(fscope)) # in units of m-2 s-1
         plt.title('Toroidal Slice of W0 Density \n View '+str(View)+' W0: %10e m$^{-2}$s$^{-1}$' %np.sum(fscope))
         plt.savefig('plots/spec_filterscope.png')
     
@@ -1730,8 +1796,10 @@ def particle_diagnostics_hist(nP_input, pdFile, segment_counter=50, seg_hist_plo
 
 if __name__ == "__main__":
     #plot_history2D(run_directory+'/output/history.nc')
-    #plot_surf_nc([1,6], 9, [1,6], '../examples/sasvw-pa-fav/output/perlmutter/production/surface_S1.nc', \
-                 #'../examples/sasvw-pa-fav/output/perlmutter/production/positions_S1.nc')
+    plot_surf_nc([1,6], 9, [1,6], '../examples/sasvw-pa-fav/output/perlmutter/production/surface_S1.nc', \
+                 '../examples/sasvw-pa-fav/output/perlmutter/production/positions_S1.nc')
+    #plot_surf_nc([1,4], 9, [1,5], '../examples/sasvw-pa-fav/output/surface1.nc', \
+                 #'../examples/sasvw-pa-fav/output/positions1.nc')
     #plot_surf_nc([5,2], 8, [1,5], setup_directory+"/../output/perlmutter/production/forces24.09.19/surfaces/BFT.nc", \
                  #setup_directory+'/../output/perlmutter/production/forces24.09.19/positions/BFT.nc', norm='')
     #analyze_leakage('perlmutter/history_D3t6.nc')
@@ -1741,10 +1809,12 @@ if __name__ == "__main__":
     #plot_gitr_gridspace()
     #plot_particle_source()
     #plot_history2D(setup_directory+"/../output/perlmutter/production/forces24.09.19/histories/gradT.nc",\
+    #plot_history2D(setup_directory+"/../output/history1.nc",\
+    #plot_history2D(setup_directory+"/../output/history1.nc",\
     #plot_history2D("/pscratch/sd/h/hayes/sasvw-pa-fav-history/output/history.nc",\
                    #bFile=setup_directory+'/../input/bField.nc')
-    #spectroscopy(1006929636574578.9,2,specFile='perlmutter/D3p5t9T6/spec.nc')
-    ionization_analysis([0,0], '../examples/sasvw-pa-fav/output/perlmutter/production/','history_IF.nc', 'positions_IF.nc')
+    #spectroscopy(2013859273149157.8,3,specFile='/Users/Alyssa/Desktop/spec.nc')
+    #ionization_analysis([0,0], '../examples/sasvw-pa-fav/output/perlmutter/production/','history_IF.nc', 'positions_IF.nc')
     #prompt_redep_hist([2,8,5], '../examples/sasvw-pa-fav/output/perlmutter/production/forces24.09.19/positions/','BEF.nc')
     #particle_diagnostics_hist(4, '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav/output/perlmutter/production/particle_histograms_PR1.nc', plot_blocker=True)
     #particle_diagnostics_hist(1e4, run_directory+'/output/particle_histograms.nc', plot_blocker=False)

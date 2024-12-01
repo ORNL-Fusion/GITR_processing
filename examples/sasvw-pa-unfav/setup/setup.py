@@ -5,7 +5,7 @@ import shutil
 import numpy as np
 import solpsProcessing, makeGeom, makeParticleSource
 
-nP = int(5e3)
+nP = int(5e2)
 run_directory = '..'
 
 W_indices = np.arange(11,22)
@@ -20,10 +20,8 @@ makeGeom.main(gitr_geometry_filename='gitrGeometry.cfg', \
                     solps_targfile = 'assets/b2fgmtry', \
                     profiles_file = run_directory+'/input/plasmaProfiles.nc', \
                     W_indices_profiles = W_indices, \
-                    tile_shift_indices = tile_shift_indices, \
                     numAddedPoints = 100, \
-                    plot_variables = 0, \
-                    show_plots = 0)
+                    plot_variables = 0)
 
 os.remove('gitrGeometry.cfg0')
 shutil.move('gitrGeometry.cfg', run_directory+'/input/gitrGeometry.cfg')

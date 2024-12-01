@@ -141,6 +141,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     energyC4, angleC4 = get_incoming_IEADs(4, profiles, surfW, rmrsCoarse, rmrsFine)
     energyC5, angleC5 = get_incoming_IEADs(5, profiles, surfW, rmrsCoarse, rmrsFine)
     energyC6, angleC6 = get_incoming_IEADs(6, profiles, surfW, rmrsCoarse, rmrsFine)
+    energyC6 = 2*energyC6 #REMOVE LATER
     
     if plot_variables == 1:
         plt.close()
@@ -519,7 +520,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
             else:
             
                 #get IEADs for sputtered W
-                E = PartDist.Generate(weight, 'Thomson')
+                E = PartDist.Generate(weight, 'Thompson')
                 PolAng = PartDist.Generate(weight, 'SinCos', x=np.linspace(0,np.pi/2,10*weight))
                 AziAng = PartDist.Generate(weight, 'Gaussian', x=np.linspace(-np.pi,np.pi,10*weight))
             

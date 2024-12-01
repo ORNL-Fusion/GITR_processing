@@ -17,7 +17,7 @@ import scipy.interpolate as scii
 import netCDF4
 import matplotlib.pyplot as plt
 
-case_number = 1
+case_number = 2
 W_indices_coarse = np.arange(11,22)
 
 rmrs_fine_file = 'rmrs_fine.txt'
@@ -141,12 +141,19 @@ ne_func = scii.interp1d(rmrsCoarse, ne_coarse, fill_value='extrapolate')
 te_func = scii.interp1d(rmrsCoarse, te_coarse, fill_value='extrapolate')
 ti_func = scii.interp1d(rmrsCoarse, ti_coarse, fill_value='extrapolate')
 
-ne = ne_func(rmrsFine)
+ne_targ = ne_func(rmrsFine)
 te = te_func(rmrsFine)
 ti = ti_func(rmrsFine)
 
+# only for Case 2, ne_inner_target is zeros, so we instead interpolate from the 2D grid
+gridz = profiles.variables['gridz'][:]
+gridr = profiles.variables['gridr'][:]
+ne_2D = profiles.variables['ne'][:]
+ne = scii.interpn((gridz,gridr),ne_2D,(Z_midpoints_fine,R_midpoints_fine))
+
 plt.close()
-plt.plot(rmrsFine, ne, color='pink')
+plt.plot(rmrsFine, ne, color='black', label='interpolated from 2D profiles.nc')
+plt.plot(rmrsFine, ne_targ, color='pink', label='from "inner_target"')
 plt.xlabel('D-Dsep [m]')
 plt.ylabel('Density [m$^{-3}$]')
 plt.title('Case '+str(case_number)+' ne')

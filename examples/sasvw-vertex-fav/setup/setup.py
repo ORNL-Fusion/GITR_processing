@@ -5,8 +5,9 @@ import shutil
 import numpy as np
 import solpsProcessing, makeGeom, makeParticleSource
 
-nP = int(1e4)
-run_directory = '/pscratch/sd/h/hayes/sasvw-vertex-fav/surface'
+nP = int(5e2)
+run_directory = '..'
+#run_directory = '/pscratch/sd/h/hayes/sasvw-vertex-fav/surface'
 
 W_indices = np.arange(16,25)
 tile_shift_indices = [2,6]

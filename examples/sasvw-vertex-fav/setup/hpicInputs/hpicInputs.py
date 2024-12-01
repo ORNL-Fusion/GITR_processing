@@ -17,8 +17,8 @@ import scipy.interpolate as scii
 import netCDF4
 import matplotlib.pyplot as plt
 
-case_number = 1
-W_indices_coarse = np.arange(11,22)
+case_number = 3
+W_indices_coarse = np.arange(16,25)
 
 rmrs_fine_file = 'rmrs_fine.txt'
 gitr_rz = 'gitr_rz.txt'
