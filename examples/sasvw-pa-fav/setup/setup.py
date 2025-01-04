@@ -1,11 +1,12 @@
 import sys, os
-sys.path.insert(0, os.path.abspath('../../../python/'))
+#sys.path.insert(0, os.path.abspath('../../../python/'))
+sys.path.insert(0,'.') #this line MUST be last in a list of sys.path.insert commands or the wrong setup scripts could be used
 
 import shutil
 import numpy as np
 import solpsProcessing, makeGeom, makeParticleSource
 
-nP = int(5e2)
+nP = int(1e5)
 run_directory = '..'
 #run_directory = '/Users/Alyssa/Dev/GITR/scratch'
 #run_directory = '/pscratch/sd/h/hayes/forces/force'
@@ -13,7 +14,7 @@ run_directory = '..'
 W_indices = np.arange(11,22)
 
 print_separator = '\n-------------------------------------------------\n'
-
+'''
 print('\n',print_separator,'Making gitrGeometry.cfg',print_separator,'\n')
 makeGeom.main(gitr_geometry_filename='gitrGeometry.cfg', \
                     solps_geomfile = 'assets/sas-vw_v005_mod.ogr', \
@@ -34,7 +35,7 @@ solpsProcessing.readEquilibrium(equilibrium_filename = 'assets/dg.equ', \
                     plot_variables = 0)
 
 shutil.move('bField.nc', run_directory+'/input/bField.nc')
-'''
+
 solpsProcessing.plot_surf_plasma_params(W_surf = W_indices, \
                     tile_shift_indices = [1,9], \
                     Bangle_shift_indices = [3,8,9])
@@ -50,6 +51,6 @@ makeParticleSource.distributed_source(nP, surfW = W_indices, \
                     ftDFile = 'assets/ftridynBackgroundD.nc', \
                     ftCFile = 'assets/ftridynBackgroundC.nc', \
                     configuration = 'random', \
-                    plot_variables = 0, blockplots = 0)
+                    plot_variables = 1, blockplots = 0)
 
 shutil.move('particleSource.nc', run_directory+'/input/particleSource.nc')

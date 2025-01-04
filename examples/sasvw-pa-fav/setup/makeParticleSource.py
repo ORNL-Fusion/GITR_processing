@@ -60,7 +60,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
             configuration = 'random', \
             use_fractal_tridyn_outgoing_IEADS = 0, \
             plot_variables = 1, blockplots = 0):
-    
+        
     #import wall geometry to plot over
     with open(gitr_rz, 'r') as file:
         wall = file.readlines()
@@ -982,7 +982,7 @@ if __name__ == "__main__":
                 ftDFile = 'assets/ftridynBackgroundD.nc', \
                 ftCFile = 'assets/ftridynBackgroundC.nc', \
                 configuration = 'random', \
-                plot_variables = 1)
+                plot_variables = 1, blockplots = 0)
 
 
 

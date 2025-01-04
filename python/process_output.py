@@ -1,6 +1,7 @@
 import sys, os
 import numpy as np
 from scipy import special
+import scipy.interpolate as scii
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import matplotlib.path as path
@@ -11,11 +12,12 @@ import solps
 # setting directories and special constants
 ################################################
 
-run_directory = '/Users/Alyssa/Dev/GITR/scratch'
+run_directory = '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-vertex-fav'
+#run_directory = '/Users/Alyssa/Dev/GITR/scratch'
 #run_directory = '/pscratch/sd/h/hayes/sasvw-pa-fav-history'
-setup_directory = '../examples/sasvw-pa-fav/setup'
+setup_directory = '../examples/sasvw-vertex-fav/setup'
 rmrs_fine_file = setup_directory+'/assets/rmrs_fine.txt'
-
+'''
 #prog angle
 W_surf_indices = np.arange(11,22)
 tile_shift_indices = [1,9]
@@ -28,7 +30,8 @@ W_surf_indices = np.arange(16,25)
 tile_shift_indices = [2,6]
 Bangle_shift_indices = [3,6]
 r_sp, z_sp = 1.50230407, 1.23187366 #vertex & favorable
-'''
+#r_sp, z_sp = 1.49905286, 1.22894757 #vertex & unfavorable
+
 sys.path.insert(0, os.path.abspath(setup_directory))
 import makeParticleSource
 
@@ -301,7 +304,7 @@ def plot_surf_nc(nP10, dt10, nT10, \
     z2 = Z[1:]
     
     dist = np.sqrt(np.power(r1-r2,2) + np.power(z1-z2,2))
-    area = np.pi*(r1+r2)*dist
+    area = np.pi*(r1+r2)*dist # conical frustum surface area
     
     if positions_file != '':
         positions = netCDF4.Dataset(positions_file, "r", format="NETCDF4")
@@ -439,7 +442,7 @@ def plot_surf_nc(nP10, dt10, nT10, \
     V1_grossEro = V1_grossEro / V1_area
     V2_grossEro = V2_grossEro / V2_area
     V3_grossEro = V3_grossEro / V3_area
-    
+    '''
     #filterscope_diameter1 = 0.005404199 #option to replace V1_area in the toroidal_fraction1
     tokamak_circumference1 = 2 * np.pi * 1.492014
     toroidal_fraction1 = V1_area / tokamak_circumference1
@@ -458,7 +461,7 @@ def plot_surf_nc(nP10, dt10, nT10, \
     V1_grossEro = view_fraction1 * V1_grossEro
     V2_grossEro = view_fraction2 * V2_grossEro
     V3_grossEro = view_fraction3 * V3_grossEro
-    
+    '''
     print('\n')
     print('gross erosion in View 1:', V1_grossEro)
     print('gross erosion in View 2:', V2_grossEro)
@@ -529,7 +532,7 @@ def plot_surf_nc(nP10, dt10, nT10, \
     
     return
         
-def spectroscopy(pps_per_nP, View=3, \
+def spectroscopy(pps_per_nP, View=1, \
                  specFile='spec.nc',plotting=1):
     
     spec = netCDF4.Dataset(specFile, "r", format="NETCDF4")
@@ -607,6 +610,7 @@ def spectroscopy(pps_per_nP, View=3, \
             plt.ylabel('z [m]')
             plt.colorbar(label='\n Density [m$^{-3}$ s$^{-1}$]')
             plt.title('Toroidal Slice of W0 Density')
+            #plt.show(block=True)
             plt.savefig('plots/spec_density_sliced.png')
         
         rstart, rend = 62, 71
@@ -641,6 +645,7 @@ def spectroscopy(pps_per_nP, View=3, \
             plt.ylabel('Z [m]')
             plt.colorbar(label='\n Density [m$^{-3}$ s$^{-1}$]')
             plt.title('Toroidal Slice of W0 Density')
+            #plt.show(block=True)
             plt.savefig('plots/spec_density_sliced.png')
         
         rstart, rend = 50, 72
@@ -685,6 +690,7 @@ def spectroscopy(pps_per_nP, View=3, \
             plt.ylabel('Z [m]')
             plt.colorbar(label='\n Density [m$^{-3}$ s$^{-1}$]')
             plt.title('Toroidal Slice of W0 Density')
+            #plt.show(block=True)
             plt.savefig('plots/spec_density_sliced.png')
         
         rstart, rend = 39, 72
@@ -1793,11 +1799,116 @@ def particle_diagnostics_hist(nP_input, pdFile, segment_counter=50, seg_hist_plo
         
     return
 
+def PEC_interpolation(te, ne):
+    PEC_file = '../../SAS-VW-Data/sxb/martin_pec_4009_only_5d_ion.dat'
+    PEC_data = np.loadtxt(PEC_file, dtype='double')
+
+    te_grid = PEC_data[0][1:]
+    ne_grid = PEC_data.transpose()[0][1:]
+    PEC_grid = PEC_data[1:,1:]
+    
+    PEC_interpolated = scii.interpn((ne_grid,te_grid),PEC_grid,(ne,te))[0]
+    
+    return PEC_interpolated
+
+def spec_line_integration(view, spec_file, pps_per_nP, num_points=100, dt=1e-8):
+    profiles, W_indices, R, Z, rmrs = init()
+    
+    # set start and end points for the line along which we are integrating
+    # all (r,z) points are in [cm] for this calculation
+    if 'vertex' in setup_directory:
+        if view == 1:
+            r_source = 148.97312
+            z_source = 122.05578
+            r_targ = 149.8651495
+            z_targ = 121.4376785
+        elif view == 2:
+            r_source = 147.24126
+            z_source = 120.49705
+            r_targ = 149.952905
+            z_targ = 118.55191
+        elif view == 3:
+            r_source = 145.723855
+            z_source = 119.132585
+            r_targ = 149.831495
+            z_targ = 115.270365
+    else: 
+        if view == 1:
+            r_source = 148.973078
+            z_source = 122.055764
+            r_targ = 149.818333
+            z_targ = 121.454694
+        elif view == 2:
+            r_source = 147.24117594
+            z_source = 120.497058512
+            r_targ = 149.95283384
+            z_targ = 118.55196013
+        elif view == 3:
+            r_source = 145.724392078
+            z_source = 119.1319528895
+            r_targ = 149.906982022
+            z_targ = 115.200366255
+        
+    # define the points of interest along the line from (r_source,z_source) to (r_targ,z_targ)
+    r_line = np.linspace(r_source, r_targ, num_points+1)
+    z_line = np.linspace(z_source, z_targ, num_points+1)
+    
+    plt.close()
+    plt.plot(R*100,Z*100)
+    plt.plot(r_line,z_line)
+    plt.show(block=True)
+    
+    # import neutral W density results from spec.nc
+    spec = netCDF4.Dataset(spec_file, "r", format="NETCDF4")
+    
+    gridz_spec_original = spec.variables['gridZ'][:]*100 #[cm]
+    gridr_spec_original = spec.variables['gridR'][:]*100 #[cm]
+    dz = gridz_spec_original[1]-gridz_spec_original[0]
+    dr = gridr_spec_original[1]-gridr_spec_original[0]
+    gridz_spec = np.append(gridz_spec_original, gridz_spec_original[-1]+dz)
+    gridr_spec = np.append(gridr_spec_original, gridr_spec_original[-1]+dr)
+    
+    rr, zz = np.meshgrid(gridr_spec,gridz_spec)
+    r1 = rr[:-1,:-1]
+    r2 = rr[1:,1:]
+    z1 = zz[:-1,:-1]
+    z2 = zz[1:,1:]
+    
+    dV = 2*np.pi*(z2-z1)*0.5*(r2**2 - r1**2)
+
+    ni_unitless = spec.variables['n'][:] #unitless ion densities for all charge states
+    n0_unitless = ni_unitless[0] #unitless neutral densities
+    # gets 0 for view==1 but you can check that it's not broken because it's non-zero for ni_unitless[2]
+    ni_2D = pps_per_nP * (n0_unitless/dV) * dt # W0 cm-3
+    
+    # interpolate plasma parameters (te,ne,ni) at each point along the line from profiles.nc
+    gridz = profiles.variables['gridz'][:]*100 #[cm]
+    gridr = profiles.variables['gridr'][:]*100 #[cm]
+
+    te_2D = profiles.variables['te'][:] #[eV]
+    ne_2D = profiles.variables['ne'][:]/1e6 #[cm-3]
+
+    te_line = scii.interpn((gridz,gridr),te_2D,(z_line,r_line))
+    ne_line = scii.interpn((gridz,gridr),ne_2D,(z_line,r_line))
+    ni_line = scii.interpn((gridz_spec_original,gridr_spec_original),ni_2D,(z_line,r_line))
+
+    # interpolate PEC as a function of local ne and te
+    PEC_line = PEC_interpolation(te_line, ne_line) #[ph cm3 s-1]
+    
+    # perform the integration per equation 2 of Bogen 1984
+    dr = (r_targ-r_source)/num_points
+    dz = (z_targ-z_source)/num_points
+    dx = np.sqrt(dr**2+dz**2)
+    
+    intensity = (1/(4*np.pi)) * np.sum(ne_line * ni_line * PEC_line) * dx #[ph cm-2 s-1 str-1]
+    print(intensity)
+    
+    return intensity
 
 if __name__ == "__main__":
     #plot_history2D(run_directory+'/output/history.nc')
-    plot_surf_nc([1,6], 9, [1,6], '../examples/sasvw-pa-fav/output/perlmutter/production/surface_S1.nc', \
-                 '../examples/sasvw-pa-fav/output/perlmutter/production/positions_S1.nc')
+    #plot_surf_nc([1,6], 9, [1,6], '../examples/sasvw-pa-fav/output/perlmutter/production/surface_S1.nc', \
+                 #'../examples/sasvw-pa-fav/output/perlmutter/production/positions_S1.nc')
     #plot_surf_nc([1,4], 9, [1,5], '../examples/sasvw-pa-fav/output/surface1.nc', \
                  #'../examples/sasvw-pa-fav/output/positions1.nc')
     #plot_surf_nc([5,2], 8, [1,5], setup_directory+"/../output/perlmutter/production/forces24.09.19/surfaces/BFT.nc", \
@@ -1813,7 +1924,8 @@ if __name__ == "__main__":
     #plot_history2D(setup_directory+"/../output/history1.nc",\
     #plot_history2D("/pscratch/sd/h/hayes/sasvw-pa-fav-history/output/history.nc",\
                    #bFile=setup_directory+'/../input/bField.nc')
-    #spectroscopy(2013859273149157.8,3,specFile='/Users/Alyssa/Desktop/spec.nc')
+    spectroscopy(2013859273149157.8,1,specFile='/Users/Alyssa/Desktop/spec.nc')
+    #spec_line_integration(view=2, spec_file='/Users/Alyssa/Desktop/spec.nc', pps_per_nP=2013859273149157.8)
     #ionization_analysis([0,0], '../examples/sasvw-pa-fav/output/perlmutter/production/','history_IF.nc', 'positions_IF.nc')
     #prompt_redep_hist([2,8,5], '../examples/sasvw-pa-fav/output/perlmutter/production/forces24.09.19/positions/','BEF.nc')
     #particle_diagnostics_hist(4, '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav/output/perlmutter/production/particle_histograms_PR1.nc', plot_blocker=True)

@@ -7,7 +7,7 @@
 # All plasma parameters Bmag, te, ti, ne, and ni are sheath entrance parameters. 
 # Each 'ith' variable set corresponds to one refined line segment on a W surface. 
 # 
-# Variables returned from 2D bfield.nc: Bmag and Bangle
+# Variables returned from 2D bfield.nc: Bmag, Bangle
 # Variables returned from 2D plasmaProfiles.nc: ne, te, ti
 # Variables returned from 1D plasmaProfiles.nc: ni(ns)
 ###############################################################################
@@ -30,7 +30,7 @@ bfield_file = 'bField.nc'
 bfield = netCDF4.Dataset(bfield_file)
 
 # toggle this to see test comparisons of input vars
-plot_blocker = True
+plot_blocker = False
 
 ###############################################################################
 # Import refined rmrs points of interest for interpolation off inner_target
@@ -120,12 +120,12 @@ plt.title('Case '+str(case_number)+' Bmag')
 plt.show(block=plot_blocker)
 
 plt.close()
-plt.plot(rmrsFine, Bangle_test, color='pink', label='from "inner_target"')
+#plt.plot(rmrsFine, Bangle_test, color='deeppink', label='from "inner_target"')
 plt.plot(rmrsFine, Bangle, color='black', label='interpolated from 2D bfield.nc')
 plt.xlabel('D-Dsep [m]')
 plt.ylabel('Degrees from normal incidence')
 plt.title('Case '+str(case_number)+' Bangle')
-plt.legend()
+#plt.legend()
 plt.show(block=plot_blocker)
 
 ###############################################################################
@@ -133,38 +133,37 @@ plt.show(block=plot_blocker)
 ###############################################################################
 
 rmrsCoarse = profiles.variables['rmrs_inner_target_midpoints'][W_indices_coarse]
-ne_coarse = profiles.variables['ne_inner_target'][W_indices_coarse]
 te_coarse = profiles.variables['te_inner_target'][W_indices_coarse]
 ti_coarse = profiles.variables['ti_inner_target'][W_indices_coarse]
+ne_coarse = profiles.variables['ne_inner_target'][W_indices_coarse]
 
-ne_func = scii.interp1d(rmrsCoarse, ne_coarse, fill_value='extrapolate')
 te_func = scii.interp1d(rmrsCoarse, te_coarse, fill_value='extrapolate')
 ti_func = scii.interp1d(rmrsCoarse, ti_coarse, fill_value='extrapolate')
+ne_func = scii.interp1d(rmrsCoarse, ne_coarse, fill_value='extrapolate')
 
-ne = ne_func(rmrsFine)
 te = te_func(rmrsFine)
 ti = ti_func(rmrsFine)
+ne = ne_func(rmrsFine)
 
 plt.close()
-plt.plot(rmrsFine, ne, color='pink')
-plt.xlabel('D-Dsep [m]')
-plt.ylabel('Density [m$^{-3}$]')
-plt.title('Case '+str(case_number)+' ne')
-plt.legend()
-plt.show(block=plot_blocker)
-
-plt.close()
-plt.plot(rmrsFine, te, color='pink')
+plt.plot(rmrsFine, te, color='deeppink')
 plt.xlabel('D-Dsep [m]')
 plt.ylabel('Temperature [eV]')
 plt.title('Case '+str(case_number)+' te')
 plt.show(block=plot_blocker)
 
 plt.close()
-plt.plot(rmrsFine, ti, color='pink')
+plt.plot(rmrsFine, ti, color='deeppink')
 plt.xlabel('D-Dsep [m]')
 plt.ylabel('Temperature [eV]')
 plt.title('Case '+str(case_number)+' ti')
+plt.show(block=plot_blocker)
+
+plt.close()
+plt.plot(rmrsFine, ne, color='deeppink')
+plt.xlabel('D-Dsep [m]')
+plt.ylabel('Density [m$^{-3}$]')
+plt.title('Case '+str(case_number)+' ne')
 plt.show(block=plot_blocker)
 
 ###############################################################################
