@@ -6,7 +6,7 @@ import shutil
 import numpy as np
 import solpsProcessing, makeGeom, makeParticleSource
 
-nP = int(5e2)
+nP = int(5e3)
 run_directory = '..'
 #run_directory = '/Users/Alyssa/Dev/GITR/scratch'
 #run_directory = '/pscratch/sd/h/hayes/sasvw-pa-fav'

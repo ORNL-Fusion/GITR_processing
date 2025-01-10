@@ -230,13 +230,12 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     sputt_fluxC6 = spyldC6*fluxC6
     sputt_flux = sputt_fluxD + sputt_fluxC1 + sputt_fluxC2 + sputt_fluxC3 + sputt_fluxC4 + sputt_fluxC5 + sputt_fluxC6
     #print('SPUTT FLUX',len(sputt_flux),'\n',sputt_flux)
-    print('\n')
-    print('W eroded flux per nP:', np.sum(sputt_flux)/nP, 'm-2 s-1')
-
 
     #multiply by area to get the outgoing particles per second
+    print('\n')
     pps = np.multiply(sputt_flux,area)
     print('Total actual W eroded per second:', np.sum(pps), 's-1 \n')
+    print('W eroded flux per nP:', np.sum(pps)/np.sum(area)/nP, 'm-2 s-1')
     pps_weights = nP*pps/np.sum(pps)
 
     if plot_variables == 1: 

@@ -12,12 +12,12 @@ import solps
 # setting directories and special constants
 ################################################
 
-run_directory = '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-vertex-fav'
+run_directory = '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav'
 #run_directory = '/Users/Alyssa/Dev/GITR/scratch'
 #run_directory = '/pscratch/sd/h/hayes/sasvw-pa-fav-history'
-setup_directory = '../examples/sasvw-vertex-fav/setup'
+setup_directory = '../examples/sasvw-pa-fav/setup'
 rmrs_fine_file = setup_directory+'/assets/rmrs_fine.txt'
-'''
+
 #prog angle
 W_surf_indices = np.arange(11,22)
 tile_shift_indices = [1,9]
@@ -31,7 +31,7 @@ tile_shift_indices = [2,6]
 Bangle_shift_indices = [3,6]
 r_sp, z_sp = 1.50230407, 1.23187366 #vertex & favorable
 #r_sp, z_sp = 1.49905286, 1.22894757 #vertex & unfavorable
-
+'''
 sys.path.insert(0, os.path.abspath(setup_directory))
 import makeParticleSource
 
@@ -339,7 +339,7 @@ def plot_surf_nc(nP10, dt10, nT10, \
     print('total net deposited flux',sum(netDep*area)/sum(area))
     print('redeposition rate',100 * (sum(grossDep*area)/sum(area)) / (sum(grossEro*area)/sum(area)), '%')
     print('prompt redeposition rate', 100 * prompt_redep_rate, '%')
-    #print('self-sputtering fraction',100 * (sum(grossEro)-sum(partSource_flux))/sum(grossEro), '%')
+    print('self-sputtering fraction',100 * (sum(grossEro)-sum(partSource_flux))/sum(grossEro), '%')
     '''
     if norm=='C':
         grossEro_norm = grossEro/fluxC
@@ -467,9 +467,9 @@ def plot_surf_nc(nP10, dt10, nT10, \
     print('gross erosion in View 2:', V2_grossEro)
     print('gross erosion in View 3:', V3_grossEro)
     
-    plt.rcParams.update({'font.size':14})
+    plt.rcParams.update({'font.size':24})
     plt.rcParams.update({'lines.linewidth':5}) 
-    '''
+    
     #plot self-sputtering
     plt.close()
     if tile_shift_indices != []:
@@ -484,9 +484,9 @@ def plot_surf_nc(nP10, dt10, nT10, \
     plt.plot(rmrsFine, 100*(grossEro-partSource_flux)/grossEro)
     plt.xlabel('D-Dsep [m]')
     plt.ylabel('Percentage')
-    plt.title('Percentage of Gross Erosion from Self-Sputtering')
+    plt.title('Percentage of Gross Erosion from Self-Sputtering', fontsize=30)
     plt.show(block=True)
-    '''
+    
     #plot main surface plot with 3 views
     plt.close()
     plt.axvspan(rmrs1_start, rmrs1_end, color='#f7bc00', alpha=0.5)
@@ -494,7 +494,7 @@ def plot_surf_nc(nP10, dt10, nT10, \
     plt.axvspan(rmrs3_start, rmrs3_end, color='#f99301', alpha=0.5)
     
     plt.plot(rmrsFine,np.zeros(len(rmrsFine)),'gray')
-    '''
+    
     if tile_shift_indices != []:
         for i,v in enumerate(tile_shift_indices):
             if i==0: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', label='Walll\nVertices')
@@ -503,7 +503,7 @@ def plot_surf_nc(nP10, dt10, nT10, \
         for i,v in enumerate(Bangle_shift_indices):
             if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\\alpha_B$')
             else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
-    '''
+    
     plt.plot(rmrsFine,grossEro_norm,'r', label='Gross Erosion')
     plt.plot(rmrsFine,grossDep_norm,'g', label='Gross Deposition')
     plt.plot(rmrsFine,netDep_norm,'k', label='Net Deposition')
@@ -512,8 +512,8 @@ def plot_surf_nc(nP10, dt10, nT10, \
     if norm!=None: plt.ylabel('\u0393$_{W,outgoing}$ / \u0393$_{%s,incoming}$'%norm)
     if norm==None: plt.ylabel('\u0393$_{W}$ [m$^{-2}$s$^{-1}$]')
     plt.ticklabel_format(axis='y',style='sci',scilimits=(-2,2))
-    plt.legend(fontsize=10)#loc='upper left')
-    plt.title('GITR-Predicted Erosion and Deposition', fontsize=20)
+    plt.legend(loc='upper left')
+    plt.title('GITR-Predicted Erosion and Deposition', fontsize=30)
     #plt.title('GITR Predicted Erosion and Redeposition Profiles,\nnP='+str(nP10[0])+'e'+str(nP10[1])+', dt=1e-'+str(dt10)+', nT='+str(nT10[0])+'e'+str(nT10[1]), fontsize=30)
     plt.show(block=True)
     #plt.savefig('plots/surface.png')
@@ -1456,6 +1456,7 @@ def ionization_analysis(plotting, output_dir, historyFile, positionsFile, \
             else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
     
     plt.plot(rmrsPlotting[31:], frac_ioniz_in_Chodura[31:], label='Chodura', color='darkorange')
+    #plt.plot(rmrsPlotting, frac_ioniz_in_Chodura, label='Chodura', color='darkorange')
     plt.plot(rmrsPlotting, frac_ioniz_in_Debye, label='Debye', color='crimson')
     plt.xlabel('D-Dsep [m]')
     plt.ylabel('Fraction')
@@ -1559,17 +1560,17 @@ def ionization_analysis(plotting, output_dir, historyFile, positionsFile, \
     
     print('\nFraction that first ionize in the Debye sheath past OSP:')
     print('Min:', np.min(frac_ioniz_in_Debye[32:]))
-    print('Max:', np.max(frac_ioniz_in_Debye[31:]))
-    print('Average:', np.average(frac_ioniz_in_Debye[31:]))
+    print('Max:', np.max(frac_ioniz_in_Debye[32:]))
+    print('Average:', np.average(frac_ioniz_in_Debye[32:]))
     
     print('\nFraction that first ionize in the Chodura sheath past OSP:')
-    print('Min:', np.min(frac_ioniz_in_Chodura[31:]))
-    print('Max:', np.max(frac_ioniz_in_Chodura[31:]))
+    print('Min:', np.min(frac_ioniz_in_Chodura[32:]))
+    print('Max:', np.max(frac_ioniz_in_Chodura[32:]))
     print('Average:', np.average(frac_ioniz_in_Chodura[31:]))  
     
     print('\nFraction of first ionizations in the Chodura sheath that promptly redeposit past OSP:')
-    print('Min:', np.min(frac_prompt_Chodura[31:]))
-    print('Max:', np.max(frac_prompt_Chodura[31:]))
+    print('Min:', np.min(frac_prompt_Chodura[32:]))
+    print('Max:', np.max(frac_prompt_Chodura[32:]))
     print('Average:', np.average(frac_prompt_Chodura[31:])) 
     return
 
@@ -1629,7 +1630,7 @@ def prompt_redep_hist(inputs, fileDir, fileOFF, fileON=None):
 
     return
 
-def particle_diagnostics_hist(nP_input, pdFile, segment_counter=50, seg_hist_plotting=0, plot_blocker=1):
+def particle_diagnostics_hist(pdFile, segment_counter=50, seg_hist_plotting=0, plot_blocker=1):
     
     diagnostics = netCDF4.Dataset(pdFile, "r", format="NETCDF4")
     bin_edges_time = diagnostics.variables['bin_edges_time'][:]
@@ -1763,7 +1764,7 @@ def particle_diagnostics_hist(nP_input, pdFile, segment_counter=50, seg_hist_plo
     
     plt.close()
     plt.bar(bin_edges_time[:-1], histogram_particle_time_AllSegs/nP_time, width=bin_width_time, color='darkviolet', align='edge', edgecolor='k')
-    plt.axvline(np.log10(3e-6), 0,1, color='darkkhaki')
+    plt.axvline(np.log10(5e-6), 0,1, color='darkkhaki')
     plt.axvline(np.log10(50e-6), 0,1, color='darkkhaki')
     plt.xlabel('Logarithmic Time [log(sec)]')
     plt.ylabel('Counts\n')
@@ -1787,7 +1788,7 @@ def particle_diagnostics_hist(nP_input, pdFile, segment_counter=50, seg_hist_plo
     # Calculate percentage under a peak
     ########################################################
     
-    cutoff = -5.5
+    cutoff = np.log10(5e-6) #-5.5
     peak_edge_time = np.where((np.abs(bin_edges_time - cutoff) == np.min(np.abs(bin_edges_time - cutoff))))[0][0]
     prompt_redep_time = np.sum(histogram_particle_time_AllSegs[:round(peak_edge_time)])/nP_time
     print('Fraction Promptly Redeposited by Flight Time:', prompt_redep_time)
@@ -1907,26 +1908,24 @@ def spec_line_integration(view, spec_file, pps_per_nP, num_points=100, dt=1e-8):
 
 if __name__ == "__main__":
     #plot_history2D(run_directory+'/output/history.nc')
-    #plot_surf_nc([1,6], 9, [1,6], '../examples/sasvw-pa-fav/output/perlmutter/production/surface_S1.nc', \
-                 #'../examples/sasvw-pa-fav/output/perlmutter/production/positions_S1.nc')
+    #plot_surf_nc([1,6], 9, [1,6], '../examples/sasvw-pa-fav/output/perlmutter/production/surface_S.nc', \
+                 #'../examples/sasvw-pa-fav/output/perlmutter/production/positions_S.nc')
     #plot_surf_nc([1,4], 9, [1,5], '../examples/sasvw-pa-fav/output/surface1.nc', \
                  #'../examples/sasvw-pa-fav/output/positions1.nc')
-    #plot_surf_nc([5,2], 8, [1,5], setup_directory+"/../output/perlmutter/production/forces24.09.19/surfaces/BFT.nc", \
-                 #setup_directory+'/../output/perlmutter/production/forces24.09.19/positions/BFT.nc', norm='')
+    #plot_surf_nc([5,2], 8, [1,5], setup_directory+"/../output/perlmutter/production/forces25.01.06/surfaces/BET.nc", \
+                 #setup_directory+'/../output/perlmutter/production/forces25.01.06/positions/BET.nc', norm='')
     #analyze_leakage('perlmutter/history_D3t6.nc')
-    #analyze_forces('ExB drift', 'z', rzlim=True, colorbarLimits=[-500,500], dt=1e-9)
+    analyze_forces('ExB drift', 'z', rzlim=True, colorbarLimits=[-500,500], dt=1e-9)
     
     #init()
     #plot_gitr_gridspace()
     #plot_particle_source()
     #plot_history2D(setup_directory+"/../output/perlmutter/production/forces24.09.19/histories/gradT.nc",\
     #plot_history2D(setup_directory+"/../output/history1.nc",\
-    #plot_history2D(setup_directory+"/../output/history1.nc",\
     #plot_history2D("/pscratch/sd/h/hayes/sasvw-pa-fav-history/output/history.nc",\
                    #bFile=setup_directory+'/../input/bField.nc')
-    spectroscopy(2013859273149157.8,1,specFile='/Users/Alyssa/Desktop/spec.nc')
+    #spectroscopy(2013859273149157.8,1,specFile='/Users/Alyssa/Desktop/spec.nc')
     #spec_line_integration(view=2, spec_file='/Users/Alyssa/Desktop/spec.nc', pps_per_nP=2013859273149157.8)
     #ionization_analysis([0,0], '../examples/sasvw-pa-fav/output/perlmutter/production/','history_IF.nc', 'positions_IF.nc')
     #prompt_redep_hist([2,8,5], '../examples/sasvw-pa-fav/output/perlmutter/production/forces24.09.19/positions/','BEF.nc')
-    #particle_diagnostics_hist(4, '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav/output/perlmutter/production/particle_histograms_PR1.nc', plot_blocker=True)
-    #particle_diagnostics_hist(1e4, run_directory+'/output/particle_histograms.nc', plot_blocker=False)
+    #particle_diagnostics_hist('/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav/output/perlmutter/production/particle_histograms_PR.nc', plot_blocker=True)
