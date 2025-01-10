@@ -248,7 +248,7 @@ def plot_surf_nc(nP10, dt10, nT10, \
                  gitr_rz=setup_directory+'/assets/gitr_rz.txt', \
                  W_fine_file=setup_directory+'/assets/W_fine.txt', \
                  rmrs_fine_file=setup_directory+'/assets/rmrs_fine.txt', \
-                 norm=None, plot_cumsum=0):
+                 norm=None, plot_cumsum=0, plot_blocker=True):
     
     profiles, W_indices, r_inner_target, z_inner_target, rmrs = init()
     rmrsCoords = profiles.variables['rmrs_inner_target'][W_indices]
@@ -485,7 +485,7 @@ def plot_surf_nc(nP10, dt10, nT10, \
     plt.xlabel('D-Dsep [m]')
     plt.ylabel('Percentage')
     plt.title('Percentage of Gross Erosion from Self-Sputtering', fontsize=30)
-    plt.show(block=True)
+    plt.show(block=plot_blocker)
     
     #plot main surface plot with 3 views
     plt.close()
@@ -515,7 +515,7 @@ def plot_surf_nc(nP10, dt10, nT10, \
     plt.legend(loc='upper left')
     plt.title('GITR-Predicted Erosion and Deposition', fontsize=30)
     #plt.title('GITR Predicted Erosion and Redeposition Profiles,\nnP='+str(nP10[0])+'e'+str(nP10[1])+', dt=1e-'+str(dt10)+', nT='+str(nT10[0])+'e'+str(nT10[1]), fontsize=30)
-    plt.show(block=True)
+    plt.show(block=plot_blocker)
     #plt.savefig('plots/surface.png')
     
     if plot_cumsum:
@@ -1910,12 +1910,12 @@ if __name__ == "__main__":
     #plot_history2D(run_directory+'/output/history.nc')
     #plot_surf_nc([1,6], 9, [1,6], '../examples/sasvw-pa-fav/output/perlmutter/production/surface_S.nc', \
                  #'../examples/sasvw-pa-fav/output/perlmutter/production/positions_S.nc')
-    #plot_surf_nc([1,4], 9, [1,5], '../examples/sasvw-pa-fav/output/surface1.nc', \
-                 #'../examples/sasvw-pa-fav/output/positions1.nc')
+    plot_surf_nc([1,6], 9, [1,6], '../../sasvw-pa-fav/sasvw-pa-fav-surfaces/nPnT-new/surface_p6t6.nc', \
+                 '../../sasvw-pa-fav/sasvw-pa-fav-surfaces/nPnT-new/positions_p6t6.nc', plot_blocker=False)
     #plot_surf_nc([5,2], 8, [1,5], setup_directory+"/../output/perlmutter/production/forces25.01.06/surfaces/BET.nc", \
                  #setup_directory+'/../output/perlmutter/production/forces25.01.06/positions/BET.nc', norm='')
     #analyze_leakage('perlmutter/history_D3t6.nc')
-    analyze_forces('ExB drift', 'z', rzlim=True, colorbarLimits=[-500,500], dt=1e-9)
+    #analyze_forces('ExB drift', 'z', rzlim=True, colorbarLimits=[-500,500], dt=1e-9)
     
     #init()
     #plot_gitr_gridspace()
