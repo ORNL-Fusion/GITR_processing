@@ -1,15 +1,18 @@
 import sys, os
 #sys.path.insert(0, os.path.abspath('../../../python/'))
-sys.path.insert(0,'.') #this line MUST be last in a list of sys.path.insert commands or the wrong setup scripts could be used
+if sys.path[0] != os.path.abspath('.'):
+    sys.path.insert(0,'.') 
+    #this line MUST be last in a list of sys.path.insert commands 
+    #or the wrong setup scripts could be used
 
 import shutil
 import numpy as np
 import solpsProcessing, makeGeom, makeParticleSource
 
-nP = int(1e4)
+nP = int(5e3)
 #run_directory = '..'
 #run_directory = '/Users/Alyssa/Dev/GITR/scratch'
-run_directory = '/pscratch/sd/h/hayes/sasvw-pa-fav/sasvw-pa-fav-surface'
+run_directory = '/pscratch/sd/h/hayes/sasvw-pa-fav/sasvw-pa-fav-leakage'
 
 W_indices = np.arange(11,22)
 
@@ -22,6 +25,7 @@ makeGeom.main(gitr_geometry_filename='gitrGeometry.cfg', \
                     profiles_file = run_directory+'/input/plasmaProfiles.nc', \
                     W_indices_profiles = W_indices, \
                     numAddedPoints = 100, \
+                    use_core_leakage_boundary = 1, \
                     plot_variables = 0)
 
 os.remove('gitrGeometry.cfg0')
@@ -51,6 +55,7 @@ makeParticleSource.distributed_source(nP, surfW = W_indices, \
                     ftDFile = 'assets/ftridynBackgroundD.nc', \
                     ftCFile = 'assets/ftridynBackgroundC.nc', \
                     configuration = 'random', \
+                    use_surface_model = 0, \
                     plot_variables = 0, blockplots = 0)
 
 shutil.move('particleSource.nc', run_directory+'/input/particleSource.nc')

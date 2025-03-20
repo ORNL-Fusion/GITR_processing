@@ -4,12 +4,13 @@ sys.path.insert(0, '../../../python/')
 
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.path as path
 import io, libconf, netCDF4
 
 def init():
     #set plotting style defaults
     plt.rcParams.update({'font.size':10})
-    plt.rcParams.update({'lines.linewidth':2.5})
+    plt.rcParams.update({'lines.linewidth':0.5})
     plt.rcParams.update({'lines.markersize':5})
 
 def replace_line_segment(x_priority, y_priority, x_base, y_base):
@@ -87,12 +88,13 @@ def gitr_lines_from_points(r,z):
 
     return lines
 
-def lines_to_vectors(lines, inDir, plt, plot_variables, shouldBlock):
+def lines_to_vectors(lines, inDir, plt):
 
     x1 = lines[:, 0]
     z1 = lines[:, 1]
     x2 = lines[:, 2]
     z2 = lines[:, 3]
+
     slope = lines[:, 4]
     intercept = lines[:, 5]
     line_length = lines[:, 6]
@@ -101,17 +103,15 @@ def lines_to_vectors(lines, inDir, plt, plot_variables, shouldBlock):
         if slope[i]==0: 
             perpSlope = 1.0e12
         else:
-            perpSlope = -np.sign(slope[i])/np.abs(slope[i]);
+            perpSlope = -np.sign(slope[i])/np.abs(slope[i])
 
-        rPerp = -inDir[i]/np.sqrt(perpSlope*perpSlope+1);
-        zPerp = -inDir[i]*np.sign(perpSlope)*np.sqrt(1-rPerp*rPerp);
+        rPerp = -inDir[i]/np.sqrt(perpSlope*perpSlope+1)
+        zPerp = -inDir[i]*np.sign(perpSlope)*np.sqrt(1-rPerp*rPerp)
 
-    if plot_variables:
         plt.quiver([x1[i] + (x2[i]-x1[i])/2], [z1[i] + (z2[i]-z1[i])/2], [rPerp/10], [zPerp/10], width=0.0015, scale=5, headwidth=4)
-
-        plt.title('inDir')
-        plt.show(block=shouldBlock)
-        plt.savefig('plots/geom/inDir.png')
+    
+    plt.title('inDir')
+    plt.show(block=True)
     
 def lines_to_gitr_geometry(filename, lines, Z, surface, inDir):
 
@@ -190,6 +190,45 @@ def refine_target(rSurfCoarse, zSurfCoarse, rmrsCoarse, numAddedPoints=100):
     
     return rSurfFine, zSurfFine, rmrsFine, sum(addedPoints)
 
+def generate_core_leakage_boundary(bFile = '../input/bField.nc', xpoint_z = 0.9874948):
+    bField = netCDF4.Dataset(bFile)
+    r_bField = bField.variables['r'][:]
+    z_bField = bField.variables['z'][:]
+    psi = bField.variables['psi'][:]
+    
+    cs = plt.contourf(r_bField,z_bField,psi,1)
+    p = cs.collections[0].get_paths()[0]
+    v = p.vertices
+    pathx = v[:,0]
+    pathy = v[:,1]
+    core_boundary_x_fine = np.append(pathx[:791],pathx[1499:])
+    core_boundary_y_fine = np.append(pathy[:791],pathy[1499:])
+    print('Original number of core boundary points:',len(core_boundary_x_fine),len(core_boundary_y_fine))
+    core_boundary_x = core_boundary_x_fine[::10]
+    core_boundary_y = core_boundary_y_fine[::10]
+    core_boundary_x = np.append(core_boundary_x, core_boundary_x[0])
+    core_boundary_y = np.append(core_boundary_y, core_boundary_y[0])
+    print('Reduced number of core boundary points:',len(core_boundary_x),len(core_boundary_y))
+    
+    plt.close()
+    fig,ax = plt.subplots()
+    #ax.fill(core_boundary_x,core_boundary_y,'lightpink')
+    plt.plot(core_boundary_x,core_boundary_y,'k')
+    plt.xlabel('R [m]')
+    plt.ylabel('Z [m]')
+    plt.title('Core Boundary')
+    plt.axis('Scaled')
+    
+    return core_boundary_x, core_boundary_y
+
+def combine_lines(lines1,lines2):
+    lines_total = np.zeros((len(lines1)+len(lines2),7))
+    #independently extend x1, x2, z1, z2, and all vars in "lines" so that there's no line segment connecting the 2D structures
+    for i in range(0,7):
+        lines_total[:,i] = np.append(lines1[:,i], lines2[:,i])
+    
+    return lines_total
+
 def main(gitr_geometry_filename='gitrGeometry.cfg', \
              solps_geomfile = 'assets/sas-vw_v005_mod.ogr', \
              solps_targfile = 'assets/b2fgmtry', \
@@ -200,7 +239,8 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
              rmrs_fine_file = 'assets/rmrs_fine.txt', \
              W_fine_file = 'assets/W_fine.txt', \
              numAddedPoints = 100, \
-             plot_variables = 0):
+             use_core_leakage_boundary = 0, \
+             plot_variables = 1):
     
     # This program uses the solps geometry .ogr file to create a 2d geometry for GITR
     # in which the solps plasma profiles properly match the solps divertor target.
@@ -372,9 +412,9 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
         plt.xlim(1.43,1.52)
         plt.xlabel('r [m]')
         plt.ylabel('z [m]')
-        plt.title('Case 2: Progressive Angle OSP \n and upward Bx▽B drift ')
-        plt.savefig('plots/geom/makeGeom.png')
-        plt.show(block=True)
+        plt.title('Case 1: Progressive Angle OSP \n and upward Bx▽B drift ')
+        #plt.savefig('plots/geom/makeGeom.png')
+        #plt.show(block=True)
     
     #print('length of 3rd leg:',np.sqrt((rSurfCoarse[-1]-rSurfCoarse[-2])**2+(zSurfCoarse[-1]-zSurfCoarse[-2])**2))
     
@@ -385,12 +425,12 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
         #plt.scatter(r_final, z_final, s=1)
         plt.plot(r_final[W_indices], z_final[W_indices], 'orchid', label='Tungsten')
         plt.axis('scaled')
-        plt.xlabel('r [m]')
-        plt.ylabel('z [m]')
+        plt.xlabel('R [m]')
+        plt.ylabel('Z [m]')
         plt.title('Cross Section of DIII-D Geometry')
         plt.legend()
-        plt.savefig('plots/geom/gitr_final.png')
-        plt.show(block=False)
+        #plt.savefig('plots/geom/gitr_final.png')
+        #plt.show(block=False)
     
     #define interior side of each line segment in the geometry with inDir
     inDir = np.ones(len(r_final))
@@ -399,14 +439,34 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     
     #populate lines and check that vectors point inward
     lines = gitr_lines_from_points(r_final, z_final)
-    lines_to_vectors(lines, inDir, plt, plot_variables, False)
+    if plot_variables: lines_to_vectors(lines, inDir, plt)
     
     #give the divertor target segments, targ_indices, a material and an interactive surface
     Z = np.zeros(len(r_final))
     surfaces = np.zeros(len(r_final))
     
-    Z[W_indices] = 74;
-    surfaces[W_indices] = 1;
+    Z[W_indices] = 74
+    surfaces[W_indices] = 1
+    
+    if use_core_leakage_boundary:
+        core_boundary_x, core_boundary_y = generate_core_leakage_boundary()
+        lines_core = gitr_lines_from_points(core_boundary_x, core_boundary_y)
+        
+        inDir_core = -1*np.ones(len(core_boundary_x))
+        inDir_core[int(len(inDir_core)/2):] = 1
+        inDir_core[0] = 1
+        inDir_core[67:79] = -1
+        print(len(core_boundary_x),len(lines_core),len(inDir_core))
+        if plot_variables: lines_to_vectors(lines_core, inDir_core, plt)
+        
+        Z_core = np.zeros(len(core_boundary_x))
+        surfaces_core = np.ones(len(core_boundary_x))
+        
+        lines = combine_lines(lines,lines_core)
+        inDir = np.append(inDir, inDir_core)
+        Z = np.append(Z, Z_core)
+        surfaces = np.append(surfaces, surfaces_core)
+        
     
     #populate geometry input file to GITR
     lines_to_gitr_geometry(gitr_geometry_filename+'0', lines, Z, surfaces, inDir)
@@ -429,12 +489,13 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
             f.write(str(rmrsMid[i]) +'\n')
     
     print('r_min:', min(r_final), '\nr_max:', max(r_final), '\nz_min:', min(z_final), '\nz_max:', max(z_final))
+    plt.close()
     print('Created gitrGeometry.cfg')
     
     return
 
 if __name__ == "__main__":
-    main(plot_variables = 1)
+    main(use_core_leakage_boundary = 1, plot_variables = 0)
 
 
 

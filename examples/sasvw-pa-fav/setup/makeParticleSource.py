@@ -1,5 +1,6 @@
 import sys, os
-sys.path.insert(0, os.path.abspath('../../../python/'))
+if '../../../python/' not in sys.path:
+    sys.path.insert(0, os.path.abspath('../../../python/'))
 
 import numpy as np
 import scipy.interpolate as scii
@@ -51,14 +52,15 @@ def point_source(nP = int(2e2)):
 def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[], \
             geom = '../input/gitrGeometry.cfg', \
             profiles_file = '../input/plasmaProfiles.nc', \
-            gitr_rz = '../setup/assets/gitr_rz.txt', \
-            rmrs_fine_file = '../setup/assets/rmrs_fine.txt', \
-            W_fine_file = '../setup/assets/W_fine.txt', \
-            ftDFile = '../setup/assets/ftridynBackgroundD.nc', \
-            ftCFile = '../setup/assets/ftridynBackgroundC.nc', \
+            gitr_rz = 'assets/gitr_rz.txt', \
+            rmrs_fine_file = 'assets/rmrs_fine.txt', \
+            W_fine_file = 'assets/W_fine.txt', \
+            ftDFile = 'assets/ftridynBackgroundD.nc', \
+            ftCFile = 'assets/ftridynBackgroundC.nc', \
             ftWFile = '../input/ftridynSelf.nc', \
             configuration = 'random', \
             use_fractal_tridyn_outgoing_IEADS = 0, \
+            use_surface_model = 1, \
             plot_variables = 1, blockplots = 0):
         
     #import wall geometry to plot over
@@ -122,7 +124,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
             Alpha[i] = np.pi/2
 
     Alpha = np.abs(Alpha) #np.abs(np.rad2deg(Alpha[W_fine[:-1]]))
-    print('alpha:',np.rad2deg(Alpha))
+    #print('alpha:',np.rad2deg(Alpha))
     Beta = np.abs(np.pi/2 - Alpha)
 
     dist = np.sqrt(np.power(r1-r2,2) + np.power(z1-z2,2))
@@ -230,6 +232,17 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     sputt_fluxC6 = spyldC6*fluxC6
     sputt_flux = sputt_fluxD + sputt_fluxC1 + sputt_fluxC2 + sputt_fluxC3 + sputt_fluxC4 + sputt_fluxC5 + sputt_fluxC6
     #print('SPUTT FLUX',len(sputt_flux),'\n',sputt_flux)
+    
+    if not use_surface_model:
+        #if the intention is to run with no surface model (ex: for leakage analysis), 
+        #then use gross erosion fluxes from a previous GITR simulation
+        sputt_flux_ConW_only = sputt_flux
+        
+        import process_output
+        print('Calculating gross erosion')
+        sputt_flux = process_output.plot_surf_nc([1,6], 9, [1,6], \
+                    '../output/perlmutter/production/surface_S.nc', \
+                    '../output/perlmutter/production/positions_S.nc', plot_blocker=False)
 
     #multiply by area to get the outgoing particles per second
     print('\n')
@@ -326,12 +339,18 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
         plt.savefig('plots/particle-source/sputt_flux_charge_dependent.png')
 
         plt.close()
-        plt.plot(rmrsFine, sputt_flux)
+        if not use_surface_model:
+            plt.plot(rmrsFine, sputt_flux_ConW_only, linewidth=2, label='Without self-sputtering')
+            plt.plot(rmrsFine, sputt_flux, 'r', linewidth=2, label='With self-sputtering')
+            plt.legend()
+        else:
+            plt.plot(rmrsFine, sputt_flux)
         plt.xlabel('D-Dsep [m]')
-        plt.ylabel('Flux [#/m2s]')
-        plt.title('Flux of W sputtered off wall')
+        plt.ylabel('Flux [m$^{-2}$s$^{-1}$]')
+        plt.title('Flux of W sputtered off the wall')
+        plt.show(block=True)
         plt.savefig('plots/particle-source/sputt_flux.png') 
-
+        
         plt.close()
         area_cm = area*100*100
         plt.plot(rmrsFine, area_cm)
@@ -693,8 +712,8 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
 
 def midpoints(nP,pps_weights,adj,slope,Beta, r1,z1,r2,z2):
     #get midpoints of coords
-    r_mid = np.zeros(len(r1)-1)
-    z_mid = np.zeros(len(z1)-1)
+    r_mid = np.zeros(len(r1))
+    z_mid = np.zeros(len(z1))
     for i in range(len(r1)):
         r_mid[i] = np.average(np.array([r1[i],r2[i]]))
         z_mid[i] = np.average(np.array([z1[i],z2[i]]))
@@ -981,6 +1000,7 @@ if __name__ == "__main__":
                 ftDFile = 'assets/ftridynBackgroundD.nc', \
                 ftCFile = 'assets/ftridynBackgroundC.nc', \
                 configuration = 'random', \
+                use_surface_model = 0, \
                 plot_variables = 1, blockplots = 0)
 
 

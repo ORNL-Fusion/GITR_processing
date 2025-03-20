@@ -13,9 +13,10 @@ import solps
 ################################################
 
 run_directory = '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav'
-#run_directory = '/Users/Alyssa/Dev/GITR/scratch'
+#run_directory = '/Users/Alyssa/Dev/flag-testing'
 #run_directory = '/pscratch/sd/h/hayes/sasvw-pa-fav-history'
-setup_directory = '../examples/sasvw-pa-fav/setup'
+#setup_directory = '../examples/sasvw-pa-fav/setup'
+setup_directory = '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav/setup'
 rmrs_fine_file = setup_directory+'/assets/rmrs_fine.txt'
 
 #prog angle
@@ -149,17 +150,22 @@ def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
         x0 = particleSource.variables['x'][:]
         z0 = particleSource.variables['z'][:]
     
-    profiles, W_indices, R, Z, rmrs = init()
-    W_fine, r_wall, z_wall, rmrs_fine = init_geom()
-    r_target_fine = r_wall[W_fine]
-    z_target_fine = z_wall[W_fine]
+    profilesFile = setup_directory+'/../input/plasmaProfiles.nc'
+    if os.path.exists(profilesFile):
+        profiles, W_indices, R, Z, rmrs = init()
+        W_fine, r_wall, z_wall, rmrs_fine = init_geom()
+        r_target_fine = r_wall[W_fine]
+        z_target_fine = z_wall[W_fine]
+    
     history = netCDF4.Dataset(history_file, "r", format="NETCDF4")
     
-    if bFile != None:
+    if os.path.exists(bFile):
         bField = netCDF4.Dataset(bFile)
         r_bField = bField.variables['r'][:]
         z_bField = bField.variables['z'][:]
         psi = bField.variables['psi'][:]
+    else:
+        print('WARNING: No bField.nc provided')
 
     plt.rcParams.update({'lines.linewidth':0.3})
     plt.rcParams.update({'lines.markersize':markersize})
@@ -176,15 +182,17 @@ def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
 
     plt.close()
     if plot_particle_source: plt.scatter(x0,z0,marker='o',s=10)
-    plt.plot(r_wall, z_wall,'-k',linewidth=1.5)
-    plt.plot(r_target_fine, z_target_fine,'-m',linewidth=2)
+    if os.path.exists(profilesFile): plt.plot(r_wall, z_wall,'-k',linewidth=1.5)
+    if os.path.exists(profilesFile): plt.plot(r_target_fine, z_target_fine,'-m',linewidth=2)
     plt.axis('scaled')
     plt.xlabel('R [m]')
     plt.ylabel('Z [m]')
         
     #define charge state to color mapping
     colors = {0:'black', 1:'firebrick', 2:'darkorange', 3:'gold', 4:'limegreen', 5:'dodgerblue', \
-              6:'mediumpurple', 7:'darkviolet', 8:'darkmagenta', 9:'deeppink', 10:'gray'}
+              6:'mediumpurple', 7:'darkviolet', 8:'darkmagenta', 9:'deeppink', 10:'gray', 11:'gray', \
+                  12:'gray', 13:'gray', 14:'gray', 15:'gray', 16:'gray', 17:'gray', 18:'gray', 19:'gray', \
+                      20:'gray', 21:'gray', 22:'gray', 23:'gray', 24:'gray', 25:'gray', 26:'gray', 27:'gray'}
     
     # all particle source vars ordered as (nP, nT)
     if basic==1:
@@ -196,7 +204,8 @@ def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
     
     counter=0
     if continuousChargeState==1:
-        for p in np.arange(0,nP,1):
+        #for p in [671, 860, 1043, 1275, 1366, 1479]:  # particles that leak out of the divertor space in history_H.nc from pa-fav (Case #1)
+        for p in np.arange(0,nP,1): # plot all particles by default
             t=0
             counter+=1
             while t<nT-1:
@@ -211,21 +220,24 @@ def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
             plt.plot(r[p][:],z[p][:], colors[charge[p][-1]])
         plt.title('Particle Tracks by End Charge State')
     
-    if bFile != None: plt.contour(r_bField,z_bField,psi,1,linestyles='--',colors='k',linewidths=1)
+    if os.path.exists(bFile): plt.contour(r_bField,z_bField,psi,1,linestyles='--',colors='k',linewidths=1)
     #plt.scatter(1.49829829, 1.19672716, label='Strikepoint', marker='X', color='k', s=100, zorder=5)
     
     legend_dict = {'+0':'black', '+1':'firebrick', '+2':'darkorange', '+3':'gold', '+4':'limegreen', '+5':'dodgerblue', \
-              '+6':'mediumpurple', '+7':'darkviolet', '+8':'darkmagenta', '+9':'deeppink', '+10':'gray'}
+              '+6':'mediumpurple', '+7':'darkviolet', '+8':'darkmagenta', '+9':'deeppink', '+10':'gray', '+11':'gray', \
+                  '+12':'gray', '+13':'gray', '+14':'gray', '+15':'gray', '+16':'gray', '+17':'gray', '+18':'gray', \
+                      '+19':'gray', '+20':'gray', '+21':'gray', '+22':'gray', '+23':'gray', '+24':'gray', '+25':'gray', \
+                          '+26':'gray', '+27':'gray'}
     
     patchList = []
     for key in legend_dict:
         data_key = mpatches.Patch(color=legend_dict[key], label=key)
         patchList.append(data_key)
 
-    if basic==0: plt.legend(handles=patchList, fontsize=8, loc=2) #upper-left=2, lower-left=3
+    #if basic==0: plt.legend(handles=patchList, fontsize=8, loc=2) #upper-left=2, lower-left=3
     
     #whole device
-    #plt.xlim(1.0, 2.0)
+    #plt.xlim(1.0, 3.0)
     #plt.ylim(-1.5, 1.5)
     #pa-fav
     plt.xlim(1.37, 1.52)
@@ -238,7 +250,7 @@ def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
     #plt.ylim(1.0, 1.23)
     
     plt.title('W Trajectories', fontsize=24)
-    #plt.show(block=False)
+    #plt.show(block=True)
     plt.savefig(run_directory+'/output/history.svg')
     plt.close()
     return
@@ -338,7 +350,7 @@ def plot_surf_nc(nP10, dt10, nT10, \
     print('total redeposited flux',sum(grossDep*area)/sum(area))
     print('total net deposited flux',sum(netDep*area)/sum(area))
     print('redeposition rate',100 * (sum(grossDep*area)/sum(area)) / (sum(grossEro*area)/sum(area)), '%')
-    print('prompt redeposition rate', 100 * prompt_redep_rate, '%')
+    if positions_file != '': print('prompt redeposition rate', 100 * prompt_redep_rate, '%')
     print('self-sputtering fraction',100 * (sum(grossEro)-sum(partSource_flux))/sum(grossEro), '%')
     '''
     if norm=='C':
@@ -530,7 +542,7 @@ def plot_surf_nc(nP10, dt10, nT10, \
         plt.title('GITR Predicted Cumulative Sum of \n Erosion and Redeposition Profiles',fontsize=20)
         plt.savefig('plots/surface_cumsum.pdf')
     
-    return
+    return grossEro
         
 def spectroscopy(pps_per_nP, View=1, \
                  specFile='spec.nc',plotting=1):
@@ -733,14 +745,14 @@ def spectroscopy(pps_per_nP, View=1, \
         plt.title('Toroidal Slice of W0 Density \n View '+str(View)+' W0: %10e m$^{-2}$s$^{-1}$' %np.sum(fscope))
         plt.savefig('plots/spec_filterscope.png')
     
-def analyze_leakage(historyFile, bFile = '../input/bField.nc'):
+def analyze_leakage(historyFile, bFile = run_directory+'/input/bField.nc'):
     bField = netCDF4.Dataset(bFile)
     r_bField = bField.variables['r'][:]
     z_bField = bField.variables['z'][:]
     psi = bField.variables['psi'][:]
     xpoint_z = 0.9874948
     
-    gitr_rz='../setup/assets/gitr_rz.txt'
+    gitr_rz=setup_directory+'/assets/gitr_rz.txt'
     with open(gitr_rz, 'r') as file:
         wall = file.readlines()
         
@@ -1541,7 +1553,7 @@ def ionization_analysis(plotting, output_dir, historyFile, positionsFile, \
             if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\\alpha_B$')
             else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
     
-    plt.plot(rmrsPlotting, frac_prompt_Debye, label='Prompt Redeposition', color='maroon')
+    plt.plot(rmrsPlotting[31:], frac_prompt_Debye[31:], label='Prompt Redeposition', color='maroon')
     plt.plot(rmrsPlotting, frac_delayed_Debye, label='Delayed Redeposition', color='crimson')
     plt.plot(rmrsPlotting, frac_noHitWall_Debye, label='Never Hit a Wall', color='lightcoral')
     plt.xlabel('D-Dsep [m]')
@@ -1566,12 +1578,17 @@ def ionization_analysis(plotting, output_dir, historyFile, positionsFile, \
     print('\nFraction that first ionize in the Chodura sheath past OSP:')
     print('Min:', np.min(frac_ioniz_in_Chodura[32:]))
     print('Max:', np.max(frac_ioniz_in_Chodura[32:]))
-    print('Average:', np.average(frac_ioniz_in_Chodura[31:]))  
+    print('Average:', np.average(frac_ioniz_in_Chodura[31:])) 
+    
+    print('\nFraction of first ionizations in the Debye sheath that promptly redeposit past OSP:')
+    print('Min:', np.min(frac_prompt_Debye[32:]))
+    print('Max:', np.max(frac_prompt_Debye[32:]))
+    print('Average:', np.average(frac_prompt_Debye[32:]))
     
     print('\nFraction of first ionizations in the Chodura sheath that promptly redeposit past OSP:')
     print('Min:', np.min(frac_prompt_Chodura[32:]))
     print('Max:', np.max(frac_prompt_Chodura[32:]))
-    print('Average:', np.average(frac_prompt_Chodura[31:])) 
+    print('Average:', np.average(frac_prompt_Chodura[32:])) 
     return
 
 def prompt_redep_hist(inputs, fileDir, fileOFF, fileON=None):
@@ -1908,24 +1925,26 @@ def spec_line_integration(view, spec_file, pps_per_nP, num_points=100, dt=1e-8):
 
 if __name__ == "__main__":
     #plot_history2D(run_directory+'/output/history.nc')
+    #plot_surf_nc([1,2], 9, [1,4], run_directory+'/output/surface.nc', '')#, run_directory+'/output/surface.nc')
     #plot_surf_nc([1,6], 9, [1,6], '../examples/sasvw-pa-fav/output/perlmutter/production/surface_S.nc', \
                  #'../examples/sasvw-pa-fav/output/perlmutter/production/positions_S.nc')
-    plot_surf_nc([1,6], 9, [1,6], '../../sasvw-pa-fav/sasvw-pa-fav-surfaces/nPnT-new/surface_p6t6.nc', \
-                 '../../sasvw-pa-fav/sasvw-pa-fav-surfaces/nPnT-new/positions_p6t6.nc', plot_blocker=False)
+    #plot_surf_nc([1,6], 9, [1,6], '../../sasvw-pa-fav/sasvw-pa-fav-surfaces/nPnT-new/surface-p6t6.nc', \
+                 #'../../sasvw-pa-fav/sasvw-pa-fav-surfaces/nPnT-new/positions-p6t6.nc', plot_blocker=False)
     #plot_surf_nc([5,2], 8, [1,5], setup_directory+"/../output/perlmutter/production/forces25.01.06/surfaces/BET.nc", \
                  #setup_directory+'/../output/perlmutter/production/forces25.01.06/positions/BET.nc', norm='')
     #analyze_leakage('perlmutter/history_D3t6.nc')
+    #analyze_leakage(run_directory+'/output/history.nc')
     #analyze_forces('ExB drift', 'z', rzlim=True, colorbarLimits=[-500,500], dt=1e-9)
     
     #init()
     #plot_gitr_gridspace()
     #plot_particle_source()
     #plot_history2D(setup_directory+"/../output/perlmutter/production/forces24.09.19/histories/gradT.nc",\
-    #plot_history2D(setup_directory+"/../output/history1.nc",\
+    plot_history2D(setup_directory+"/../output/perlmutter/production/history_H2.nc",\
     #plot_history2D("/pscratch/sd/h/hayes/sasvw-pa-fav-history/output/history.nc",\
-                   #bFile=setup_directory+'/../input/bField.nc')
-    #spectroscopy(2013859273149157.8,1,specFile='/Users/Alyssa/Desktop/spec.nc')
+                   bFile=setup_directory+'/../input/bField.nc')
+    #spectroscopy(2013859273149157.8,3, specFile=run_directory+'/output/spec.nc')#specFile='/Users/Alyssa/Desktop/spec.nc')
     #spec_line_integration(view=2, spec_file='/Users/Alyssa/Desktop/spec.nc', pps_per_nP=2013859273149157.8)
-    #ionization_analysis([0,0], '../examples/sasvw-pa-fav/output/perlmutter/production/','history_IF.nc', 'positions_IF.nc')
+    #ionization_analysis([0,1], '../examples/sasvw-pa-fav/output/perlmutter/production/','history_IF.nc', 'positions_IF.nc')
     #prompt_redep_hist([2,8,5], '../examples/sasvw-pa-fav/output/perlmutter/production/forces24.09.19/positions/','BEF.nc')
-    #particle_diagnostics_hist('/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav/output/perlmutter/production/particle_histograms_PR.nc', plot_blocker=True)
+    #particle_diagnostics_hist('/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav/output/perlmutter/production/particle_histograms_gpu.nc', plot_blocker=True)
