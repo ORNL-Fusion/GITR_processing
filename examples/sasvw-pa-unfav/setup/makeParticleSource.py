@@ -1,5 +1,6 @@
 import sys, os
-sys.path.insert(0, os.path.abspath('../../../python/'))
+if os.path.abspath('../../../python/') not in sys.path:
+    sys.path.insert(0, os.path.abspath('../../../python/'))
 
 import numpy as np
 import scipy.interpolate as scii
@@ -59,6 +60,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
             ftWFile = '../input/ftridynSelf.nc', \
             configuration = 'random', \
             use_fractal_tridyn_outgoing_IEADS = 0, \
+            use_surface_model = 1, \
             plot_variables = 0):
     
     #import wall geometry to plot over
@@ -230,10 +232,20 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     sputt_fluxC5 = spyldC5*fluxC5
     sputt_fluxC6 = spyldC6*fluxC6
     sputt_flux = sputt_fluxD + sputt_fluxC1 + sputt_fluxC2 + sputt_fluxC3 + sputt_fluxC4 + sputt_fluxC5 + sputt_fluxC6
-    print('SPUTT FLUX',len(sputt_flux),'\n',sputt_flux)
+    #print('SPUTT FLUX',len(sputt_flux),'\n',sputt_flux)
     print('\n')
     print('W eroded flux per nP:', np.sum(sputt_flux)/nP, 'm-2 s-1')
 
+    if not use_surface_model:
+        #if the intention is to run with no surface model (ex: for leakage analysis), 
+        #then use gross erosion fluxes from a previous GITR simulation
+        sputt_flux_ConW_only = sputt_flux
+        
+        import process_output
+        print('Calculating gross erosion')
+        sputt_flux = process_output.plot_surf_nc([5,2], 8, [1,5], \
+                    '../output/surface.nc', \
+                    '../output/positions.nc', plot_blocker=False)
 
     #multiply by area to get the outgoing particles per second
     pps = np.multiply(sputt_flux,area)
@@ -977,6 +989,7 @@ if __name__ == "__main__":
                 ftDFile = 'assets/ftridynBackgroundD.nc', \
                 ftCFile = 'assets/ftridynBackgroundC.nc', \
                 configuration = 'random', \
+                use_surface_model = 0, \
                 plot_variables = 1)
 
 

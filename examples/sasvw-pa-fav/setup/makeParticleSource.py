@@ -1,5 +1,5 @@
 import sys, os
-if '../../../python/' not in sys.path:
+if os.path.abspath('../../../python/') not in sys.path:
     sys.path.insert(0, os.path.abspath('../../../python/'))
 
 import numpy as np
@@ -241,8 +241,8 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
         import process_output
         print('Calculating gross erosion')
         sputt_flux = process_output.plot_surf_nc([1,6], 9, [1,6], \
-                    '../output/perlmutter/production/surface_S.nc', \
-                    '../output/perlmutter/production/positions_S.nc', plot_blocker=False)
+                    '../output/surface.nc', \
+                    '../output/positions.nc', plot_blocker=False)
 
     #multiply by area to get the outgoing particles per second
     print('\n')

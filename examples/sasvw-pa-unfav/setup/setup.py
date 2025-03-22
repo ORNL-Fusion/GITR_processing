@@ -1,5 +1,9 @@
 import sys, os
-sys.path.insert(0, os.path.abspath('../../../python/'))
+#sys.path.insert(0, os.path.abspath('../../../python/'))
+if sys.path[0] != os.path.abspath('.'):
+    sys.path.insert(0,os.path.abspath('.')) 
+    #this line MUST be last in a list of sys.path.insert commands 
+    #or the wrong setup scripts could be used
 
 import shutil
 import numpy as np
@@ -21,6 +25,7 @@ makeGeom.main(gitr_geometry_filename='gitrGeometry.cfg', \
                     profiles_file = run_directory+'/input/plasmaProfiles.nc', \
                     W_indices_profiles = W_indices, \
                     numAddedPoints = 100, \
+                    use_core_leakage_boundary = 1, \
                     plot_variables = 0)
 
 os.remove('gitrGeometry.cfg0')
@@ -51,6 +56,7 @@ makeParticleSource.distributed_source(nP, surfW = W_indices, \
                     ftCFile = 'assets/ftridynBackgroundC.nc', \
                     configuration = 'random', \
                     use_fractal_tridyn_outgoing_IEADS = 0, \
+                    use_surface_model = 0, \
                     plot_variables = 0)
 
 shutil.move('particleSource.nc', run_directory+'/input/particleSource.nc')

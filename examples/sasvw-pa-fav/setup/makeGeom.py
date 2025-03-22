@@ -1,6 +1,7 @@
 import sys
 import os
-sys.path.insert(0, '../../../python/')
+if os.path.abspath('../../../python/') not in sys.path:
+    sys.path.insert(0, '../../../python/')
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -112,6 +113,7 @@ def lines_to_vectors(lines, inDir, plt):
     
     plt.title('inDir')
     plt.show(block=True)
+    return
     
 def lines_to_gitr_geometry(filename, lines, Z, surface, inDir):
 
@@ -190,7 +192,7 @@ def refine_target(rSurfCoarse, zSurfCoarse, rmrsCoarse, numAddedPoints=100):
     
     return rSurfFine, zSurfFine, rmrsFine, sum(addedPoints)
 
-def generate_core_leakage_boundary(bFile = '../input/bField.nc', xpoint_z = 0.9874948):
+def generate_core_leakage_boundary(bFile = '../input/bField.nc'):
     bField = netCDF4.Dataset(bFile)
     r_bField = bField.variables['r'][:]
     z_bField = bField.variables['z'][:]
@@ -238,9 +240,10 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
              gitr_rz = 'assets/gitr_rz.txt', \
              rmrs_fine_file = 'assets/rmrs_fine.txt', \
              W_fine_file = 'assets/W_fine.txt', \
+             bFile = '../input/bField.nc', \
              numAddedPoints = 100, \
              use_core_leakage_boundary = 0, \
-             plot_variables = 1):
+             plot_variables = 0):
     
     # This program uses the solps geometry .ogr file to create a 2d geometry for GITR
     # in which the solps plasma profiles properly match the solps divertor target.
@@ -449,7 +452,7 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     surfaces[W_indices] = 1
     
     if use_core_leakage_boundary:
-        core_boundary_x, core_boundary_y = generate_core_leakage_boundary()
+        core_boundary_x, core_boundary_y = generate_core_leakage_boundary(bFile)
         lines_core = gitr_lines_from_points(core_boundary_x, core_boundary_y)
         
         inDir_core = -1*np.ones(len(core_boundary_x))
@@ -466,7 +469,7 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
         inDir = np.append(inDir, inDir_core)
         Z = np.append(Z, Z_core)
         surfaces = np.append(surfaces, surfaces_core)
-        
+    
     
     #populate geometry input file to GITR
     lines_to_gitr_geometry(gitr_geometry_filename+'0', lines, Z, surfaces, inDir)
@@ -492,7 +495,12 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     plt.close()
     print('Created gitrGeometry.cfg')
     
-    return
+    print('Number of surfaces per makeGeom.py:',np.sum(surfaces))
+    
+    if use_core_leakage_boundary: 
+        return lines, lines_core, surfaces
+    else:
+        return
 
 if __name__ == "__main__":
     main(use_core_leakage_boundary = 1, plot_variables = 0)

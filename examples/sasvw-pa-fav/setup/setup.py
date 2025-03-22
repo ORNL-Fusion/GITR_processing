@@ -1,7 +1,7 @@
 import sys, os
 #sys.path.insert(0, os.path.abspath('../../../python/'))
 if sys.path[0] != os.path.abspath('.'):
-    sys.path.insert(0,'.') 
+    sys.path.insert(0,os.path.abspath('.')) 
     #this line MUST be last in a list of sys.path.insert commands 
     #or the wrong setup scripts could be used
 
@@ -9,10 +9,10 @@ import shutil
 import numpy as np
 import solpsProcessing, makeGeom, makeParticleSource
 
-nP = int(5e3)
-#run_directory = '..'
+nP = int(2.5e6)
+run_directory = '..'
 #run_directory = '/Users/Alyssa/Dev/GITR/scratch'
-run_directory = '/pscratch/sd/h/hayes/sasvw-pa-fav/sasvw-pa-fav-leakage'
+#run_directory = '/pscratch/sd/h/hayes/sasvw-pa-fav/sasvw-pa-fav-leakage'
 
 W_indices = np.arange(11,22)
 

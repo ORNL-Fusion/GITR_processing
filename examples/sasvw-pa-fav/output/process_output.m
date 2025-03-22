@@ -88,7 +88,8 @@ set(groot, 'defaultAxesFontSize', 11.5, 'defaultTextFontSize', 11.5);
 plot_tracks = 1;
 if plot_tracks
     %file = strcat('../../../../GITR/scratch/output/history.nc');
-    file = strcat('perlmutter/production/forces25.01.06/histories/BET.nc');
+    %file = strcat('perlmutter/production/forces25.01.06/histories/BET.nc');
+    file = strcat('../../../../flag-testing/output/history.nc');
     x = ncread(file,'x');
     y = ncread(file,'y');
     z = ncread(file,'z');
@@ -110,9 +111,9 @@ if plot_tracks
     end
 
     axis equal
-    xlim([0.0 2.5])
-    ylim([-0.2 2.5])
-    zlim([-1.5 1.5])
+    xlim([1.4 1.55])
+    ylim([-0.2 0.2])
+    zlim([1 1.23])
     xlabel('R [m]')
     ylabel('T [m]')
     zlabel('Z [m]')

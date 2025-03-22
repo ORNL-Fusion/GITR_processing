@@ -1,5 +1,6 @@
 import sys, os
-sys.path.insert(0, os.path.abspath('../../../python/'))
+if os.path.abspath('../../../python/') not in sys.path:
+    sys.path.insert(0, os.path.abspath('../../../python/'))
 
 import numpy as np
 import scipy.interpolate as scii
@@ -59,6 +60,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
             ftWFile = '../input/ftridynSelf.nc', \
             configuration = 'random', \
             use_fractal_tridyn_outgoing_IEADS = 0, \
+            use_surface_model = 1, \
             plot_variables = 0):
     
     #import wall geometry to plot over
@@ -232,7 +234,17 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     print('SPUTT FLUX',len(sputt_flux),'\n',sputt_flux)
     print('\n')
     print('W eroded flux per nP:', np.sum(sputt_flux)/nP, 'm-2 s-1')
-
+    
+    if not use_surface_model:
+        #if the intention is to run with no surface model (ex: for leakage analysis), 
+        #then use gross erosion fluxes from a previous GITR simulation
+        sputt_flux_ConW_only = sputt_flux
+        
+        import process_output
+        print('Calculating gross erosion')
+        sputt_flux = process_output.plot_surf_nc([5,3], 8, [1,5], \
+                    '../output/surface1.nc', \
+                    '../output/positions1.nc', plot_blocker=False)
 
     #multiply by area to get the outgoing particles per second
     pps = np.multiply(sputt_flux,area)
@@ -793,7 +805,6 @@ def get_ft_spyld(S, surfE, surfA, ftBFile):
     
     #handle surface energies less than the minimum f-TRIDYN grid energy
     surfE[np.where(surfE<min(ftE))] = min(ftE) 
-    
     try: 
         spyld = ftB.variables['spyld'][S][:]
         surfY = scii.interpn((ftE,ftA), spyld, (surfE,surfA))
@@ -977,6 +988,7 @@ if __name__ == "__main__":
                 ftDFile = 'assets/ftridynBackgroundD.nc', \
                 ftCFile = 'assets/ftridynBackgroundC.nc', \
                 configuration = 'random', \
+                use_surface_model = 0, \
                 plot_variables = 1)
 
 

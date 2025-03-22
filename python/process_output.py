@@ -12,19 +12,19 @@ import solps
 # setting directories and special constants
 ################################################
 
-run_directory = '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav'
+run_directory = '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-unfav'
 #run_directory = '/Users/Alyssa/Dev/flag-testing'
 #run_directory = '/pscratch/sd/h/hayes/sasvw-pa-fav-history'
 #setup_directory = '../examples/sasvw-pa-fav/setup'
-setup_directory = '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav/setup'
+setup_directory = '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-unfav/setup'
 rmrs_fine_file = setup_directory+'/assets/rmrs_fine.txt'
 
 #prog angle
 W_surf_indices = np.arange(11,22)
 tile_shift_indices = [1,9]
 Bangle_shift_indices = [3,8,9]
-r_sp, z_sp = 1.49829829, 1.19672716 #prog angle & favorable
-#r_sp, z_sp = 1.49829824, 1.19672712 #prog angle & unfavorable
+#r_sp, z_sp = 1.49829829, 1.19672716 #prog angle & favorable
+r_sp, z_sp = 1.49829824, 1.19672712 #prog angle & unfavorable
 '''
 #vertex
 W_surf_indices = np.arange(16,25)
@@ -33,8 +33,10 @@ Bangle_shift_indices = [3,6]
 r_sp, z_sp = 1.50230407, 1.23187366 #vertex & favorable
 #r_sp, z_sp = 1.49905286, 1.22894757 #vertex & unfavorable
 '''
-sys.path.insert(0, os.path.abspath(setup_directory))
-import makeParticleSource
+if sys.path[0] != os.path.abspath(setup_directory):
+    sys.path.insert(0, os.path.abspath(setup_directory))
+
+import makeGeom, makeParticleSource
 
 ################################################
 # function definitions
@@ -142,7 +144,7 @@ def plot_particle_source():
     plt.savefig('plots/particleSource.png')
 
 def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
-                   basic=0, continuousChargeState=1, endChargeState=0, \
+                   basic=1, continuousChargeState=0, endChargeState=0, \
                    plot_particle_source=0, markersize=0):
     
     if plot_particle_source:
@@ -237,11 +239,11 @@ def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
     #if basic==0: plt.legend(handles=patchList, fontsize=8, loc=2) #upper-left=2, lower-left=3
     
     #whole device
-    #plt.xlim(1.0, 3.0)
-    #plt.ylim(-1.5, 1.5)
+    plt.xlim(1.0, 3.0)
+    plt.ylim(-1.5, 1.5)
     #pa-fav
-    plt.xlim(1.37, 1.52)
-    plt.ylim(1.06, 1.23)
+    #plt.xlim(1.37, 1.52)
+    #plt.ylim(1.06, 1.23)
     #vertex-fav
     #plt.xlim(1.0, 1.53)
     #plt.ylim(1.0, 1.23)
@@ -795,6 +797,64 @@ def analyze_leakage(historyFile, bFile = run_directory+'/input/bField.nc'):
     print('leakage fraction:', leakage/nP)
     
     return    
+
+def analyze_leakage_surf(surface_file="surface.nc"):
+    
+    lines, lines_core, surfaces = makeGeom.main(gitr_geometry_filename=run_directory+'/input/gitrGeometry.cfg', \
+                                      solps_geomfile = run_directory+'/setup/assets/sas-vw_v005_mod.ogr', \
+                                      solps_targfile = run_directory+'/setup/assets/b2fgmtry', \
+                                      profiles_file = run_directory+'/input/plasmaProfiles.nc', \
+                                      solps_rz = run_directory+'/setup/assets/solps_rz.txt', \
+                                      gitr_rz = run_directory+'/setup/assets/gitr_rz.txt', \
+                                      rmrs_fine_file = run_directory+'/setup/assets/rmrs_fine.txt', \
+                                      W_fine_file = run_directory+'/setup/assets/W_fine.txt', \
+                                      bFile = run_directory+'/input/bField.nc', \
+                                      use_core_leakage_boundary = 1)
+        
+    len_wall = int(len(lines)-len(lines_core))
+    r_wall = np.append(lines[:len_wall,0],lines[len_wall-1,2])
+    z_wall = np.append(lines[:len_wall,1],lines[len_wall-1,3])
+    r_core = np.append(lines_core[:,0],lines_core[-1,2])
+    z_core = np.append(lines_core[:,1],lines_core[-1,3])
+    
+    surface = netCDF4.Dataset(surface_file, "r", format="NETCDF4")
+    grossEro = (surface.variables['grossErosion'][:])
+    grossDep = (surface.variables['grossDeposition'][:])
+    surf_core_start = len(grossDep)-len(lines_core)
+    print('\nTotal number leaked:',np.sum(grossDep[surf_core_start+1:]))
+    print('Maximum leaked at one location:',np.max(grossDep[surf_core_start+1:]),'\n')
+    print('Check that there is no erosion along the core boundary:',np.sum(grossEro[surf_core_start+1:]))
+    indices_leaked = np.where(grossDep[surf_core_start+1:]==1)[0]
+    print(indices_leaked)
+
+    print('\n')
+    print('Number of surfaces per process_output.py:',np.sum(surfaces))
+    print(len(grossDep[surf_core_start:]),len(lines_core))        
+    
+    plt.close()
+    plt.plot(grossDep[surf_core_start+1:])
+    
+    plt.close()
+    plt.rcParams.update({'lines.linewidth':2})
+    plt.plot(r_wall,z_wall,'gray',label='Wall')
+    plt.plot(r_core,z_core,'k',label='LCFS',linewidth=0.5)
+    for i in indices_leaked:
+        plt.plot(r_core[i:i+2],z_core[i:i+2],'red')
+    plt.axis('Scaled')
+    plt.xlabel('R [m]')
+    plt.ylabel('Z [m]')
+    plt.title('Entrypoints for W Leakage \nfrom the SAS-VW into the Core')
+    
+    legend_dict = {'Wall':'gray', 'LCFS':'black', '1 Leaked':'red'}
+    
+    patchList = []
+    for key in legend_dict:
+        data_key = mpatches.Patch(color=legend_dict[key], label=key)
+        patchList.append(data_key)
+        
+    plt.legend(handles=patchList, fontsize=8, loc='upper right')
+    
+    return
 
 def analyze_forces(varString, component, rzlim=True, colorbarLimits=[], dt=1e-8):
     #import wall geometry to plot over
@@ -1934,15 +1994,17 @@ if __name__ == "__main__":
                  #setup_directory+'/../output/perlmutter/production/forces25.01.06/positions/BET.nc', norm='')
     #analyze_leakage('perlmutter/history_D3t6.nc')
     #analyze_leakage(run_directory+'/output/history.nc')
+    analyze_leakage_surf('../examples/sasvw-pa-fav/output/leakage/scaling_particles/surface_P53.nc')
     #analyze_forces('ExB drift', 'z', rzlim=True, colorbarLimits=[-500,500], dt=1e-9)
     
     #init()
     #plot_gitr_gridspace()
     #plot_particle_source()
     #plot_history2D(setup_directory+"/../output/perlmutter/production/forces24.09.19/histories/gradT.nc",\
-    plot_history2D(setup_directory+"/../output/perlmutter/production/history_H2.nc",\
+    #plot_history2D(setup_directory+"/../output/perlmutter/production/history_H2.nc",\
+    #plot_history2D(setup_directory+"/../output/leakage/history_t8T25.nc",\
     #plot_history2D("/pscratch/sd/h/hayes/sasvw-pa-fav-history/output/history.nc",\
-                   bFile=setup_directory+'/../input/bField.nc')
+                   #bFile=setup_directory+'/../input/bField.nc')
     #spectroscopy(2013859273149157.8,3, specFile=run_directory+'/output/spec.nc')#specFile='/Users/Alyssa/Desktop/spec.nc')
     #spec_line_integration(view=2, spec_file='/Users/Alyssa/Desktop/spec.nc', pps_per_nP=2013859273149157.8)
     #ionization_analysis([0,1], '../examples/sasvw-pa-fav/output/perlmutter/production/','history_IF.nc', 'positions_IF.nc')
