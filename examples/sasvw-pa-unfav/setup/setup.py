@@ -1,15 +1,16 @@
 import sys, os
 #sys.path.insert(0, os.path.abspath('../../../python/'))
 if sys.path[0] != os.path.abspath('.'):
-    sys.path.insert(0,os.path.abspath('.')) 
+    sys.path.insert(0,os.path.abspath('.'))
     #this line MUST be last in a list of sys.path.insert commands 
     #or the wrong setup scripts could be used
 
+print('\nWorking path directory:\n',sys.path[0])
 import shutil
 import numpy as np
 import solpsProcessing, makeGeom, makeParticleSource
 
-nP = int(5e2)
+nP = int(5.5e8)
 run_directory = '..'
 
 W_indices = np.arange(11,22)
@@ -56,7 +57,7 @@ makeParticleSource.distributed_source(nP, surfW = W_indices, \
                     ftCFile = 'assets/ftridynBackgroundC.nc', \
                     configuration = 'random', \
                     use_fractal_tridyn_outgoing_IEADS = 0, \
-                    use_surface_model = 0, \
-                    plot_variables = 0)
+                    use_surface_model = 1, \
+                    plot_variables = 1)
 
 shutil.move('particleSource.nc', run_directory+'/input/particleSource.nc')

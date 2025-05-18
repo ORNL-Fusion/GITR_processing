@@ -257,7 +257,7 @@ def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
     plt.close()
     return
 
-def plot_surf_nc(nP10, dt10, nT10, \
+def plot_surf_nc(nP10, dt10, nT10, pps_per_nP=0, \
                  surface_file="surface.nc", positions_file='positions.nc', \
                  gitr_rz=setup_directory+'/assets/gitr_rz.txt', \
                  W_fine_file=setup_directory+'/assets/W_fine.txt', \
@@ -267,23 +267,23 @@ def plot_surf_nc(nP10, dt10, nT10, \
     profiles, W_indices, r_inner_target, z_inner_target, rmrs = init()
     rmrsCoords = profiles.variables['rmrs_inner_target'][W_indices]
     surface = netCDF4.Dataset(surface_file, "r", format="NETCDF4")
-    #pps_per_nP = 1394457587.59747
     
-    pps_per_nP, partSource_flux, fluxD, fluxC = makeParticleSource.distributed_source(nP=(nP10[0] * (10**int(nP10[1]))), \
-                surfW = W_surf_indices, \
-                tile_shift_indices = tile_shift_indices, \
-                Bangle_shift_indices = Bangle_shift_indices, \
-                geom = setup_directory+'/../input/gitrGeometry.cfg', \
-                profiles_file = setup_directory+'/../input/plasmaProfiles.nc', \
-                gitr_rz = setup_directory+'/assets/gitr_rz.txt', \
-                rmrs_fine_file = setup_directory+'/assets/rmrs_fine.txt', \
-                W_fine_file = setup_directory+'/assets/W_fine.txt', \
-                ftDFile = setup_directory+'/assets/ftridynBackgroundD.nc', \
-                ftCFile = setup_directory+'/assets/ftridynBackgroundC.nc', \
-                ftWFile = setup_directory+'/../input/ftridynSelf.nc', \
-                configuration = 'random', \
-                use_fractal_tridyn_outgoing_IEADS = 1, \
-                plot_variables = 0)
+    if pps_per_nP==0:    
+        pps_per_nP, partSource_flux, fluxD, fluxC = makeParticleSource.distributed_source(nP=(nP10[0] * (10**int(nP10[1]))), \
+                    surfW = W_surf_indices, \
+                    tile_shift_indices = tile_shift_indices, \
+                    Bangle_shift_indices = Bangle_shift_indices, \
+                    geom = setup_directory+'/../input/gitrGeometry.cfg', \
+                    profiles_file = setup_directory+'/../input/plasmaProfiles.nc', \
+                    gitr_rz = setup_directory+'/assets/gitr_rz.txt', \
+                    rmrs_fine_file = setup_directory+'/assets/rmrs_fine.txt', \
+                    W_fine_file = setup_directory+'/assets/W_fine.txt', \
+                    ftDFile = setup_directory+'/assets/ftridynBackgroundD.nc', \
+                    ftCFile = setup_directory+'/assets/ftridynBackgroundC.nc', \
+                    ftWFile = setup_directory+'/../input/ftridynSelf.nc', \
+                    configuration = 'random', \
+                    use_fractal_tridyn_outgoing_IEADS = 1, \
+                    plot_variables = 0)
     
         #print(surface.variables['grossErosion'][:])
     
@@ -798,7 +798,10 @@ def analyze_leakage(historyFile, bFile = run_directory+'/input/bField.nc'):
     
     return    
 
-def analyze_leakage_surf(surface_file="surface.nc"):
+def analyze_leakage_surf(surface_file="surface.nc", pps_per_nP=0, \
+                         gitr_rz=setup_directory+'/assets/gitr_rz.txt', \
+                         W_fine_file=setup_directory+'/assets/W_fine.txt', \
+                         rmrs_fine_file=setup_directory+'/assets/rmrs_fine.txt'):
     
     lines, lines_core, surfaces = makeGeom.main(gitr_geometry_filename=run_directory+'/input/gitrGeometry.cfg', \
                                       solps_geomfile = run_directory+'/setup/assets/sas-vw_v005_mod.ogr', \
@@ -821,10 +824,12 @@ def analyze_leakage_surf(surface_file="surface.nc"):
     grossEro = (surface.variables['grossErosion'][:])
     grossDep = (surface.variables['grossDeposition'][:])
     surf_core_start = len(grossDep)-len(lines_core)
-    print('\nTotal number leaked:',np.sum(grossDep[surf_core_start+1:]))
-    print('Maximum leaked at one location:',np.max(grossDep[surf_core_start+1:]),'\n')
-    print('Check that there is no erosion along the core boundary:',np.sum(grossEro[surf_core_start+1:]))
-    indices_leaked = np.where(grossDep[surf_core_start+1:]==1)[0]
+    print('\nTotal number leaked:',np.sum(grossDep[surf_core_start:]))
+    if pps_per_nP!=0: print('Total leakage:',np.sum(grossDep[surf_core_start:])*pps_per_nP)
+    print('Maximum leaked at one location:',np.max(grossDep[surf_core_start:]),'\n')
+    print('Check that there is no erosion along the core boundary:',np.sum(grossEro[surf_core_start:]))
+    grossDep_core = grossDep[surf_core_start:]
+    indices_leaked = np.where(grossDep_core>0)[0]
     print(indices_leaked)
 
     print('\n')
@@ -832,27 +837,80 @@ def analyze_leakage_surf(surface_file="surface.nc"):
     print(len(grossDep[surf_core_start:]),len(lines_core))        
     
     plt.close()
-    plt.plot(grossDep[surf_core_start+1:])
+    plt.plot(np.flip(grossDep_core)) #puts the PFR on the left and the SOL on the right
+    plt.axvline(x=len(grossDep_core)-79.5,color='k') #this is the x-point
+    plt.show(block=True)
+    plt.close()
+    plt.hist(grossDep_core,bins=100,log=True)#,range=[100,])
+    plt.show(block=True)
     
     plt.close()
     plt.rcParams.update({'lines.linewidth':2})
     plt.plot(r_wall,z_wall,'gray',label='Wall')
     plt.plot(r_core,z_core,'k',label='LCFS',linewidth=0.5)
+    #plt.scatter(r_core[0],z_core[0],15,'k')
+    #plt.scatter(r_core[79],z_core[79],15,'k')
     for i in indices_leaked:
-        plt.plot(r_core[i:i+2],z_core[i:i+2],'red')
+        if grossDep_core[i]<=1:
+            plt.plot(r_core[i:i+2],z_core[i:i+2],'magenta')
+        if grossDep_core[i]>1 and grossDep_core[i]<=5:
+            plt.plot(r_core[i:i+2],z_core[i:i+2],'dodgerblue')
+        if grossDep_core[i]>5 and grossDep_core[i]<=100:
+            plt.plot(r_core[i:i+2],z_core[i:i+2],'limegreen')
+        if grossDep_core[i]>100 and grossDep_core[i]<=2000:
+            plt.plot(r_core[i:i+2],z_core[i:i+2],'gold')
+        if grossDep_core[i]>2000:
+            plt.plot(r_core[i:i+2],z_core[i:i+2],'red')
     plt.axis('Scaled')
     plt.xlabel('R [m]')
     plt.ylabel('Z [m]')
     plt.title('Entrypoints for W Leakage \nfrom the SAS-VW into the Core')
     
-    legend_dict = {'Wall':'gray', 'LCFS':'black', '1 Leaked':'red'}
+    legend_dict = {'Wall':'gray', 'No W Leakage':'black', '<6e11 W/s Leaked':'magenta', '6e11-3e12 W/s Leaked':'dodgerblue', \
+                   '3e12-6e13 W/s Leaked':'limegreen', '6e13-1e15 W/s Leaked':'gold', '>1e15 W/s Leaked':'red'}
     
     patchList = []
     for key in legend_dict:
         data_key = mpatches.Patch(color=legend_dict[key], label=key)
         patchList.append(data_key)
         
-    plt.legend(handles=patchList, fontsize=8, loc='upper right')
+    plt.legend(handles=patchList, fontsize=7, loc='lower right')
+    
+    #erosion and deposition flux stuff
+    
+    #calculate area from wall
+    #import wall geometry to plot over
+    with open(gitr_rz, 'r') as file:
+        wall = file.readlines()
+    
+    #import W surface indices
+    with open(W_fine_file, 'r') as file:
+        W_fine = file.readlines()
+    W_fine = np.array(W_fine,dtype='int')
+    
+    #import refined rmrs at the W surface
+    with open(rmrs_fine_file, 'r') as file:
+        rmrs_fine = file.readlines()   
+    rmrsFine = np.array(rmrs_fine,dtype='float')
+    
+    R = np.zeros(len(wall))
+    Z = np.zeros(len(wall))
+    for i,line in enumerate(wall):
+        point = line.split()
+        R[i] = float(point[0])
+        Z[i] = float(point[1])
+    
+    R = R[W_fine]
+    Z = Z[W_fine]
+    
+    r1 = R[:-1]
+    r2 = R[1:]
+    z1 = Z[:-1]
+    z2 = Z[1:]
+    
+    dist = np.sqrt(np.power(r1-r2,2) + np.power(z1-z2,2))
+    area = np.pi*(r1+r2)*dist # conical frustum surface area
+    
     
     return
 
@@ -1985,7 +2043,7 @@ def spec_line_integration(view, spec_file, pps_per_nP, num_points=100, dt=1e-8):
 
 if __name__ == "__main__":
     #plot_history2D(run_directory+'/output/history.nc')
-    #plot_surf_nc([1,2], 9, [1,4], run_directory+'/output/surface.nc', '')#, run_directory+'/output/surface.nc')
+    #plot_surf_nc([5,5], 8, [5,5], 6.28367621129320E+11, run_directory+'/output/leakage/surface_20h.nc', '')#, run_directory+'/output/surface.nc')
     #plot_surf_nc([1,6], 9, [1,6], '../examples/sasvw-pa-fav/output/perlmutter/production/surface_S.nc', \
                  #'../examples/sasvw-pa-fav/output/perlmutter/production/positions_S.nc')
     #plot_surf_nc([1,6], 9, [1,6], '../../sasvw-pa-fav/sasvw-pa-fav-surfaces/nPnT-new/surface-p6t6.nc', \
@@ -1994,7 +2052,7 @@ if __name__ == "__main__":
                  #setup_directory+'/../output/perlmutter/production/forces25.01.06/positions/BET.nc', norm='')
     #analyze_leakage('perlmutter/history_D3t6.nc')
     #analyze_leakage(run_directory+'/output/history.nc')
-    analyze_leakage_surf('../examples/sasvw-pa-fav/output/leakage/scaling_particles/surface_P53.nc')
+    analyze_leakage_surf('../examples/sasvw-pa-unfav/output/leakage/surface_on.nc',7.140925877891980E+10)
     #analyze_forces('ExB drift', 'z', rzlim=True, colorbarLimits=[-500,500], dt=1e-9)
     
     #init()
@@ -2003,6 +2061,7 @@ if __name__ == "__main__":
     #plot_history2D(setup_directory+"/../output/perlmutter/production/forces24.09.19/histories/gradT.nc",\
     #plot_history2D(setup_directory+"/../output/perlmutter/production/history_H2.nc",\
     #plot_history2D(setup_directory+"/../output/leakage/history_t8T25.nc",\
+    #plot_history2D('../examples/sasvw-pa-unfav/output/leakage/history_old.nc',\
     #plot_history2D("/pscratch/sd/h/hayes/sasvw-pa-fav-history/output/history.nc",\
                    #bFile=setup_directory+'/../input/bField.nc')
     #spectroscopy(2013859273149157.8,3, specFile=run_directory+'/output/spec.nc')#specFile='/Users/Alyssa/Desktop/spec.nc')

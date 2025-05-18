@@ -244,8 +244,8 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
         import process_output
         print('Calculating gross erosion')
         sputt_flux = process_output.plot_surf_nc([5,2], 8, [1,5], \
-                    '../output/surface.nc', \
-                    '../output/positions.nc', plot_blocker=False)
+                    surface_file = os.path.abspath('../output/surface.nc'), \
+                    positions_file = os.path.abspath('../output/positions.nc'), plot_blocker=False)
 
     #multiply by area to get the outgoing particles per second
     pps = np.multiply(sputt_flux,area)
@@ -382,7 +382,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
 
     print('total nP', nP)
     print('pps over nP', pps_per_nP)
-    print('nP(r_mid):', int_weights)
+    #print('nP(r_mid):', int_weights)
     print('nP_diff should be 0: ', nP_diff)
 
     #define adjustment into the sheath because particles can't start exactly on the wall
@@ -413,7 +413,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     #print('COARSE SEGMENT: 0') #debugging
     
     for i in range(len(int_weights)): #range(29,34):#
-    
+        
         weight = int(int_weights[i])
         weight_diff = np.zeros(len(int_weights))
         m = np.sign(slope[i])
@@ -978,7 +978,7 @@ def get_analytic_spyld(surfE, surfA, Z1=6, M1=12, Z2=74, M2=183.84, \
 if __name__ == "__main__":
     #init()
     
-    distributed_source(nP=int(1e5), surfW=np.arange(11,22), \
+    distributed_source(nP=int(5e3), surfW=np.arange(11,22), \
                 tile_shift_indices = [1,9], \
                 Bangle_shift_indices = [2,8,9], \
                 geom = '../input/gitrGeometry.cfg', \

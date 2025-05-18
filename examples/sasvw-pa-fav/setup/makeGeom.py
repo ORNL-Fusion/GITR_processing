@@ -445,8 +445,8 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     if plot_variables: lines_to_vectors(lines, inDir, plt)
     
     #give the divertor target segments, targ_indices, a material and an interactive surface
-    Z = np.zeros(len(r_final))
-    surfaces = np.zeros(len(r_final))
+    Z = np.zeros(len(r_final)-1)
+    surfaces = np.zeros(len(r_final)-1)
     
     Z[W_indices] = 74
     surfaces[W_indices] = 1
@@ -462,8 +462,8 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
         print(len(core_boundary_x),len(lines_core),len(inDir_core))
         if plot_variables: lines_to_vectors(lines_core, inDir_core, plt)
         
-        Z_core = np.zeros(len(core_boundary_x))
-        surfaces_core = np.ones(len(core_boundary_x))
+        Z_core = np.zeros(len(lines_core))
+        surfaces_core = np.ones(len(lines_core))
         
         lines = combine_lines(lines,lines_core)
         inDir = np.append(inDir, inDir_core)
@@ -495,7 +495,8 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     plt.close()
     print('Created gitrGeometry.cfg')
     
-    print('Number of surfaces per makeGeom.py:',np.sum(surfaces))
+    print('Number of W surfaces per makeGeom.py:',np.sum(surfaces))
+    print('Number of total surfaces per makeGeom.py:',len(surfaces),len(lines))
     
     if use_core_leakage_boundary: 
         return lines, lines_core, surfaces
@@ -503,7 +504,7 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
         return
 
 if __name__ == "__main__":
-    main(use_core_leakage_boundary = 1, plot_variables = 0)
+    main(use_core_leakage_boundary = 0, plot_variables = 0)
 
 
 
