@@ -58,6 +58,6 @@ makeParticleSource.distributed_source(nP, surfW = W_indices, \
                     configuration = 'random', \
                     use_fractal_tridyn_outgoing_IEADS = 0, \
                     use_surface_model = 1, \
-                    plot_variables = 1)
+                    plot_variables = 0)
 
 shutil.move('particleSource.nc', run_directory+'/input/particleSource.nc')
