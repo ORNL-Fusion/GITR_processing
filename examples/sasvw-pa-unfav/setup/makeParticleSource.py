@@ -740,9 +740,9 @@ def random(nP,pps_weights,adj,slope,Beta, r1,z1,r2,z2):
     y = np.zeros(nP)
     z = np.zeros(nP)
     counter = 0
-    print('\nStatus tracker')
+    if nP>1e7: print('\nStatus tracker')
     for i in range(len(pps_weights)):
-        print(i,'of',len(pps_weights))
+        if nP>1e7: print(i,'of',len(pps_weights))
         for j in range(pps_weights[i]):
             chi = np.random.rand(1)
             x[counter+j] = r1[i]+chi*(r2[i]-r1[i]) - adj*np.abs(np.cos(Beta[i]))
