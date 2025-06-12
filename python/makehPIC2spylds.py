@@ -90,7 +90,7 @@ relative_spyldC6 = np.zeros(len(rmrsFine))
 
 for i in range(len(rmrsFine)):
     print('\nLine Segment:', i, 'of', len(rmrsFine))
-    pathname = '/Users/Alyssa/Dev/hpic2-data/case1/IEAD_data/x'+str(i+1)
+    pathname = host_dir+'/hpic2-data/case1/IEAD_data/x'+str(i+1)
     
     # autofill filenames for each species
     filenameD = complete_filename('_D1_', pathname)
