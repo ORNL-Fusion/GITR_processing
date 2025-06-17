@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import os
+import os, sys
 import netCDF4
 import numpy as np
 import scipy.interpolate as scii
 import pandas as pd
 
 case = 1
+if case == 0: case = int(sys.argv[1])
+
 device = 'local'
 
 if device == 'local':
@@ -88,7 +90,7 @@ relative_spyldC4 = np.zeros(len(rmrsFine))
 relative_spyldC5 = np.zeros(len(rmrsFine))
 relative_spyldC6 = np.zeros(len(rmrsFine))
 
-for i in range(len(rmrsFine)):
+for i in range(3,len(rmrsFine)):
     print('\nLine Segment:', i, 'of', len(rmrsFine))
     pathname = host_dir+'/hpic2-data/case1/IEAD_data/x'+str(i+1)
     
@@ -131,13 +133,13 @@ for i in range(len(rmrsFine)):
     Emax_C5 = 240 * dE_C5
     Emax_C6 = 240 * dE_C6
     
-    energiesD = np.arange(dE_D, Emax_D+dE_D, dE_D)
-    energiesC1 = np.arange(dE_C1, Emax_C1+dE_C1, dE_C1)
-    energiesC2 = np.arange(dE_C2, Emax_C2+dE_C2, dE_C2)
-    energiesC3 = np.arange(dE_C3, Emax_C3+dE_C3, dE_C3)
-    energiesC4 = np.arange(dE_C4, Emax_C4+dE_C4, dE_C4)
-    energiesC5 = np.arange(dE_C5, Emax_C5+dE_C5, dE_C5)
-    energiesC6 = np.arange(dE_C6, Emax_C6+dE_C6, dE_C6)
+    energiesD = np.arange(dE_D, Emax_D, dE_D)
+    energiesC1 = np.arange(dE_C1, Emax_C1, dE_C1)
+    energiesC2 = np.arange(dE_C2, Emax_C2, dE_C2)
+    energiesC3 = np.arange(dE_C3, Emax_C3, dE_C3)
+    energiesC4 = np.arange(dE_C4, Emax_C4, dE_C4)
+    energiesC5 = np.arange(dE_C5, Emax_C5, dE_C5)
+    energiesC6 = np.arange(dE_C6, Emax_C6, dE_C6)
     
     '''
     # set E=1e3 eV for all E>1e3 eV
