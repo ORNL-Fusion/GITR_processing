@@ -8,7 +8,7 @@ import scipy.interpolate as scii
 import pandas as pd
 
 case = 1
-species = 'D'
+species = 'D1'
 device = 'perlmutter'
 
 ##############################################################################
