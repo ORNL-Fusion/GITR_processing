@@ -448,28 +448,34 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     Z = np.zeros(len(r_final)-1)
     surfaces = np.zeros(len(r_final)-1)
     
-    Z[W_indices] = 74
-    surfaces[W_indices] = 1
+    Z = np.zeros(len(r_final))
+    surfaces = np.zeros(len(r_final))
     
+    Z[W_indices] = 74;
+    surfaces[W_indices] = 1;
+    print('\nNumber of W surfaces in the divertor:',np.sum(surfaces),'\n')
+        
     if use_core_leakage_boundary:
         core_boundary_x, core_boundary_y = generate_core_leakage_boundary(bFile)
         lines_core = gitr_lines_from_points(core_boundary_x, core_boundary_y)
         
-        inDir_core = -1*np.ones(len(core_boundary_x))
+        inDir_core = -1*np.ones(len(lines_core))
         inDir_core[int(len(inDir_core)/2):] = 1
         inDir_core[0] = 1
-        inDir_core[67:79] = -1
-        print(len(core_boundary_x),len(lines_core),len(inDir_core))
+        inDir_core[66:79] = -1
+        #note to self: len(lines_core) == len(inDir_core) because only the lines have inDir vectors duh
         if plot_variables: lines_to_vectors(lines_core, inDir_core, plt)
         
         Z_core = np.zeros(len(lines_core))
         surfaces_core = np.ones(len(lines_core))
+        print('\nNumber of LCFS core boundary surfaces:',np.sum(surfaces_core),'\n')
         
         lines = combine_lines(lines,lines_core)
         inDir = np.append(inDir, inDir_core)
-        Z = np.append(Z, Z_core)
-        surfaces = np.append(surfaces, surfaces_core)
-    
+        Z = np.append(Z[:-1], Z_core)
+        Z = np.append(Z, np.zeros(1))
+        surfaces = np.append(surfaces[:-1], surfaces_core)
+        surfaces = np.append(surfaces, np.zeros(1))
     
     #populate geometry input file to GITR
     lines_to_gitr_geometry(gitr_geometry_filename+'0', lines, Z, surfaces, inDir)
