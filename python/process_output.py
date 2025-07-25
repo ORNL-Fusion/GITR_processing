@@ -12,11 +12,11 @@ import solps
 # setting directories and special constants
 ################################################
 
-run_directory = '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav'
+#run_directory = '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav'
 #run_directory = '/Users/Alyssa/Dev/flag-testing'
-#run_directory = '/pscratch/sd/h/hayes/sasvw-pa-fav-history'
-#setup_directory = '../examples/sasvw-pa-fav/setup'
-setup_directory = '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav/setup'
+run_directory = '/pscratch/sd/h/hayes/sasvw-pa-fav-history'
+#setup_directory = '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav/setup'
+setup_directory = '/pscratch/sd/h/hayes/GITR_processing/examples/sasvw-pa-fav/setup'
 rmrs_fine_file = setup_directory+'/assets/rmrs_fine.txt'
 
 #prog angle
@@ -30,8 +30,8 @@ r_sp, z_sp = 1.49829829, 1.19672716 #prog angle & favorable
 W_surf_indices = np.arange(16,25)
 tile_shift_indices = [2,6]
 Bangle_shift_indices = [3,6]
-r_sp, z_sp = 1.50230407, 1.23187366 #vertex & favorable
-#r_sp, z_sp = 1.49905286, 1.22894757 #vertex & unfavorable
+#r_sp, z_sp = 1.50230407, 1.23187366 #vertex & favorable
+r_sp, z_sp = 1.49905286, 1.22894757 #vertex & unfavorable
 '''
 if sys.path[0] != os.path.abspath(setup_directory):
     sys.path.insert(0, os.path.abspath(setup_directory))
@@ -57,8 +57,8 @@ def init(W_indices = W_surf_indices, plot_rz=False):
         plt.plot(r_inner_target, z_inner_target)
     
     #set plotting style defaults
-    plt.rcParams.update({'font.size':11.5})
-    plt.rcParams.update({'lines.linewidth':2})
+    plt.rcParams.update({'font.size':12})
+    plt.rcParams.update({'lines.linewidth':1.5})
     plt.rcParams.update({'lines.markersize':1})
 
     return profiles, W_indices, r_inner_target, z_inner_target, rmrs_coarse
@@ -184,8 +184,8 @@ def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
 
     plt.close()
     if plot_particle_source: plt.scatter(x0,z0,marker='o',s=10)
-    if os.path.exists(profilesFile): plt.plot(r_wall, z_wall,'-k',linewidth=1.5)
-    if os.path.exists(profilesFile): plt.plot(r_target_fine, z_target_fine,'-m',linewidth=2)
+    if os.path.exists(profilesFile): plt.plot(r_wall, z_wall,'-k',linewidth=5)
+    if os.path.exists(profilesFile): plt.plot(r_target_fine, z_target_fine,'-m',linewidth=5)
     plt.axis('scaled')
     plt.xlabel('R [m]')
     plt.ylabel('Z [m]')
@@ -242,16 +242,16 @@ def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
     #plt.xlim(1.0, 3.0)
     #plt.ylim(-1.5, 1.5)
     #pa-fav
-    plt.xlim(1.37, 1.52)
-    plt.ylim(1.06, 1.23)
+    plt.xlim(1.35, 1.55)
+    plt.ylim(1.05, 1.23)
     #vertex-fav
     #plt.xlim(1.0, 1.53)
-    #plt.ylim(1.0, 1.23)
+    #plt.ylim(0.9, 1.24)
     #vertex-unfav
     #plt.xlim(1.0, 1.53)
     #plt.ylim(1.0, 1.23)
     
-    plt.title('W Trajectories', fontsize=24)
+    plt.title('W Trajectories', fontsize=18)
     #plt.show(block=True)
     plt.savefig(run_directory+'/output/plots/history.svg')
     plt.close()
@@ -263,7 +263,7 @@ def plot_surf_nc(nP10, dt10, nT10, \
                  gitr_rz=setup_directory+'/assets/gitr_rz.txt', \
                  W_fine_file=setup_directory+'/assets/W_fine.txt', \
                  rmrs_fine_file=setup_directory+'/assets/rmrs_fine.txt', \
-                 norm=None, plot_cumsum=0, plot_blocker=True):
+                 norm=None, use_hpic=0, plot_cumsum=0, plot_blocker=False):
     
     profiles, W_indices, r_inner_target, z_inner_target, rmrs = init()
     rmrsCoords = profiles.variables['rmrs_inner_target'][W_indices]
@@ -273,10 +273,11 @@ def plot_surf_nc(nP10, dt10, nT10, \
     particle_source = netCDF4.Dataset(particle_source_file, "r", format="NETCDF4")
     pps_per_nP = particle_source.variables['pps_per_nP'][:]
     
-    pps_per_nP_scrap, partSource_flux, fluxD, fluxC = makeParticleSource.distributed_source(nP=(nP10[0] * (10**int(nP10[1]))), \
+    pps_per_nP, partSource_flux, fluxD, fluxC = makeParticleSource.distributed_source(nP=(nP10[0] * (10**int(nP10[1]))), \
             surfW = W_surf_indices, \
             tile_shift_indices = tile_shift_indices, \
             Bangle_shift_indices = Bangle_shift_indices, \
+            setup_directory = setup_directory, \
             geom = setup_directory+'/../input/gitrGeometry.cfg', \
             profiles_file = setup_directory+'/../input/plasmaProfiles.nc', \
             gitr_rz = setup_directory+'/assets/gitr_rz.txt', \
@@ -286,7 +287,7 @@ def plot_surf_nc(nP10, dt10, nT10, \
             ftCFile = setup_directory+'/assets/ftridynBackgroundC.nc', \
             ftWFile = setup_directory+'/../input/ftridynSelf.nc', \
             configuration = 'random', \
-            use_fractal_tridyn_outgoing_IEADS = 1, \
+            use_surface_model = 1, use_hpic = use_hpic, \
             plot_variables = 0)
         
     #calculate area from wall
@@ -328,11 +329,11 @@ def plot_surf_nc(nP10, dt10, nT10, \
         is_prompt_redep = flightAngle < 2*np.pi
         prompt_redep_rate = np.sum(is_prompt_redep) / len(flightAngle)
 
-    grossEro = (surface.variables['grossErosion'][:])
+    grossEro = surface.variables['grossErosion'][:]
     print(grossEro)
-    grossDep = (surface.variables['grossDeposition'][:])
+    grossDep = surface.variables['grossDeposition'][:]
     print(grossDep)
-    netDep = (grossDep-grossEro)
+    netDep = grossDep-grossEro
     
     print('\n')
     print('total gross eroded comp particles',sum(grossEro))
@@ -479,9 +480,9 @@ def plot_surf_nc(nP10, dt10, nT10, \
     V3_grossEro = view_fraction3 * V3_grossEro
     '''
     print('\n')
-    print('gross erosion in View 1:', V1_grossEro) #[W m-2 s-1]
-    print('gross erosion in View 2:', V2_grossEro) #[W m-2 s-1]
-    print('gross erosion in View 3:', V3_grossEro) #[W m-2 s-1]
+    print('gross erosion in View 1:', '{:.6E}'.format(V1_grossEro)) #[W m-2 s-1]
+    print('gross erosion in View 2:', '{:.6E}'.format(V2_grossEro)) #[W m-2 s-1]
+    print('gross erosion in View 3:', '{:.6E}'.format(V3_grossEro)) #[W m-2 s-1]
     
     plt.rcParams.update({'font.size':24})
     plt.rcParams.update({'lines.linewidth':5}) 
@@ -515,10 +516,10 @@ def plot_surf_nc(nP10, dt10, nT10, \
         for i,v in enumerate(tile_shift_indices):
             if i==0: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', label='Walll\nVertices')
             else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
-    if Bangle_shift_indices != []:
+    '''if Bangle_shift_indices != []:
         for i,v in enumerate(Bangle_shift_indices):
             if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\\alpha_B$')
-            else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
+            else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')'''
     
     plt.plot(rmrsFine,grossEro_norm,'r', label='Gross Erosion')
     plt.plot(rmrsFine,grossDep_norm,'g', label='Gross Deposition')
@@ -746,7 +747,7 @@ def spectroscopy(pps_per_nP, View=1, \
 
         fscope[np.isnan(fscope)] = 0
         print('W0 Neutral Flux:', np.sum(fscope)) # in units of m-2 s-1
-        plt.title('Toroidal Slice of W0 Density \n View '+str(View)+' W0: %10e m$^{-2}$s$^{-1}$' %np.sum(fscope))
+        plt.title('Toroidal Slice of W0 Density')# \n View '+str(View)+' W0: %10e m$^{-2}$s$^{-1}$' %np.sum(fscope))
         plt.savefig('plots/spec_filterscope.png')
     
 def analyze_leakage(historyFile, bFile = run_directory+'/input/bField.nc'):
@@ -1502,6 +1503,9 @@ def ionization_analysis(plotting, output_dir, historyFile, positionsFile, \
             # Calculate fraction of particles ionizing in a sheath that promptly redeposit
             ##############################################################################
             
+            chi_prompt_Debye = 1-0.5*np.sqrt(1 - frac_ioniz_in_Debye)
+            chi_prompt_Chodura = 1-0.5*np.sqrt(1 - frac_ioniz_in_Chodura)
+            
             if len(pindex_in_Chodura) == 0:
                 frac_prompt_Chodura[seg] = 0
                 frac_noHitWall_Chodura[seg] = 0
@@ -1553,7 +1557,15 @@ def ionization_analysis(plotting, output_dir, historyFile, positionsFile, \
             if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\\alpha_B$')
             else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
     
-    plt.errorbar(rmrsPlotting, avg_distance_to_first_ionization*1000, std_distance_to_first_ionization*1000, ecolor='lightpink', fmt='saddlebrown')
+    # clip the negative error bars (thanks Dmitry for pointing this out)
+    lower_error = std_distance_to_first_ionization
+    for i in range(len(std_distance_to_first_ionization)):
+        if avg_distance_to_first_ionization[i] - std_distance_to_first_ionization[i] < 0:
+            lower_error[i] = avg_distance_to_first_ionization[i]
+    lower_error = lower_error * 1000
+    upper_error = std_distance_to_first_ionization * 1000
+    
+    plt.errorbar(rmrsPlotting, avg_distance_to_first_ionization*1000, [lower_error,upper_error], ecolor='lightpink', fmt='saddlebrown')
     plt.xlabel('D-Dsep [m]')
     plt.ylabel('Distance [mm]')
     plt.title('Average Distance to First Ionization')
@@ -1648,7 +1660,8 @@ def ionization_analysis(plotting, output_dir, historyFile, positionsFile, \
             if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\\alpha_B$')
             else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
             
-    plt.plot(rmrsPlotting, frac_prompt_Chodura, label='Prompt Redeposition', color='saddlebrown')
+    plt.plot(rmrsPlotting, chi_prompt_Chodura, label='Prompt Redeposition by Eq.1', color='black')
+    plt.plot(rmrsPlotting, frac_prompt_Chodura, label='Prompt Redeposition by rotations', color='saddlebrown')
     plt.plot(rmrsPlotting, frac_delayed_Chodura, label='Delayed Redeposition', color='darkorange')
     plt.plot(rmrsPlotting, frac_noHitWall_Chodura, label='Never Hit a Wall', color='burlywood')
     plt.xlabel('D-Dsep [m]')
@@ -1673,7 +1686,8 @@ def ionization_analysis(plotting, output_dir, historyFile, positionsFile, \
             if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\\alpha_B$')
             else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
     
-    plt.plot(rmrsPlotting[31:], frac_prompt_Debye[31:], label='Prompt Redeposition', color='maroon')
+    #plt.plot(rmrsPlotting, chi_prompt_Debye, label='Prompt Redeposition by Eq.1', color='black')
+    plt.plot(rmrsPlotting, frac_prompt_Debye, label='Prompt Redeposition', color='maroon') #[31:]
     plt.plot(rmrsPlotting, frac_delayed_Debye, label='Delayed Redeposition', color='crimson')
     plt.plot(rmrsPlotting, frac_noHitWall_Debye, label='Never Hit a Wall', color='lightcoral')
     plt.xlabel('D-Dsep [m]')
@@ -1705,10 +1719,16 @@ def ionization_analysis(plotting, output_dir, historyFile, positionsFile, \
     print('Max:', np.max(frac_prompt_Debye[32:]))
     print('Average:', np.average(frac_prompt_Debye[32:]))
     
-    print('\nFraction of first ionizations in the Chodura sheath that promptly redeposit past OSP:')
+    print('\nFraction of first ionizations in the Chodura sheath that promptly redeposit past OSP by gyrorotations:')
     print('Min:', np.min(frac_prompt_Chodura[32:]))
     print('Max:', np.max(frac_prompt_Chodura[32:]))
     print('Average:', np.average(frac_prompt_Chodura[32:])) 
+    
+    print('\nFraction of first ionizations in the Chodura sheath that promptly redeposit past OSP by Guterl2021-PPCNF:')
+    print('Min:', np.min(chi_prompt_Chodura[32:]))
+    print('Max:', np.max(chi_prompt_Chodura[32:]))
+    print('Average:', np.average(chi_prompt_Chodura[32:])) 
+    print('Average delta between Chodura prompt redeposition calculations:', np.average(frac_prompt_Chodura[32:] - chi_prompt_Chodura[32:]))
     return
 
 def prompt_redep_hist(inputs, fileDir, fileOFF, fileON=None):
@@ -1945,19 +1965,40 @@ def PEC_interpolation(te, ne):
     ne_grid = PEC_data.transpose()[0][1:]
     PEC_grid = PEC_data[1:,1:]
     
-    PEC_interpolated = scii.interpn((ne_grid,te_grid),PEC_grid,(ne,te))[0]
+    PEC_interpolated = scii.interpn((ne_grid,te_grid),PEC_grid,(ne,te))
     
     return PEC_interpolated
 
 def spec_line_integration(view, spec_file=run_directory+'/output/spec.nc', num_points=100, dt=1e-8):
     profiles, W_indices, R, Z, rmrs = init()
+    R = R*100 #[cm]
+    Z = Z*100 #[cm]
     
     particle_source_file = run_directory+'/input/particleSource.nc'
     particle_source = netCDF4.Dataset(particle_source_file, "r", format="NETCDF4")
     pps_per_nP = particle_source.variables['pps_per_nP'][:]
     
+    # import neutral W density results from spec.nc
+    spec = netCDF4.Dataset(spec_file, "r", format="NETCDF4")
+    
+    gridz_spec_original = spec.variables['gridZ'][:]*100 #[cm]
+    gridr_spec_original = spec.variables['gridR'][:]*100 #[cm]
+    dz = gridz_spec_original[1]-gridz_spec_original[0]
+    dr = gridr_spec_original[1]-gridr_spec_original[0]
+    gridz_spec = np.append(gridz_spec_original, gridz_spec_original[-1]+dz)
+    gridr_spec = np.append(gridr_spec_original, gridr_spec_original[-1]+dr)
+    gridr_expanded = np.arange(130,151,0.1)
+    
     # set start and end points for the line along which we are integrating
+    # define spectroscopic view lines to find the intercept from which to calculate s and ds
     # all (r,z) points are in [cm] for this calculation
+    r_vtile1 = R[5]
+    z_vtile1 = Z[5]
+    r_vtile2 = R[10]
+    z_vtile2 = Z[10]
+    m_vtile = (z_vtile2-z_vtile1) / (r_vtile2-r_vtile1)
+    b_vtile = z_vtile1 - m_vtile*r_vtile1
+    
     if 'vertex' in setup_directory:
         if view == 1:
             r_source = 148.97312
@@ -1974,42 +2015,179 @@ def spec_line_integration(view, spec_file=run_directory+'/output/spec.nc', num_p
             z_source = 119.132585
             r_targ = 149.831495
             z_targ = 115.270365
+            
     else: 
         if view == 1:
             r_source = 148.973078
             z_source = 122.055764
             r_targ = 149.818333
             z_targ = 121.454694
+            
+            m_bound1 = -0.564378
+            b_bound1 = 2.063959*100
+            m_bound2 = -0.790843
+            b_bound2 = 2.395664*100
+                        
+            r_wtile1_bound1 = R[11]
+            z_wtile1_bound1 = Z[11]
+            r_wtile2_bound1 = R[12]
+            z_wtile2_bound1 = Z[12]
+            
+            r_wtile1_bound2 = R[12]
+            z_wtile1_bound2 = Z[12]
+            r_wtile2_bound2 = R[13]
+            z_wtile2_bound2 = Z[13]
+            '''
+            # calculate the m_bound1 and b_bound1 assuming that the intersection between the bounds 
+            # has the same solid angle as for views 2 and 3, such that the upper bound needs to be redefined
+            solid_angle = np.average([0.039182783120984194, 0.0350123317478682])
+            print('solid_angle_view1_preset:', solid_angle)
+            m_wtile_bound1 = (z_wtile2_bound1-z_wtile1_bound1) / (r_wtile2_bound1-r_wtile1_bound1)
+            b_wtile_bound1 = z_wtile1_bound1 - m_wtile_bound1*r_wtile1_bound1
+            m_wtile_bound2 = (z_wtile2_bound2-z_wtile1_bound2) / (r_wtile2_bound2-r_wtile1_bound2)
+            b_wtile_bound2 = z_wtile1_bound2 - m_wtile_bound2*r_wtile1_bound2
+            
+            r_intercept_wtile_bound1 = (b_bound1 - b_wtile_bound1)/(m_wtile_bound1 - m_bound1)
+            r_intercept_vtile_bound2 = (b_bound2 - b_vtile)/(m_vtile - m_bound2)
+            r_intercept_wtile_bound2 = (b_bound2 - b_wtile_bound2)/(m_wtile_bound2 - m_bound2)
+            z_intercept_wtile_bound1 = m_bound1 * r_intercept_wtile_bound1 + b_bound1
+            z_intercept_vtile_bound2 = m_bound2 * r_intercept_vtile_bound2 + b_bound2
+            z_intercept_wtile_bound2 = m_bound2 * r_intercept_wtile_bound2 + b_bound2
+            
+            half_spot_width = np.sqrt((r_targ - r_intercept_wtile_bound2)**2 + (z_targ - z_intercept_wtile_bound2)**2)
+            length_0_wtile2 = half_spot_width/np.sin(solid_angle/2)
+            length_vtile2_wtile2 = np.sqrt((r_intercept_wtile_bound2 - r_intercept_vtile_bound2)**2 + \
+                                           (z_intercept_wtile_bound2 - z_intercept_vtile_bound2)**2)
+            length_ratio = length_0_wtile2 / length_vtile2_wtile2
+            r0 = length_ratio * (r_intercept_vtile_bound2-r_intercept_wtile_bound2) + r_intercept_wtile_bound2
+            z0 = length_ratio * (z_intercept_vtile_bound2-z_intercept_wtile_bound2) + z_intercept_wtile_bound2
+            
+            m_bound1 = (z_intercept_wtile_bound1-z0) / (r_intercept_wtile_bound1-r0)
+            b_bound1 = z0 - m_bound1*r0
+            rw1 = r_intercept_wtile_bound1
+            zw1 = z_intercept_wtile_bound1
+            rw2 = r_intercept_wtile_bound2
+            zw2 = z_intercept_wtile_bound2
+            rv2 = r_intercept_vtile_bound2
+            zv2 = z_intercept_vtile_bound2
+            '''
+            SXB = 6.752
+            
         elif view == 2:
             r_source = 147.24117594
             z_source = 120.497058512
             r_targ = 149.95283384
             z_targ = 118.55196013
+            
+            m_bound1 = -0.685413
+            b_bound1 = 2.216844*100
+            m_bound2 = -0.744624
+            b_bound2 = 2.298601*100
+            
+            r_wtile1_bound1 = r_wtile1_bound2 = R[16]
+            z_wtile1_bound1 = z_wtile1_bound2 = Z[16]
+            r_wtile2_bound1 = r_wtile2_bound2 = R[18]
+            z_wtile2_bound1 = z_wtile2_bound2 = Z[18]
+            
+            SXB = 28.467
+            
         elif view == 3:
             r_source = 145.724392078
             z_source = 119.1319528895
             r_targ = 149.906982022
             z_targ = 115.200366255
-        
+            
+            m_bound1 = -0.906176
+            b_bound1 = 2.515464*100
+            m_bound2 = -0.972056
+            b_bound2 = 2.604085*100
+            
+            r_wtile1_bound1 = r_wtile1_bound2 = R[20]
+            z_wtile1_bound1 = z_wtile1_bound2 = Z[20]
+            r_wtile2_bound1 = r_wtile2_bound2 = R[21]
+            z_wtile2_bound1 = z_wtile2_bound2 = Z[21]
+            
+            SXB = 38.369
+    
+    # slice the portion of the 2 bounds lines that fall between the target and the source
+    # calculate the area of the circle between the bounds lines for num_points divisions
+    m_wtile_bound1 = (z_wtile2_bound1-z_wtile1_bound1) / (r_wtile2_bound1-r_wtile1_bound1)
+    b_wtile_bound1 = z_wtile1_bound1 - m_wtile_bound1*r_wtile1_bound1
+    m_wtile_bound2 = (z_wtile2_bound2-z_wtile1_bound2) / (r_wtile2_bound2-r_wtile1_bound2)
+    b_wtile_bound2 = z_wtile1_bound2 - m_wtile_bound2*r_wtile1_bound2
+    
+    r_intercept_vtile_bound1 = (b_bound1 - b_vtile)/(m_vtile - m_bound1)
+    r_intercept_wtile_bound1 = (b_bound1 - b_wtile_bound1)/(m_wtile_bound1 - m_bound1)
+    r_intercept_vtile_bound2 = (b_bound2 - b_vtile)/(m_vtile - m_bound2)
+    r_intercept_wtile_bound2 = (b_bound2 - b_wtile_bound2)/(m_wtile_bound2 - m_bound2)
+    
+    z_intercept_vtile_bound1 = m_bound1 * r_intercept_vtile_bound1 + b_bound1
+    z_intercept_wtile_bound1 = m_bound1 * r_intercept_wtile_bound1 + b_bound1
+    z_intercept_vtile_bound2 = m_bound2 * r_intercept_vtile_bound2 + b_bound2
+    z_intercept_wtile_bound2 = m_bound2 * r_intercept_wtile_bound2 + b_bound2
+    
+    r_bound1 = np.linspace(r_intercept_vtile_bound1, r_intercept_wtile_bound1, num_points+1)
+    z_bound1 = m_bound1 * r_bound1 + b_bound1
+    r_bound2 = np.linspace(r_intercept_vtile_bound2, r_intercept_wtile_bound2, num_points+1)
+    z_bound2 = m_bound2 * r_bound2 + b_bound2
+    
+    diameter = np.sqrt((r_bound2 - r_bound1)**2 + (z_bound2 - z_bound1)**2)
+    radius = diameter/2
+    area = np.pi * (radius**2)
+    
+    # calculate the solid angle within the OES view as (A dot B) / (|A| |B|)
+    Ax = r_bound1[-1]-r_bound1[0]
+    Ay = z_bound1[-1]-z_bound1[0]
+    Bx = r_bound2[-1]-r_bound2[0]
+    By = z_bound2[-1]-z_bound2[0]
+    top = Ax*Bx + Ay*By
+    bottom = np.sqrt(Ax**2 + Ay**2) * np.sqrt(Bx**2 + By**2)
+    solid_angle = np.arccos(top/bottom)
+    print('\nSolid Angle:',solid_angle,'radians')
+    print('Solid Angle:',np.rad2deg(solid_angle),'degrees')
+    
+    #re-define r_source and z_source because of the shifted bound1 for View 1
+    r_source = np.average([r_intercept_vtile_bound1,r_intercept_vtile_bound2])
+    z_source = np.average([z_intercept_vtile_bound1,z_intercept_vtile_bound2])
+    
     # define the points of interest along the line from (r_source,z_source) to (r_targ,z_targ)
     r_line = np.linspace(r_source, r_targ, num_points+1)
     z_line = np.linspace(z_source, z_targ, num_points+1)
     
-    plt.close()
-    plt.plot(R*100,Z*100)
-    plt.plot(r_line,z_line)
-    plt.show(block=False)
+    # define s_line as the distance from the intercept of the 2 bounds lines
+    intercept_r0 = (b_bound1 - b_bound2)/(m_bound2 - m_bound1)
+    intercept_z0 = m_bound1*intercept_r0 + b_bound1
+    s_line = np.sqrt((r_line - intercept_r0)**2 + (z_line - intercept_z0)**2)
     
-    # import neutral W density results from spec.nc
-    spec = netCDF4.Dataset(spec_file, "r", format="NETCDF4")
+    dist = np.sqrt((intercept_r0-r_source)**2 + (intercept_z0-z_source)**2)
+    print('dist from apex to intersection with V-tile:', dist)
     
-    gridz_spec_original = spec.variables['gridZ'][:]*100 #[cm]
-    gridr_spec_original = spec.variables['gridR'][:]*100 #[cm]
-    dz = gridz_spec_original[1]-gridz_spec_original[0]
-    dr = gridr_spec_original[1]-gridr_spec_original[0]
-    gridz_spec = np.append(gridz_spec_original, gridz_spec_original[-1]+dz)
-    gridr_spec = np.append(gridr_spec_original, gridr_spec_original[-1]+dr)
+    # plotting for debugging
+    x = np.average([r_intercept_wtile_bound1,r_intercept_wtile_bound2])
+    y = np.average([m_bound1*r_intercept_wtile_bound1+b_bound1, m_bound2*r_intercept_wtile_bound2+b_bound2])
+    line_bound1_expanded = m_bound1*gridr_expanded + b_bound1
+    line_bound2_expanded = m_bound2*gridr_expanded + b_bound2
     
+    #plt.close()
+    plt.plot(R,Z,'k')
+    plt.scatter(R,Z,s=8)
+    plt.scatter(r_intercept_vtile_bound1,z_intercept_vtile_bound1,color='magenta',s=10)
+    #plt.scatter(x,y,color='lime',s=15)
+    plt.plot(gridr_expanded,line_bound1_expanded,'darkgreen',label='View Bound 1') #delete
+    plt.plot(gridr_expanded,line_bound2_expanded,'goldenrod',label='View Bound 2') #delete
+    #plt.scatter(r_targ,z_targ,color='magenta',s=3)
+    plt.plot(r_line,z_line,'purple',label='Centerline')
+    plt.plot(r_bound1,z_bound1,color='darkgreen',linewidth=1)
+    plt.plot(r_bound2,z_bound2,color='goldenrod',linewidth=1)
+    #plt.plot(gridr_sliced,line1,'lime',label='Sliced Bounds')
+    #plt.plot(gridr_sliced,line2,'lime')
+    plt.scatter(intercept_r0,intercept_z0,s=30)
+    #plt.scatter([rw1,rw2,rv2],[zw1,zw2,zv2],color='cyan',s=20)
+    plt.legend()
+    plt.axis('scaled')
+    #plt.show(block=False)
+    
+    # calculate volume of each spectroscopic grid element to convert #/s per cell into W densities
     rr, zz = np.meshgrid(gridr_spec,gridz_spec)
     r1 = rr[:-1,:-1]
     r2 = rr[1:,1:]
@@ -2035,23 +2213,185 @@ def spec_line_integration(view, spec_file=run_directory+'/output/spec.nc', num_p
     ni_line = scii.interpn((gridz_spec_original,gridr_spec_original),ni_2D,(z_line,r_line))
 
     # interpolate PEC as a function of local ne and te
-    PEC_line = PEC_interpolation(te_line, ne_line) #[ph cm3 s-1]
+    PEC_line = PEC_interpolation(te_line, ne_line) #[ph/W cm3 s-1]
     
     # perform the integration per equation 2 of Bogen 1984
     dr = (r_targ-r_source)/num_points
     dz = (z_targ-z_source)/num_points
-    dx = np.sqrt(dr**2+dz**2)
+    ds = np.sqrt(dr**2+dz**2)
+    '''
+    plt.close()
+    plt.plot(s_line,ni_line)
+    plt.xlabel('s_line [cm]')
+    plt.ylabel('ni_line [W/cm3]')
+    plt.show(block=False)
+    plt.close()
+    plt.plot(s_line,ne_line)
+    plt.xlabel('s_line [cm]')
+    plt.ylabel('ne_line [1/cm3]')
+    plt.show(block=False)
+    plt.close()
+    plt.plot(s_line,PEC_line)
+    plt.xlabel('s_line [cm]')
+    plt.ylabel('PEC_line [ph cm3 /W s]')
+    plt.show(block=False)
+    ''' 
+    epsilon = ne_line * ni_line * PEC_line
+    intensity_simple = (1/(4*np.pi)) * np.sum(epsilon) * ds #[ph cm-2 s-1 str-1]
+    intensity = np.sum(epsilon * (s_line**2) / area) * ds #[ph cm-2 s-1]
+    #print('test:', (s_line**2) / area)
     
-    intensity = (1/(4*np.pi)) * np.sum(ne_line * ni_line * PEC_line) * dx #[ph cm-2 s-1 str-1]
-    print(intensity)
+    intensity_per_str = (1/(4*np.pi)) * intensity #[ph cm-2 s-1 str-1]
+    intensity_per_m2 = intensity * 1e4 #[ph m-2 s-1 ]
+    flux_per_m2 = intensity_per_m2*SXB
     
+    print('\nSimplified Intensity:','{:.6E}'.format(intensity_simple),'ph cm-2 s-1 str-1')
+    print('Per STR Intensity:','{:.6E}'.format(intensity_per_str),'ph cm-2 s-1 str-1')
+    
+    print('\nIntensity per cm2:','{:.6E}'.format(intensity),'ph cm-2 s-1')
+    print('Intensity per m2:','{:.6E}'.format(intensity_per_m2),'ph m-2 s-1')
+    print('Est W Flux per m2:','{:.6E}'.format(flux_per_m2),'W m-2 s-1')
+
     return intensity
+
+def spec_volumetric_integration(view, spec_file=run_directory+'/output/spec.nc', num_points=100, dt=1e-8):
+    profiles, W_indices, R, Z, rmrs = init()
+    R = R*100 #[cm]
+    Z = Z*100 #[cm]
+    
+    particle_source_file = run_directory+'/input/particleSource.nc'
+    particle_source = netCDF4.Dataset(particle_source_file, "r", format="NETCDF4")
+    pps_per_nP = particle_source.variables['pps_per_nP'][:]
+    
+    # import neutral W density results from spec.nc
+    spec = netCDF4.Dataset(spec_file, "r", format="NETCDF4")
+    
+    gridz_spec_original = spec.variables['gridZ'][:]*100 #[cm]
+    gridr_spec_original = spec.variables['gridR'][:]*100 #[cm]
+    dz = gridz_spec_original[1]-gridz_spec_original[0]
+    dr = gridr_spec_original[1]-gridr_spec_original[0]
+    gridz_spec = np.append(gridz_spec_original, gridz_spec_original[-1]+dz)
+    gridr_spec = np.append(gridr_spec_original, gridr_spec_original[-1]+dr)
+    gridr_expanded = np.arange(130,151,0.1)
+    
+    # set start and end points for the line along which we are integrating
+    # define spectroscopic view lines to find the intercept from which to calculate s and ds
+    # all (r,z) points are in [cm] for this calculation
+    r_vtile1 = R[5]
+    z_vtile1 = Z[5]
+    r_vtile2 = R[10]
+    z_vtile2 = Z[10]
+    m_vtile = (z_vtile2-z_vtile1) / (r_vtile2-r_vtile1)
+    b_vtile = z_vtile1 - m_vtile*r_vtile1
+    
+    if view == 1:
+        rv1 = 148.8080144
+        zv1 = 122.4118582
+        rw1 = 149.27399230
+        zw1 = 122.14911950
+        rv2 = 148.5521589
+        zv2 = 122.085322
+        rw2 = 149.12877720
+        zw2 = 121.62857530
+                    
+        r1_wtile_bound1 = R[11]
+        z1_wtile_bound1 = Z[11]
+        r2_wtile_bound1 = R[12]
+        z2_wtile_bound1 = Z[12]
+        
+        r1_wtile_bound2 = R[12]
+        z1_wtile_bound2 = Z[12]
+        r2_wtile_bound2 = R[13]
+        z2_wtile_bound2 = Z[13]
+
+        SXB = 6.752
+    
+    else:
+        if view == 2:
+            rv1 = 147.1557329
+            zv1 = 120.8216187
+            rw1 = 149.20413010
+            zw1 = 119.41788080
+            rv2 = 146.8582596
+            zv2 = 120.506343
+            rw2 = 149.27159240
+            zw2 = 118.70853850
+                    
+            r1_wtile_bound1 = r1_wtile_bound2 = R[16]
+            z1_wtile_bound1 = z1_wtile_bound2 = Z[16]
+            r2_wtile_bound1 = r2_wtile_bound2 = R[18]
+            z2_wtile_bound1 = z2_wtile_bound2 = Z[18]
+            
+            SXB = 28.467
+            
+        elif view == 3:
+            rv1 = 145.7381726
+            zv1 = 119.4819696
+            rw1 = 149.35562030
+            zw1 = 116.20415840
+            rv2 = 145.374822
+            zv2 = 119.0956036
+            rw2 = 149.05364800
+            zw2 = 115.52016940
+            
+            r1_wtile_bound1 = r1_wtile_bound2 = R[20]
+            z1_wtile_bound1 = z1_wtile_bound2 = Z[20]
+            r2_wtile_bound1 = r2_wtile_bound2 = R[21]
+            z2_wtile_bound1 = z2_wtile_bound2 = Z[21]
+            
+            SXB = 38.369
+    
+    # define bound1 and bound2 by their slope and intercept
+    m_bound1 = (zw1-zv1)/(rw1-rv1)
+    b_bound1 = zw1 - m_bound1*rw1
+    line_bound1_expanded = m_bound1*gridr_expanded + b_bound1
+    m_bound2 = (zw2-zv2)/(rw2-rv2)
+    b_bound2 = zw2 - m_bound2*rw2
+    line_bound2_expanded = m_bound2*gridr_expanded + b_bound2
+    
+    # calculate angle between bound1 and bound2    
+    Ax = rw1-rv1
+    Ay = zw1-zv1
+    Bx = rw2-rv2
+    By = zw2-zv2
+    top = Ax*Bx + Ay*By
+    bottom = np.sqrt(Ax**2 + Ay**2) * np.sqrt(Bx**2 + By**2)
+    solid_angle = np.arccos(top/bottom)
+    print('\nSolid Angle:',solid_angle,'radians')
+    print('Solid Angle:',np.rad2deg(solid_angle),'degrees')
+    
+    # calculate intersection between bound lines as the apex of the cone
+    intercept_r0 = (b_bound1 - b_bound2)/(m_bound2 - m_bound1)
+    intercept_z0 = m_bound1*intercept_r0 + b_bound1
+    
+    # define center of the line of sight vector to intersection with w-tile and check against v-tile
+    plt.close()
+    plt.plot(R,Z,'k')
+    plt.scatter([rw1,rv1,rw2,rv2,intercept_r0],[zw1,zv1,zw2,zv2,intercept_z0],color='cyan',s=20)
+    plt.plot(gridr_expanded,line_bound1_expanded,'darkgreen',label='View Bound 1') 
+    plt.plot(gridr_expanded,line_bound2_expanded,'goldenrod',label='View Bound 2')
+    
+    #plt.scatter(R,Z,s=8)
+    #plt.scatter(r_intercept_vtile_bound1,z_intercept_vtile_bound1,color='magenta',s=10)
+    #plt.scatter(x,y,color='lime',s=15)
+    #plt.scatter(r_targ,z_targ,color='magenta',s=3)
+    #plt.plot(r_line,z_line,'purple',label='Centerline')
+    #plt.plot(r_bound1,z_bound1,color='darkgreen',linewidth=1)
+    #plt.plot(r_bound2,z_bound2,color='goldenrod',linewidth=1)
+    #plt.plot(gridr_sliced,line1,'lime',label='Sliced Bounds')
+    #plt.plot(gridr_sliced,line2,'lime')
+    #plt.scatter(intercept_r0,intercept_z0,s=30)
+    plt.legend()
+    plt.axis('scaled')
+    #plt.show(block=False)
+    
+    return
 
 if __name__ == "__main__":
     #plot_history2D(run_directory+'/output/history.nc')
-    #plot_surf_nc([1,4], 8, [1,4])#, run_directory+'/output/surface.nc')
+    #plot_surf_nc([1,6], 9, [1,5], run_directory+'/output/surface5.nc', use_hpic=1, plot_blocker=True)
     #plot_surf_nc([1,6], 9, [1,6], '../examples/sasvw-pa-fav/output/perlmutter/production/surface_S.nc', \
-                 #'../examples/sasvw-pa-fav/output/perlmutter/production/positions_S.nc')
+                 #'../examples/sasvw-pa-fav/output/perlmutter/production/positions_S.nc',plot_blocker=True)
     #plot_surf_nc([1,6], 9, [1,6], '../../sasvw-pa-fav/sasvw-pa-fav-surfaces/nPnT-new/surface-p6t6.nc', \
                  #'../../sasvw-pa-fav/sasvw-pa-fav-surfaces/nPnT-new/positions-p6t6.nc', plot_blocker=False)
     #plot_surf_nc([5,2], 8, [1,5], setup_directory+"/../output/perlmutter/production/forces25.01.06/surfaces/BET.nc", \
@@ -2068,10 +2408,12 @@ if __name__ == "__main__":
     #plot_history2D(setup_directory+"/../output/perlmutter/production/history_H2.nc",\
     #plot_history2D(setup_directory+"/../output/leakage/history_t8T25.nc",\
     #plot_history2D('../examples/sasvw-pa-unfav/output/leakage/history_old.nc',\
-    #plot_history2D("/pscratch/sd/h/hayes/sasvw-pa-fav-history/output/history.nc",\
-                   #bFile=setup_directory+'/../input/bField.nc')
+    plot_history2D("/pscratch/sd/h/hayes/sasvw-pa-fav-history/output/history.nc",\
+                   bFile=setup_directory+'/../input/bField.nc')
     #spectroscopy(2, specFile=run_directory+'/output/spec.nc')#specFile='/Users/Alyssa/Desktop/spec.nc')
-    spec_line_integration(view=2)#spec_file='/Users/Alyssa/Desktop/spec.nc', pps_per_nP=2013859273149157.8)
-    #ionization_analysis([0,1], '../examples/sasvw-pa-fav/output/perlmutter/production/','history_IF.nc', 'positions_IF.nc')
+    #spec_line_integration(view=1)#spec_file='/Users/Alyssa/Desktop/spec.nc', pps_per_nP=2013859273149157.8)
+    #spec_volumetric_integration(view=3)#spec_file='/Users/Alyssa/Desktop/spec.nc', pps_per_nP=2013859273149157.8)
+    #spec_line_integration(view=3)#spec_file='/Users/Alyssa/Desktop/spec.nc', pps_per_nP=2013859273149157.8)
+    #ionization_analysis([0,0], '../examples/sasvw-pa-fav/output/perlmutter/production/','history_IF.nc', 'positions_IF.nc')
     #prompt_redep_hist([2,8,5], '../examples/sasvw-pa-fav/output/perlmutter/production/forces24.09.19/positions/','BEF.nc')
     #particle_diagnostics_hist('/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav/output/perlmutter/production/particle_histograms_gpu.nc', plot_blocker=True)
