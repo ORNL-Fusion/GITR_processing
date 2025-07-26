@@ -14,7 +14,7 @@ import solps
 
 #run_directory = '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav'
 #run_directory = '/Users/Alyssa/Dev/flag-testing'
-run_directory = '/pscratch/sd/h/hayes/sasvw-pa-fav-history'
+run_directory = '/pscratch/sd/h/hayes/sasvw-pa-fav/sasvw-pa-fav-history'
 #setup_directory = '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav/setup'
 setup_directory = '/pscratch/sd/h/hayes/GITR_processing/examples/sasvw-pa-fav/setup'
 rmrs_fine_file = setup_directory+'/assets/rmrs_fine.txt'
@@ -2408,7 +2408,7 @@ if __name__ == "__main__":
     #plot_history2D(setup_directory+"/../output/perlmutter/production/history_H2.nc",\
     #plot_history2D(setup_directory+"/../output/leakage/history_t8T25.nc",\
     #plot_history2D('../examples/sasvw-pa-unfav/output/leakage/history_old.nc',\
-    plot_history2D("/pscratch/sd/h/hayes/sasvw-pa-fav-history/output/history.nc",\
+    plot_history2D("/pscratch/sd/h/hayes/sasvw-pa-fav/sasvw-pa-fav-history/output/history.nc",\
                    bFile=setup_directory+'/../input/bField.nc')
     #spectroscopy(2, specFile=run_directory+'/output/spec.nc')#specFile='/Users/Alyssa/Desktop/spec.nc')
     #spec_line_integration(view=1)#spec_file='/Users/Alyssa/Desktop/spec.nc', pps_per_nP=2013859273149157.8)
