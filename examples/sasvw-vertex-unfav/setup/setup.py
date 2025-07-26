@@ -9,7 +9,7 @@ import shutil
 import numpy as np
 import solpsProcessing, makeGeom, makeParticleSource
 
-nP = int(2e5)
+nP = int(1e3)
 run_directory = '..'
 #run_directory = '/pscratch/sd/h/hayes/sasvw-vertex-unfav/surface'
 
@@ -33,7 +33,7 @@ makeGeom.main(gitr_geometry_filename='gitrGeometry.cfg', \
 
 os.remove('gitrGeometry.cfg0')
 shutil.move('gitrGeometry.cfg', run_directory+'/input/gitrGeometry.cfg')
-
+'''
 print('\n',print_separator,'Making bField.nc',print_separator,'\n')
 solpsProcessing.readEquilibrium(equilibrium_filename = 'assets/dg.equ', \
                     W_indices = W_indices, \
@@ -42,7 +42,7 @@ solpsProcessing.readEquilibrium(equilibrium_filename = 'assets/dg.equ', \
                     plot_variables = 0)
 
 shutil.move('bField.nc', run_directory+'/input/bField.nc')
-'''
+
 solpsProcessing.plot_surf_plasma_params(W_surf = W_indices, \
                     tile_shift_indices = tile_shift_indices, \
                     Bangle_shift_indices = Bangle_shift_indices)
@@ -58,7 +58,7 @@ makeParticleSource.distributed_source(nP, surfW = W_indices, \
                     ftDFile = 'assets/ftridynBackgroundD.nc', \
                     ftCFile = 'assets/ftridynBackgroundC.nc', \
                     configuration = 'random', \
-                    use_surface_model = 0, \
+                    use_hpic = 1, use_surface_model = 1, \
                     plot_variables = 1)
 
 shutil.move('particleSource.nc', run_directory+'/input/particleSource.nc')

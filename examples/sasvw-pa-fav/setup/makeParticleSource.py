@@ -63,7 +63,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
             configuration = 'random', \
             use_fractal_tridyn_outgoing_IEADS = 0, \
             use_hpic = 0, use_surface_model = 1, \
-            plot_variables = 1, blockplots = 0):
+            plot_variables = 0, blockplots = 0):
         
     #import wall geometry to plot over
     with open(gitr_rz, 'r') as file:
@@ -140,13 +140,13 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     ##############################################
     
     if use_hpic:
-        dfD = pd.read_csv(setup_directory+'/assets/eff_spyld_hPIC_case1_D1.csv')
-        dfC1 = pd.read_csv(setup_directory+'/assets/eff_spyld_hPIC_case1_C1.csv')
-        dfC2 = pd.read_csv(setup_directory+'/assets/eff_spyld_hPIC_case1_C2.csv')
-        dfC3 = pd.read_csv(setup_directory+'/assets/eff_spyld_hPIC_case1_C3.csv')
-        dfC4 = pd.read_csv(setup_directory+'/assets/eff_spyld_hPIC_case1_C4.csv')
-        dfC5 = pd.read_csv(setup_directory+'/assets/eff_spyld_hPIC_case1_C5.csv')
-        dfC6 = pd.read_csv(setup_directory+'/assets/eff_spyld_hPIC_case1_C6.csv')
+        dfD = pd.read_csv(setup_directory+'/assets/eff_spyld_hPIC2/eff_spyld_hPIC_case1_D1.csv')
+        dfC1 = pd.read_csv(setup_directory+'/assets/eff_spyld_hPIC2/eff_spyld_hPIC_case1_C1.csv')
+        dfC2 = pd.read_csv(setup_directory+'/assets/eff_spyld_hPIC2/eff_spyld_hPIC_case1_C2.csv')
+        dfC3 = pd.read_csv(setup_directory+'/assets/eff_spyld_hPIC2/eff_spyld_hPIC_case1_C3.csv')
+        dfC4 = pd.read_csv(setup_directory+'/assets/eff_spyld_hPIC2/eff_spyld_hPIC_case1_C4.csv')
+        dfC5 = pd.read_csv(setup_directory+'/assets/eff_spyld_hPIC2/eff_spyld_hPIC_case1_C5.csv')
+        dfC6 = pd.read_csv(setup_directory+'/assets/eff_spyld_hPIC2/eff_spyld_hPIC_case1_C6.csv')
         
         spyldD = np.transpose(dfD.to_numpy())[0]
         spyldC1 = np.transpose(dfC1.to_numpy())[0]

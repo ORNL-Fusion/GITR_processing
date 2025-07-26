@@ -10,7 +10,7 @@ import shutil
 import numpy as np
 import solpsProcessing, makeGeom, makeParticleSource
 
-nP = int(5.5e8)
+nP = int(1e3)
 run_directory = '..'
 
 W_indices = np.arange(11,22)
@@ -57,7 +57,7 @@ makeParticleSource.distributed_source(nP, surfW = W_indices, \
                     ftCFile = 'assets/ftridynBackgroundC.nc', \
                     configuration = 'random', \
                     use_fractal_tridyn_outgoing_IEADS = 0, \
-                    use_surface_model = 1, \
-                    plot_variables = 0)
+                    use_hpic = 1, use_surface_model = 1, \
+                    plot_variables = 1)
 
 shutil.move('particleSource.nc', run_directory+'/input/particleSource.nc')

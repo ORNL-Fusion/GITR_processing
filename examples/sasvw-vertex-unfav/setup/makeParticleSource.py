@@ -6,6 +6,7 @@ import numpy as np
 import scipy.interpolate as scii
 import matplotlib.pyplot as plt
 import netCDF4
+import pandas as pd
 
 import gitr
 import solps
@@ -52,6 +53,7 @@ def point_source(nP = int(2e2)):
 def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[], \
             geom = '../input/gitrGeometry.cfg', \
             profiles_file = '../input/plasmaProfiles.nc', \
+            setup_directory = '.', \
             gitr_rz = '../setup/assets/gitr_rz.txt', \
             rmrs_fine_file = '../setup/assets/rmrs_fine.txt', \
             W_fine_file = '../setup/assets/W_fine.txt', \
@@ -60,7 +62,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
             ftWFile = '../input/ftridynSelf.nc', \
             configuration = 'random', \
             use_fractal_tridyn_outgoing_IEADS = 0, \
-            use_surface_model = 1, \
+            use_hpic = 0, use_surface_model = 1, \
             plot_variables = 0):
     
     #import wall geometry to plot over
@@ -134,57 +136,81 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     ##############################################
     #get W/s sputtered by D, C flux to wall
     ##############################################
-     
-    #get incoming ion energy and angle estimations where the integer input is z
-    energyD, angleD = get_incoming_IEADs(1, profiles, surfW, rmrsCoarse, rmrsFine)
+    
+    if use_hpic:
+        print('Using hPIC2 IEADs to calculate effective sputtering yield')
+        dfD = pd.read_csv(setup_directory+'/assets/eff_spyld_hPIC2/eff_spyld_hPIC_case4_D1.csv')
+        dfC1 = pd.read_csv(setup_directory+'/assets/eff_spyld_hPIC2/eff_spyld_hPIC_case4_C1.csv')
+        dfC2 = pd.read_csv(setup_directory+'/assets/eff_spyld_hPIC2/eff_spyld_hPIC_case4_C2.csv')
+        dfC3 = pd.read_csv(setup_directory+'/assets/eff_spyld_hPIC2/eff_spyld_hPIC_case4_C3.csv')
+        dfC4 = pd.read_csv(setup_directory+'/assets/eff_spyld_hPIC2/eff_spyld_hPIC_case4_C4.csv')
+        dfC5 = pd.read_csv(setup_directory+'/assets/eff_spyld_hPIC2/eff_spyld_hPIC_case4_C5.csv')
+        dfC6 = pd.read_csv(setup_directory+'/assets/eff_spyld_hPIC2/eff_spyld_hPIC_case4_C6.csv')
+        
+        spyldD = np.transpose(dfD.to_numpy())[0]
+        spyldC1 = np.transpose(dfC1.to_numpy())[0]
+        spyldC2 = np.transpose(dfC2.to_numpy())[0]
+        spyldC3 = np.transpose(dfC3.to_numpy())[0]
+        spyldC4 = np.transpose(dfC4.to_numpy())[0]
+        spyldC5 = np.transpose(dfC5.to_numpy())[0]
+        spyldC6 = np.transpose(dfC6.to_numpy())[0]
+    
+    else:
+        #get incoming ion energy and angle estimations where the integer input is z
+        energyD, angleD = get_incoming_IEADs(1, profiles, surfW, rmrsCoarse, rmrsFine)
+        energyC1, angleC1 = get_incoming_IEADs(1, profiles, surfW, rmrsCoarse, rmrsFine)
+        energyC2, angleC2 = get_incoming_IEADs(2, profiles, surfW, rmrsCoarse, rmrsFine)
+        energyC3, angleC3 = get_incoming_IEADs(3, profiles, surfW, rmrsCoarse, rmrsFine)
+        energyC4, angleC4 = get_incoming_IEADs(4, profiles, surfW, rmrsCoarse, rmrsFine)
+        energyC5, angleC5 = get_incoming_IEADs(5, profiles, surfW, rmrsCoarse, rmrsFine)
+        energyC6, angleC6 = get_incoming_IEADs(6, profiles, surfW, rmrsCoarse, rmrsFine)
+        #energyC6 = 4*energyC6 #remove later
+        
+        if plot_variables == 1:
+            plt.close()
+            plt.plot(rmrsFine, energyD, 'black', label='D1+')
+            plt.plot(rmrsFine, energyC1, 'firebrick', label='C1+')
+            plt.plot(rmrsFine, energyC2, 'darkorange', label='C2+')
+            plt.plot(rmrsFine, energyC3, 'gold', label='C3+')
+            plt.plot(rmrsFine, energyC4, 'limegreen', label='C4+')
+            plt.plot(rmrsFine, energyC5, 'dodgerblue', label='C5+')
+            plt.plot(rmrsFine, energyC6, 'mediumpurple', label='C6+')
+            plt.plot(rmrsFine, 45.3362*np.ones(len(rmrsFine)), 'gray', label='W Eth')
+            plt.legend()
+            plt.xlabel('D-Dsep [m]')
+            plt.ylabel('energy [eV]')
+            plt.title('Estimate of incident background ion energies')
+            plt.savefig('plots/particle-source/incident_energy')
+            
+            plt.close()
+            plt.plot(rmrsFine, angleD, 'black', label='D1+')
+            plt.plot(rmrsFine, angleC1, 'firebrick', label='C1+')
+            plt.plot(rmrsFine, angleC2, 'darkorange', label='C2+')
+            plt.plot(rmrsFine, angleC3, 'gold', label='C3+')
+            plt.plot(rmrsFine, angleC4, 'limegreen', label='C4+')
+            plt.plot(rmrsFine, angleC5, 'dodgerblue', label='C5+')
+            plt.plot(rmrsFine, angleC6, 'mediumpurple', label='C6+')        
+            plt.legend()
+            plt.xlabel('z [m]')
+            plt.ylabel('angle [degrees]')
+            plt.title('Used angles of incidence for incident background ions')
+            plt.savefig('plots/particle-source/incident_angle.png')
+            plt.close()
+    
+        #get sputtering yields for D0 and D1+ on W from fractal tridyn tables
+        #Cspyld = get_ft_spyld(CsurfE, CsurfA, ftCFile)[0]
+        spyldD = get_ft_spyld(1, energyD, angleD, ftDFile) #file input includes He, which we aren't using
+        spyldC1 = get_ft_spyld(0, energyC1, angleC1, ftCFile)
+        spyldC2 = get_ft_spyld(0, energyC2, angleC2, ftCFile)
+        spyldC3 = get_ft_spyld(0, energyC3, angleC3, ftCFile)
+        spyldC4 = get_ft_spyld(0, energyC4, angleC4, ftCFile)
+        spyldC5 = get_ft_spyld(0, energyC5, angleC5, ftCFile)
+        spyldC6 = get_ft_spyld(0, energyC6, angleC6, ftCFile)
+        spyldW1 = get_ft_spyld(0, energyC1, angleC1, ftWFile)
+        spyldW2 = get_ft_spyld(0, energyC2, angleC2, ftWFile)
+    
     energyC1, angleC1 = get_incoming_IEADs(1, profiles, surfW, rmrsCoarse, rmrsFine)
     energyC2, angleC2 = get_incoming_IEADs(2, profiles, surfW, rmrsCoarse, rmrsFine)
-    energyC3, angleC3 = get_incoming_IEADs(3, profiles, surfW, rmrsCoarse, rmrsFine)
-    energyC4, angleC4 = get_incoming_IEADs(4, profiles, surfW, rmrsCoarse, rmrsFine)
-    energyC5, angleC5 = get_incoming_IEADs(5, profiles, surfW, rmrsCoarse, rmrsFine)
-    energyC6, angleC6 = get_incoming_IEADs(6, profiles, surfW, rmrsCoarse, rmrsFine)
-    energyC6 = 4*energyC6
-    
-    if plot_variables == 1:
-        plt.close()
-        plt.plot(rmrsFine, energyD, 'black', label='D1+')
-        plt.plot(rmrsFine, energyC1, 'firebrick', label='C1+')
-        plt.plot(rmrsFine, energyC2, 'darkorange', label='C2+')
-        plt.plot(rmrsFine, energyC3, 'gold', label='C3+')
-        plt.plot(rmrsFine, energyC4, 'limegreen', label='C4+')
-        plt.plot(rmrsFine, energyC5, 'dodgerblue', label='C5+')
-        plt.plot(rmrsFine, energyC6, 'mediumpurple', label='C6+')
-        plt.plot(rmrsFine, 45.3362*np.ones(len(rmrsFine)), 'gray', label='W Eth')
-        plt.legend()
-        plt.xlabel('D-Dsep [m]')
-        plt.ylabel('energy [eV]')
-        plt.title('Estimate of incident background ion energies')
-        plt.savefig('plots/particle-source/incident_energy')
-        
-        plt.close()
-        plt.plot(rmrsFine, angleD, 'black', label='D1+')
-        plt.plot(rmrsFine, angleC1, 'firebrick', label='C1+')
-        plt.plot(rmrsFine, angleC2, 'darkorange', label='C2+')
-        plt.plot(rmrsFine, angleC3, 'gold', label='C3+')
-        plt.plot(rmrsFine, angleC4, 'limegreen', label='C4+')
-        plt.plot(rmrsFine, angleC5, 'dodgerblue', label='C5+')
-        plt.plot(rmrsFine, angleC6, 'mediumpurple', label='C6+')        
-        plt.legend()
-        plt.xlabel('z [m]')
-        plt.ylabel('angle [degrees]')
-        plt.title('Used angles of incidence for incident background ions')
-        plt.savefig('plots/particle-source/incident_angle.png')
-        plt.close()
-
-    #get sputtering yields for D0 and D1+ on W from fractal tridyn tables
-    #Cspyld = get_ft_spyld(CsurfE, CsurfA, ftCFile)[0]
-    spyldD = get_ft_spyld(1, energyD, angleD, ftDFile) #file input includes He, which we aren't using
-    spyldC1 = get_ft_spyld(0, energyC1, angleC1, ftCFile)
-    spyldC2 = get_ft_spyld(0, energyC2, angleC2, ftCFile)
-    spyldC3 = get_ft_spyld(0, energyC3, angleC3, ftCFile)
-    spyldC4 = get_ft_spyld(0, energyC4, angleC4, ftCFile)
-    spyldC5 = get_ft_spyld(0, energyC5, angleC5, ftCFile)
-    spyldC6 = get_ft_spyld(0, energyC6, angleC6, ftCFile)
     spyldW1 = get_ft_spyld(0, energyC1, angleC1, ftWFile)
     spyldW2 = get_ft_spyld(0, energyC2, angleC2, ftWFile)
     
@@ -291,7 +317,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
 
         plt.close()
         #plt.rcParams.update({'font.size':16})
-        #plt.rcParams.update({'lines.linewidth':3})
+        plt.rcParams.update({'lines.linewidth':1})
         
         plt.plot(rmrsFine, spyldD, 'black', label='D$^{1+}$')
         plt.plot(rmrsFine, spyldC1, 'firebrick', label='C$^{1+}$')
@@ -300,10 +326,11 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
         plt.plot(rmrsFine, spyldC4, 'limegreen', label='C$^{4+}$')
         plt.plot(rmrsFine, spyldC5, 'dodgerblue', label='C$^{5+}$')
         plt.plot(rmrsFine, spyldC6, 'mediumpurple', label='C$^{6+}$')
-        plt.plot(rmrsFine, spyldW1, 'rosybrown', label='W$^{1+}$')
-        plt.plot(rmrsFine, spyldW2, 'burlywood', label='W$^{2+}$')
+        #plt.plot(rmrsFine, spyldW1, 'rosybrown', label='W$^{1+}$')
+        #plt.plot(rmrsFine, spyldW2, 'burlywood', label='W$^{2+}$')
         #plt.xlim(-0.025)
-        plt.ticklabel_format(axis='y', style='scientific', scilimits=(-3,-3))
+        plt.yscale('log')
+        #plt.ticklabel_format(axis='y', style='scientific')#, scilimits=(-3,-3))
         plt.legend(fontsize=12)
         plt.xlabel('D-Dsep [m]', fontsize=14)
         plt.ylabel('Sputtering Yield', fontsize=14)
@@ -329,6 +356,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
         plt.plot(rmrsFine, sputt_fluxC5, 'dodgerblue', label='C$^{5+}$')
         plt.plot(rmrsFine, sputt_fluxC6, 'mediumpurple', label='C$^{6+}$')
         #plt.xlim(-0.05)
+        plt.yscale('log')
         plt.xlabel('D-Dsep [m]', fontsize=14)
         plt.ylabel('Flux [m$^{-2}$s$^{-1}$]', fontsize=14)
         plt.legend(loc='upper right', fontsize=12)

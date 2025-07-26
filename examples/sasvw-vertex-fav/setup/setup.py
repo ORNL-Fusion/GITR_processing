@@ -9,7 +9,7 @@ import shutil
 import numpy as np
 import solpsProcessing, makeGeom, makeParticleSource
 
-nP = int(2.5e6)
+nP = int(1e3)
 run_directory = '..'
 #run_directory = '/pscratch/sd/h/hayes/sasvw-vertex-fav/surface'
 
@@ -58,7 +58,7 @@ makeParticleSource.distributed_source(nP, surfW = W_indices, \
                     ftDFile = 'assets/ftridynBackgroundD.nc', \
                     ftCFile = 'assets/ftridynBackgroundC.nc', \
                     configuration = 'random', \
-                    use_surface_model = 0, \
+                    use_hpic = 1, use_surface_model = 1, \
                     plot_variables = 1)
 
 shutil.move('particleSource.nc', run_directory+'/input/particleSource.nc')

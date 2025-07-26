@@ -456,7 +456,8 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
         
         lines = combine_lines(lines,lines_core)
         inDir = np.append(inDir, inDir_core)
-        Z = np.append(Z, Z_core)
+        Z = np.append(Z[:-1], Z_core)
+        Z = np.append(Z, np.zeros(1))
         surfaces = np.append(surfaces[:-1], surfaces_core)
         surfaces = np.append(surfaces, np.zeros(1))
     
