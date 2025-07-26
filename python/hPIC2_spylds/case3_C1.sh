@@ -1,0 +1,10 @@
+#!/bin/bash
+#SBATCH -A m1709
+#SBATCH -C cpu
+#SBATCH -q regular
+#SBATCH -t 03:30:00
+#SBATCH -N 1
+#SBATCH --ntasks-per-node=1
+
+
+srun python3 case3_C1.py
