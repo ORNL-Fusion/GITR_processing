@@ -144,7 +144,7 @@ def plot_particle_source():
     plt.savefig('plots/particleSource.png')
 
 def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
-                   basic=1, continuousChargeState=0, endChargeState=0, \
+                   basic=0, continuousChargeState=1, endChargeState=0, \
                    plot_particle_source=0, markersize=0):
     
     if plot_particle_source:
