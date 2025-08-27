@@ -1,5 +1,7 @@
 import sys, os
+import time
 import numpy as np
+import math
 from scipy import special
 import scipy.interpolate as scii
 import matplotlib.pyplot as plt
@@ -12,11 +14,11 @@ import solps
 # setting directories and special constants
 ################################################
 
-#run_directory = '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav'
+run_directory = '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav'
 #run_directory = '/Users/Alyssa/Dev/flag-testing'
-run_directory = '/pscratch/sd/h/hayes/sasvw-pa-fav/sasvw-pa-fav-history'
-#setup_directory = '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav/setup'
-setup_directory = '/pscratch/sd/h/hayes/GITR_processing/examples/sasvw-pa-fav/setup'
+#run_directory = '/pscratch/sd/h/hayes/sasvw-pa-fav/sasvw-pa-fav-history'
+setup_directory = '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav/setup'
+#setup_directory = '/pscratch/sd/h/hayes/GITR_processing/examples/sasvw-pa-fav/setup'
 rmrs_fine_file = setup_directory+'/assets/rmrs_fine.txt'
 
 #prog angle
@@ -206,8 +208,8 @@ def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
     
     counter=0
     if continuousChargeState==1:
-        #for p in [671, 860, 1043, 1275, 1366, 1479]:  # particles that leak out of the divertor space in history_H.nc from pa-fav (Case #1)
-        for p in np.arange(0,nP,1): # plot all particles by default
+        for p in [671, 860, 1043, 1275, 1366, 1479]:  # particles that leak out of the divertor space in history_H.nc from pa-fav (Case #1)
+        #for p in np.arange(0,nP,1): # plot all particles by default
             t=0
             counter+=1
             while t<nT-1:
@@ -272,6 +274,10 @@ def plot_surf_nc(nP10, dt10, nT10, \
     particle_source_file = run_directory+'/input/particleSource.nc'
     particle_source = netCDF4.Dataset(particle_source_file, "r", format="NETCDF4")
     pps_per_nP = particle_source.variables['pps_per_nP'][:]
+    
+    view1_color = '#f7bc00'
+    view2_color = '#2197a9'
+    view3_color = '#741b47'
     
     pps_per_nP, partSource_flux, fluxD, fluxC = makeParticleSource.distributed_source(nP=(nP10[0] * (10**int(nP10[1]))), \
             surfW = W_surf_indices, \
@@ -506,9 +512,9 @@ def plot_surf_nc(nP10, dt10, nT10, \
     
     #plot main surface plot with 3 views
     plt.close()
-    plt.axvspan(rmrs1_start, rmrs1_end, color='#f7bc00', alpha=0.5)
-    plt.axvspan(rmrs2_start, rmrs2_end, color='lightsalmon', alpha=0.5)
-    plt.axvspan(rmrs3_start, rmrs3_end, color='#f99301', alpha=0.5)
+    plt.axvspan(rmrs1_start, rmrs1_end, color=view1_color, alpha=1)
+    plt.axvspan(rmrs2_start, rmrs2_end, color=view2_color, alpha=1)
+    plt.axvspan(rmrs3_start, rmrs3_end, color=view3_color, alpha=1)
     
     plt.plot(rmrsFine,np.zeros(len(rmrsFine)),'gray')
     
@@ -516,10 +522,10 @@ def plot_surf_nc(nP10, dt10, nT10, \
         for i,v in enumerate(tile_shift_indices):
             if i==0: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', label='Walll\nVertices')
             else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
-    '''if Bangle_shift_indices != []:
+    if Bangle_shift_indices != []:
         for i,v in enumerate(Bangle_shift_indices):
             if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\\alpha_B$')
-            else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')'''
+            else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
     
     plt.plot(rmrsFine,grossEro_norm,'r', label='Gross Erosion')
     plt.plot(rmrsFine,grossDep_norm,'g', label='Gross Deposition')
@@ -1957,17 +1963,50 @@ def particle_diagnostics_hist(pdFile, segment_counter=50, seg_hist_plotting=0, p
         
     return
 
-def PEC_interpolation(te, ne):
-    PEC_file = '../../SAS-VW-Data/sxb/martin_pec_4009_only_5d_ion.dat'
-    PEC_data = np.loadtxt(PEC_file, dtype='double')
+def martin_interpolation(filename, te, ne, plotting=0):
+    data = np.loadtxt(filename, dtype='double')
 
-    te_grid = PEC_data[0][1:]
-    ne_grid = PEC_data.transpose()[0][1:]
-    PEC_grid = PEC_data[1:,1:]
+    te_grid = data[0][1:]
+    ne_grid = data.transpose()[0][1:]
+    coeff_grid = data[1:,1:]
     
-    PEC_interpolated = scii.interpn((ne_grid,te_grid),PEC_grid,(ne,te))
+    if plotting:
+        print(np.shape(ne_grid),np.shape(te_grid),np.shape(coeff_grid))
+        nee,tee = np.meshgrid(ne_grid,te_grid,indexing='ij')
+        plt.pcolor(nee,tee,coeff_grid)
+        plt.colorbar(label='cm$^3$/s')
+        plt.xlabel('ne')
+        plt.ylabel('te')
+        plt.title(filename)
+        plt.show(block=True)
     
-    return PEC_interpolated
+    coeff_interpolated = scii.interpn((ne_grid,te_grid),coeff_grid,(ne,te),bounds_error=False, fill_value=0)
+    
+    return coeff_interpolated
+
+def adas_interpolation(filename, te, ne, plotting=0):
+    adas_data = netCDF4.Dataset(filename, "r", format="NETCDF4")  
+    
+    te_grid = adas_data.variables['gridTemperature_Ionization'][:]
+    ne_grid = adas_data.variables['gridDensity_Ionization'][:]
+    coeff_grid = adas_data.variables['IonizationRateCoeff'][0][:]
+    
+    if plotting:
+        print(np.shape(ne_grid),np.shape(te_grid),np.shape(coeff_grid))
+        nee,tee = np.meshgrid(ne_grid,te_grid,indexing='ij')
+        plt.pcolor(nee,tee,coeff_grid)
+        plt.colorbar(label='cm$^3$/s')
+        plt.xlabel('ne')
+        plt.ylabel('te')
+        plt.title(filename)
+        plt.show(block=True)
+    
+    ne = np.log10(ne, where=(ne!=0))+3
+    coeff_interpolated = scii.interpn((ne_grid,te_grid),coeff_grid,(ne,te),bounds_error=False, fill_value=0)
+    
+    return coeff_interpolated
+
+
 
 def spec_line_integration(view, spec_file=run_directory+'/output/spec.nc', num_points=100, dt=1e-8):
     profiles, W_indices, R, Z, rmrs = init()
@@ -2254,7 +2293,9 @@ def spec_line_integration(view, spec_file=run_directory+'/output/spec.nc', num_p
 
     return intensity
 
-def spec_volumetric_integration(view, spec_file=run_directory+'/output/spec.nc', num_points=100, dt=1e-8):
+def spec_volumetric_integration(view, spec_file=run_directory+'/output/spec.nc', \
+                                Nrr = 20, Ntheta = 4, Nphi = 4, dt=1e-8, plot_blocker=False):
+    
     profiles, W_indices, R, Z, rmrs = init()
     R = R*100 #[cm]
     Z = Z*100 #[cm]
@@ -2284,15 +2325,16 @@ def spec_volumetric_integration(view, spec_file=run_directory+'/output/spec.nc',
     m_vtile = (z_vtile2-z_vtile1) / (r_vtile2-r_vtile1)
     b_vtile = z_vtile1 - m_vtile*r_vtile1
     
+    print('View',view)
     if view == 1:
-        rv1 = 148.8080144
-        zv1 = 122.4118582
-        rw1 = 149.27399230
-        zw1 = 122.14911950
-        rv2 = 148.5521589
-        zv2 = 122.085322
-        rw2 = 149.12877720
-        zw2 = 121.62857530
+        rv1cmm = 148.8080144
+        zv1cmm = 122.4118582
+        rw1cmm = 149.27399230
+        zw1cmm = 122.14911950
+        rv2cmm = 148.5521589
+        zv2cmm = 122.085322
+        rw2cmm = 149.12877720
+        zw2cmm = 121.62857530
                     
         r1_wtile_bound1 = R[11]
         z1_wtile_bound1 = Z[11]
@@ -2303,51 +2345,160 @@ def spec_volumetric_integration(view, spec_file=run_directory+'/output/spec.nc',
         z1_wtile_bound2 = Z[12]
         r2_wtile_bound2 = R[13]
         z2_wtile_bound2 = Z[13]
-
+        
+        hole_to_L0 = 86.4340047/10 #cm
         SXB = 6.752
     
     else:
         if view == 2:
-            rv1 = 147.1557329
-            zv1 = 120.8216187
-            rw1 = 149.20413010
-            zw1 = 119.41788080
-            rv2 = 146.8582596
-            zv2 = 120.506343
-            rw2 = 149.27159240
-            zw2 = 118.70853850
+            rv1cmm = 147.1557329
+            zv1cmm = 120.8216187
+            rw1cmm = 149.20413010
+            zw1cmm = 119.41788080
+            rv2cmm = 146.8582596
+            zv2cmm = 120.506343
+            rw2cmm = 149.27159240
+            zw2cmm = 118.70853850
                     
             r1_wtile_bound1 = r1_wtile_bound2 = R[16]
             z1_wtile_bound1 = z1_wtile_bound2 = Z[16]
             r2_wtile_bound1 = r2_wtile_bound2 = R[18]
             z2_wtile_bound1 = z2_wtile_bound2 = Z[18]
             
+            hole_to_L0 = 88.51120659/10 #cm
             SXB = 28.467
             
         elif view == 3:
-            rv1 = 145.7381726
-            zv1 = 119.4819696
-            rw1 = 149.35562030
-            zw1 = 116.20415840
-            rv2 = 145.374822
-            zv2 = 119.0956036
-            rw2 = 149.05364800
-            zw2 = 115.52016940
+            rv1cmm = 145.7381726
+            zv1cmm = 119.4819696
+            rw1cmm = 149.35562030
+            zw1cmm = 116.20415840
+            rv2cmm = 145.374822
+            zv2cmm = 119.0956036
+            rw2cmm = 149.05364800
+            zw2cmm = 115.52016940
             
             r1_wtile_bound1 = r1_wtile_bound2 = R[20]
             z1_wtile_bound1 = z1_wtile_bound2 = Z[20]
             r2_wtile_bound1 = r2_wtile_bound2 = R[21]
             z2_wtile_bound1 = z2_wtile_bound2 = Z[21]
             
+            hole_to_L0 = 88.65501411/10 #cm
             SXB = 38.369
     
+    ######################################################################
+    # define all relevant lines and points for the spectroscopic view
+    ######################################################################
+    
     # define bound1 and bound2 by their slope and intercept
-    m_bound1 = (zw1-zv1)/(rw1-rv1)
-    b_bound1 = zw1 - m_bound1*rw1
+    m_bound1 = (zw1cmm-zv1cmm)/(rw1cmm-rv1cmm)
+    b_bound1 = zw1cmm - m_bound1*rw1cmm
     line_bound1_expanded = m_bound1*gridr_expanded + b_bound1
-    m_bound2 = (zw2-zv2)/(rw2-rv2)
-    b_bound2 = zw2 - m_bound2*rw2
+    m_bound2 = (zw2cmm-zv2cmm)/(rw2cmm-rv2cmm)
+    b_bound2 = zw2cmm - m_bound2*rw2cmm
     line_bound2_expanded = m_bound2*gridr_expanded + b_bound2
+    
+    # calculate centerline vector
+    rv0cmm = np.average([rv1cmm,rv2cmm])
+    zv0cmm = np.average([zv1cmm,zv2cmm])
+    rw0cmm = np.average([rw1cmm,rw2cmm])
+    zw0cmm = np.average([zw1cmm,zw2cmm])
+    m_center = (zw0cmm-zv0cmm)/(rw0cmm-rv0cmm)
+    b_center = zw0cmm - m_center*rw0cmm
+    line_center_expanded = m_center*gridr_expanded + b_center
+    
+    # define wtile1 and wtile2 by their slope and intercept
+    m_wtile_bound1 = (z2_wtile_bound1-z1_wtile_bound1)/(r2_wtile_bound1-r1_wtile_bound1)
+    b_wtile_bound1 = z1_wtile_bound1 - m_wtile_bound1*r1_wtile_bound1
+    m_wtile_bound2 = (z2_wtile_bound2-z1_wtile_bound2)/(r2_wtile_bound2-r1_wtile_bound2)
+    b_wtile_bound2 = z1_wtile_bound2 - m_wtile_bound2*r1_wtile_bound2
+    
+    # calculate bound1 and bound2 intercepts on the v_tile and w_tiles
+    rv1 = (b_bound1 - b_vtile)/(m_vtile - m_bound1)
+    rw1 = (b_bound1 - b_wtile_bound1)/(m_wtile_bound1 - m_bound1)
+    rv2 = (b_bound2 - b_vtile)/(m_vtile - m_bound2)
+    rw2 = (b_bound2 - b_wtile_bound2)/(m_wtile_bound2 - m_bound2)
+    zv1 = m_bound1 * rv1 + b_bound1
+    zw1 = m_bound1 * rw1 + b_bound1
+    zv2 = m_bound2 * rv2 + b_bound2
+    zw2 = m_bound2 * rw2 + b_bound2
+    
+    # calculate center of the hole on the v_tile, and the centerline intercept on the w_tile
+    rv0 = (b_center - b_vtile)/(m_vtile - m_center)
+    rw0 = (b_center - b_wtile_bound1)/(m_wtile_bound1 - m_center)
+    zv0 = m_vtile * rv0 + b_vtile
+    zw0 = m_wtile_bound1 * rw0 + b_wtile_bound1
+    
+    # find the center of the lens, L0
+    angle_centerline = np.arctan(m_center)
+    rL0 = rv0 - (hole_to_L0 * np.cos(angle_centerline))
+    zL0 = m_center * rL0 + b_center
+    hole_to_L0_test = np.sqrt((rL0-rv0)**2 + (zL0-zv0)**2)
+    print('\nDistance from hole to lens check \n(values should be the same):\n', \
+          hole_to_L0, hole_to_L0_test, '\n')
+    
+    # compare lens diameter defined by bounds 1 and 2 against the real lens width of 4.5mm (0.45cm)
+    m_lens = -1/m_center
+    b_lens = zL0 - m_lens*rL0
+    r_lens_bound1 = (b_bound1 - b_lens)/(m_lens - m_bound1)
+    r_lens_bound2 = (b_bound2 - b_lens)/(m_lens - m_bound2)
+    z_lens_bound1 = m_lens * r_lens_bound1 + b_lens
+    z_lens_bound2 = m_lens * r_lens_bound2 + b_lens
+    lens_diameter = np.sqrt((r_lens_bound2-r_lens_bound1)**2 + (z_lens_bound2-z_lens_bound1)**2)
+    print('Actual diameter of the lens is approximately 0.45 cm')
+    print('Diameter of the lens as calculated by extrapolating \nCMM measurements:', lens_diameter)
+    
+    # Trust AFM measurements for Views 2 and 3
+    # Assume View 1 sees an area of the lens that has a diameter equal to the average diameter between Views 2 and 3
+    if view == 1:
+        # calculate lens edges along the vector perpendicular to the centerline assuming a 0.45cm diameter at L0
+        average_lens_diameter = (0.09135561671357717 + 0.22839616386661643)/2
+        angle_lens = np.arctan(m_center)
+        r_lens_bound1 = rL0 - ((average_lens_diameter/2) * np.sin(angle_lens))
+        r_lens_bound2 = rL0 + ((average_lens_diameter/2) * np.sin(angle_lens))
+        z_lens_bound1 = m_lens * r_lens_bound1 + b_lens
+        z_lens_bound2 = m_lens * r_lens_bound2 + b_lens
+        lens_diameter = np.sqrt((r_lens_bound2-r_lens_bound1)**2 + (z_lens_bound2-z_lens_bound1)**2)
+        print('\nLens diameter check \n(values should be the same):\n', \
+              average_lens_diameter, lens_diameter, '\n')
+        
+        # redefine bound1 and bound2 by the lens edges and the CMM measurements on the w-tile
+        m_bound1 = (zw1-z_lens_bound1)/(rw1-r_lens_bound1)
+        b_bound1 = zw1 - m_bound1*rw1
+        line_bound1_expanded = m_bound1*gridr_expanded + b_bound1
+        m_bound2 = (zw2-z_lens_bound2)/(rw2-r_lens_bound2)
+        b_bound2 = zw2 - m_bound2*rw2
+        line_bound2_expanded = m_bound2*gridr_expanded + b_bound2
+        
+        # redefine v-tile holes based on new bounds
+        rv1 = (b_bound1 - b_vtile)/(m_vtile - m_bound1)
+        rv2 = (b_bound2 - b_vtile)/(m_vtile - m_bound2)
+        zv1 = m_bound1 * rv1 + b_bound1
+        zv2 = m_bound2 * rv2 + b_bound2
+    
+    print('\n')
+    print('LoS Polygon Vertices')
+    print(rv1, zv1)
+    print(rv2, zv2)
+    print(rw1, zw1)
+    print(rw2, zw2)
+    print('\n')
+    
+    ######################################################################
+    # define cone for volumetric integration as a function of the above
+    ######################################################################
+    
+    # calculate intersection between bound lines as the apex of the cone
+    r_apex = (b_bound1 - b_bound2)/(m_bound2 - m_bound1)
+    z_apex = m_bound1*r_apex + b_bound1
+    cone_apex = [r_apex, 0, z_apex]
+    cone_vector = [1, 0 , m_center]
+    cone_vector_magnitude = np.linalg.norm(cone_vector)
+    cone_vector = cone_vector/cone_vector_magnitude
+    cone_rr_max = np.sqrt((zw0 - z_apex)**2 + (rw0 - r_apex)**2) #distance from apex to LOS center on w-tile
+    cone_rr_min = np.sqrt((zv0 - z_apex)**2 + (rv0 - r_apex)**2) #distance from apex to LOS center on v-tile
+    cone_rr_max += 0.5 # 0.5 cm margin
+    cone_rr_min -= 0.5 # 0.5 cm margin
     
     # calculate angle between bound1 and bound2    
     Ax = rw1-rv1
@@ -2356,34 +2507,364 @@ def spec_volumetric_integration(view, spec_file=run_directory+'/output/spec.nc',
     By = zw2-zv2
     top = Ax*Bx + Ay*By
     bottom = np.sqrt(Ax**2 + Ay**2) * np.sqrt(Bx**2 + By**2)
-    solid_angle = np.arccos(top/bottom)
-    print('\nSolid Angle:',solid_angle,'radians')
-    print('Solid Angle:',np.rad2deg(solid_angle),'degrees')
+    cone_theta = np.arccos(top/bottom)
+    print('Angle between bounds:',cone_theta,'radians')
+    print('Angle between bounds:',np.rad2deg(cone_theta),'degrees\n')
     
-    # calculate intersection between bound lines as the apex of the cone
-    intercept_r0 = (b_bound1 - b_bound2)/(m_bound2 - m_bound1)
-    intercept_z0 = m_bound1*intercept_r0 + b_bound1
+    ###########################################################################
+    # convert the lab frame spherical cone into cartesian points in real space
+    ###########################################################################
     
-    # define center of the line of sight vector to intersection with w-tile and check against v-tile
+    # (1) basic spherical grid in the lab frame
+    rr = np.linspace(cone_rr_min, cone_rr_max, Nrr)
+    theta = np.linspace(0, cone_theta/2, Ntheta)
+    phi = np.linspace(0, 2*np.pi, Nphi)
+    
+    drr = rr[1] - rr[0]
+    dtheta = theta[1] - theta[0]
+    dphi = phi[1] - phi[0]
+    #print('\nShape of lab frame spherical grid:',np.shape(np.meshgrid(rr, theta, phi,indexing='ij')))
+    [RR, TT, PP] = np.meshgrid(rr, theta, phi, indexing='ij')
+    
+    # (2) spherical volume element
+    dV = np.abs(RR**2 * np.sin(TT) * drr * dtheta * dphi)
+    #print('Shapes of RR, TT, PP:', np.shape(RR), np.shape(TT), np.shape(PP))
+    
+    # (3) convert spherical grid to Cartesian (in aligned frame)
+    XX_lab = RR * np.sin(TT) * np.cos(PP)
+    YY_lab = RR * np.sin(TT) * np.sin(PP)
+    ZZ_lab = RR * np.cos(TT)
+    cone_grid_lab = [XX_lab, YY_lab, ZZ_lab]
+    cone_grid_lab_magnitudes = np.sqrt(cone_grid_lab[0]**2 + cone_grid_lab[1]**2 + cone_grid_lab[2])
+    
+    # (4) rotate and translate the lab frame cone to the real frame
+    cone_vector_lab = np.array([0,0,1])
+    angle_lab_to_real = np.arccos(np.dot(cone_vector_lab, cone_vector))
+    a = angle_lab_to_real
+    
+    rotation_matrix = np.array([[np.cos(a),0,np.sin(a)], [0,1,0], [-np.sin(a),0,np.cos(a)]])
+    XX = rotation_matrix[0][0]*cone_grid_lab[0] + rotation_matrix[0][1]*cone_grid_lab[1] + rotation_matrix[0][2]*cone_grid_lab[2]
+    YY = rotation_matrix[1][0]*cone_grid_lab[0] + rotation_matrix[1][1]*cone_grid_lab[1] + rotation_matrix[1][2]*cone_grid_lab[2]
+    ZZ = rotation_matrix[2][0]*cone_grid_lab[0] + rotation_matrix[2][1]*cone_grid_lab[1] + rotation_matrix[2][2]*cone_grid_lab[2]
+    XX += cone_apex[0]
+    YY += cone_apex[1]
+    ZZ += cone_apex[2]
+    cone_grid = [XX, YY, ZZ]
+    #print('Shape of real frame cartesian grid:', np.shape(cone_grid), '\n')
+    
+    # (5) interpolate all relevant variables at each (XX,YY,ZZ)
+    
+    # calculate volume of each spectroscopic grid element to convert #/s per cell into W densities
+    rr_spec, zz_spec = np.meshgrid(gridr_spec,gridz_spec)
+    r1_spec = rr_spec[:-1,:-1]
+    r2_spec = rr_spec[1:,1:]
+    z1_spec = zz_spec[:-1,:-1]
+    z2_spec = zz_spec[1:,1:]
+    dV_spec = 2*np.pi*(z2_spec - z1_spec)*0.5*(r2_spec**2 - r1_spec**2)
+    
+    ni_unitless = spec.variables['n'][:] #unitless ion densities for all charge states
+    n0_unitless = ni_unitless[0] #unitless neutral densities
+    # gets 0 for view==1 but you can check that it's not broken because it's non-zero for ni_unitless[2]
+    ni_2D = pps_per_nP * (n0_unitless/dV_spec) * dt # W0 cm-3
+    
+    # interpolate plasma parameters (te,ne,ni) at each point along the line from profiles.nc
+    gridz_profiles = profiles.variables['gridz'][:]*100 #[cm]
+    gridr_profiles = profiles.variables['gridr'][:]*100 #[cm]
+
+    te_2D = profiles.variables['te'][:] #[eV]
+    ne_2D = profiles.variables['ne'][:]/1e6 #[cm-3]
+    
+    te_3D = scii.interpn((gridz_profiles,gridr_profiles),te_2D,(ZZ,XX),bounds_error=False, fill_value=0)
+    ne_3D = scii.interpn((gridz_profiles,gridr_profiles),ne_2D,(ZZ,XX),bounds_error=False, fill_value=0)
+    ni_3D = scii.interpn((gridz_spec_original,gridr_spec_original),ni_2D,(ZZ,XX),bounds_error=False, fill_value=0)
+    
+    # interpolate PEC as a function of local ne and te
+    PEC_file = '../../SAS-VW-Data/sxb/martin_pec_4009_only_5d_ion.dat'
+    PEC_3D = martin_interpolation(PEC_file, te_3D, ne_3D) #[ph W-1 cm3 s-1]
+    
+    # sanity check plots of plasma parameters
+    plt.close()
+    plt.plot(rr, te_3D[:,1,1])
+    plt.title('Te along LoS')
+    plt.xlabel('Line of Sight [cm]')
+    plt.ylabel('Temperature [eV]')
+    plt.show(block=plot_blocker)
+    plt.close()
+    plt.plot(rr, ne_3D[:,1,1])
+    plt.title('ne along LoS')
+    plt.xlabel('Line of Sight [cm]')
+    plt.ylabel('Density [cm-3]')
+    plt.show(block=plot_blocker)
+    plt.close()
+    plt.plot(rr, ni_3D[:,1,1])
+    plt.title('ni along LoS')
+    plt.xlabel('Line of Sight [cm]')
+    plt.ylabel('Density [cm-3]')
+    plt.show(block=plot_blocker)
+    plt.close()
+    plt.plot(rr, PEC_3D[:,1,1])
+    plt.title('PEC along LoS')
+    plt.xlabel('Line of Sight [cm]')
+    plt.ylabel('Coefficient [ph/W cm3 s-1]')
+    plt.yscale('log')
+    plt.show(block=plot_blocker)
+
+    #############################################################
+    # sanity check by calculating mean free paths
+    #############################################################
+    print('----------------------------------------')
+    
+    m = 183.84 / 6.0221366516752e26 #[kg]
+    kT = te_3D * 1.602176634e-19 #[J]
+    cs = np.sqrt(2*kT/m) #[m/s]
+    #print(cs)
+    
+    scd_martin_filename = '../../SAS-VW-Data/sxb/martin_scd_only_5d_ion.dat'
+    scd_martin_3D = martin_interpolation(scd_martin_filename, te_3D, ne_3D) #assumed to be cm3/s
+    #print(scd_martin_3D)
+    scd_martin_masked = np.ma.masked_array(scd_martin_3D, scd_martin_3D==0)
+    print('Ionization coefficients from martin files:', \
+          np.min(scd_martin_masked), np.average(scd_martin_masked), np.max(scd_martin_masked), '\n')
+    
+    nu_iz_martin_3D = ne_3D * scd_martin_3D #[1/s]
+    nu_iz_martin_nonzero_indices = np.where(nu_iz_martin_3D!=0)[:]
+    mfp_iz_martin_3D = np.divide(cs[nu_iz_martin_nonzero_indices], nu_iz_martin_3D[nu_iz_martin_nonzero_indices])
+    mfp_iz_martin_masked = np.ma.masked_array(mfp_iz_martin_3D, np.isnan(mfp_iz_martin_3D))
+    mfp_iz_martin_masked = np.ma.masked_array(mfp_iz_martin_masked, np.isinf(mfp_iz_martin_3D))
+    print('Ionization mfp from martin files:', \
+          np.min(mfp_iz_martin_masked), np.average(mfp_iz_martin_masked), np.max(mfp_iz_martin_masked), '\n')
+    
+    scd_ADAS_filename = '../../GITR_processing/examples/sasvw-pa-fav/input/ADAS_Rates_W.nc'
+    scd_ADAS_3D = adas_interpolation(scd_ADAS_filename, te_3D, ne_3D) #assumed to be cm3/s
+    #print(scd_ADAS_3D)
+    scd_ADAS_masked = np.ma.masked_array(scd_ADAS_3D, scd_ADAS_3D==0)
+    print('Ionization coefficients from ADAS files:', \
+          np.min(scd_ADAS_masked), np.average(scd_ADAS_masked), np.max(scd_ADAS_masked), '\n')
+    
+    nu_iz_ADAS_3D = np.abs(ne_3D * scd_ADAS_3D) #[1/s]
+    #print(nu_iz_ADAS_3D)
+    nu_iz_ADAS_nonzero_indices = np.where(nu_iz_ADAS_3D!=0)[:]
+    mfp_iz_ADAS_3D = np.zeros(np.shape(nu_iz_ADAS_3D))
+    mfp_iz_ADAS_3D = np.divide(cs[nu_iz_ADAS_nonzero_indices], nu_iz_ADAS_3D[nu_iz_ADAS_nonzero_indices])
+    #print(mfp_iz_ADAS_3D)
+    mfp_iz_ADAS_masked = np.ma.masked_array(mfp_iz_ADAS_3D, np.isnan(mfp_iz_ADAS_3D))
+    mfp_iz_ADAS_masked = np.ma.masked_array(mfp_iz_ADAS_masked, np.isinf(mfp_iz_ADAS_masked))
+    #print(mfp_iz_ADAS_masked)
+    print('Ionization mfp from ADAS files:', \
+          np.min(mfp_iz_ADAS_masked), np.average(mfp_iz_ADAS_masked), np.max(mfp_iz_ADAS_masked))
+    
+    #############################################################
+    # martin ionization coeff file gives nonsensical mfp
+    # ADAS ionization coeff file gives negative values
+    #############################################################
+    print('----------------------------------------\n')    
+    
+    index = np.where(ni_3D == np.max(ni_3D))
+    print('max ion density',np.max(ni_3D))
+    print('ne at surface', ne_3D[index])
+    print('te at surface', te_3D[index])
+    print('PEC at surface',PEC_3D[index])
+    
+    spot_diameter = np.sqrt((rw2-rw1)**2 + (zw2-zw1)**2)
+    print('spot diameter',spot_diameter)
+    
+    dist_to_lens = np.sqrt((rw0-rL0)**2 + (zw0-zL0)**2)
+    print('dist to lens',dist_to_lens)
+    
+    analytic_epsilon = np.max(ni_3D) * ne_3D[index][0] * PEC_3D[index][0] #[ph cm-3 s-1]
+    analytic_integration = analytic_epsilon * 0.2/2 * (np.pi * (spot_diameter/2)**2) / (dist_to_lens**2)
+    print('analytic integration','{:.6E}'.format(analytic_integration*30),'\n')
+    v_iz = 2.25e6
+    v_iz = 4e13
+    partial_analytic_integration = np.max(ni_3D) * 0.2/2 * (np.pi * (spot_diameter/2)**2) / (dist_to_lens**2) * v_iz
+    print('partial analytic integration','{:.6E}'.format(partial_analytic_integration),'\n')
+    
+    #############################################################
+    # perform the volumetric integration of emitted photons
+    #############################################################
+    
+    epsilon = ni_3D * ne_3D * PEC_3D #[ph cm-3 s-1]
+    #epsilon = ni_3D * nu_iz_ADAS_3D
+    
+    dist_to_lens_center = np.sqrt((XX-rL0)**2 + YY**2 + (ZZ-zL0)**2) #[cm]
+    
+    intensity = np.sum(epsilon * dV / dist_to_lens_center**2) #[ph cm-2 s-1] #EDIT!!!!!!!!!!!!
+    intensity = np.sum(epsilon * 0.2/2 * (np.pi * (spot_diameter/2)**2) / (dist_to_lens**2))
+    intensity_per_m2 = intensity * 1e4 #[ph m-2 s-1]
+    flux_per_m2 = intensity_per_m2*SXB #[W m-2 s-1]
+    '''
+    print(RR)
+    print('----------------------------------------------------------')
+    print(TT)
+    print('----------------------------------------------------------')
+    print(PP)
+    
+    analytic = 2*np.pi*(1 - np.cos(cone_theta/2)) * (cone_rr_max)**5 / 5 
+    print(cone_rr_max, cone_theta)
+    print(np.shape(epsilon),np.shape(dV)) 
+    print('Analytic Solution:','{:.6E}'.format(analytic))
+    
+    print(dV)
+    print('----------------------------------------------------------')
+    print(epsilon)
+    '''
+    print('Intensity per cm2:','{:.6E}'.format(intensity),'ph cm-2 s-1\n')
+    print('Intensity per m2:','{:.6E}'.format(intensity_per_m2),'ph m-2 s-1')
+    print('Est W Flux per m2:','{:.6E}'.format(flux_per_m2),'W m-2 s-1')
+    
+    #############################################################
+    # plotting!!!
+    #############################################################
+    
+    # plotting sanity checks for all lines and point intersections
     plt.close()
     plt.plot(R,Z,'k')
-    plt.scatter([rw1,rv1,rw2,rv2,intercept_r0],[zw1,zv1,zw2,zv2,intercept_z0],color='cyan',s=20)
     plt.plot(gridr_expanded,line_bound1_expanded,'darkgreen',label='View Bound 1') 
     plt.plot(gridr_expanded,line_bound2_expanded,'goldenrod',label='View Bound 2')
+    plt.plot(gridr_expanded,line_center_expanded,'purple',label='Center Line')
+    plt.scatter([rw1,rv1,rw2,rv2,rv0,rw0,rL0,r_lens_bound1,r_lens_bound2,r_apex],\
+                [zw1,zv1,zw2,zv2,zv0,zw0,zL0,z_lens_bound1,z_lens_bound2,z_apex],\
+                color='magenta',s=20,zorder=10)
+    plt.scatter(cone_grid[0],cone_grid[2],marker='.',color='red')
     
-    #plt.scatter(R,Z,s=8)
-    #plt.scatter(r_intercept_vtile_bound1,z_intercept_vtile_bound1,color='magenta',s=10)
-    #plt.scatter(x,y,color='lime',s=15)
-    #plt.scatter(r_targ,z_targ,color='magenta',s=3)
-    #plt.plot(r_line,z_line,'purple',label='Centerline')
-    #plt.plot(r_bound1,z_bound1,color='darkgreen',linewidth=1)
-    #plt.plot(r_bound2,z_bound2,color='goldenrod',linewidth=1)
-    #plt.plot(gridr_sliced,line1,'lime',label='Sliced Bounds')
-    #plt.plot(gridr_sliced,line2,'lime')
-    #plt.scatter(intercept_r0,intercept_z0,s=30)
     plt.legend()
     plt.axis('scaled')
-    #plt.show(block=False)
+    plt.show(block=plot_blocker)
+    
+    return
+
+def OES_synth_diagnostic(history_file=run_directory+'/output/history.nc'):
+    
+    # start post-processing timer
+    timer0 = time.time()    
+    
+    ####################################################################################
+    # Collect points of first ionizations
+    ####################################################################################
+    
+    # import history.nc file and relevant variables
+    history = netCDF4.Dataset(history_file, "r", format="NETCDF4")
+    nP = len(history.dimensions['nP'])
+    charge = history.variables['charge'][:]
+    x = history.variables['x'][:]
+    y = history.variables['y'][:]
+    r = np.sqrt(x**2 + y**2)*100
+    z = history.variables['z'][:]*100
+    print('Import timestamp:', time.time()-timer0, 'seconds')
+    
+    # catch the particles that never ionize at all, or first ionize outside a LoS in this bucket
+    # add the particles that never ionize to the bucket
+    bucket = len(np.where(np.sum(charge,axis=1)==0)[0])
+    
+    # extract time index of first ionization
+    # extract position at time index of first ionization
+    time_ionize = np.empty(0, dtype='int')
+    r_ionize = np.empty(0)
+    z_ionize = np.empty(0)
+    for p in range(0,nP):
+        if sum(charge[p])>0:
+            time_ionize = np.where(charge[p]>0)[0][0]
+            r_ionize = np.append(r_ionize, r[p][time_ionize])
+            z_ionize = np.append(z_ionize, z[p][time_ionize])
+    
+    print('Find first ionization timestamp:', time.time()-timer0, 'seconds')
+    
+    ####################################################################################
+    # Pick the line of sight (LoS) and count the 0->1 ionizations that occur in that LoS
+    ####################################################################################
+    
+    # define 3 sets of (r,z) inputs to make 3 polygons defining all 3 LoS
+    vertices1 = np.array([[149.19636129073243, 122.25672551517775],[148.75308042332668, 121.857772706507],\
+                         [149.77410699520738, 121.11740134944615],[149.9086364126706, 121.79127941976076],\
+                         [149.19636129073243, 122.25672551517775]])
+    vertices2 = np.array([[147.40897354700155, 120.64807643289646],[147.0734088952648, 120.34606822513311],\
+                         [149.99477765775828, 118.16980397041856],[149.9109570467313, 118.93350219712552],\
+                         [147.40897354700155, 120.64807643289646]])
+    vertices3 = np.array([[145.92510131444246, 119.31259132984533],[145.52347543071227, 118.9511280091142],\
+                         [149.81712372199036, 114.77815083014266],[149.99694016803898, 115.6230510501299],\
+                         [145.92510131444246, 119.31259132984533]])
+    
+    polygon1 = path.Path(vertices1, closed=True)
+    polygon2 = path.Path(vertices2, closed=True)
+    polygon3 = path.Path(vertices3, closed=True)
+    
+    pathx1 = vertices1[:,0]
+    pathy1 = vertices1[:,1]
+    pathx2 = vertices2[:,0]
+    pathy2 = vertices2[:,1]
+    pathx3 = vertices3[:,0]
+    pathy3 = vertices3[:,1]
+    
+    # plot the lines of sight
+    gitr_rz=setup_directory+'/assets/gitr_rz.txt'
+    with open(gitr_rz, 'r') as file:
+        wall = file.readlines()
+        
+    r_wall = np.zeros(len(wall))
+    z_wall = np.zeros(len(wall))
+    for i,line in enumerate(wall):
+        point = line.split()
+        r_wall[i] = float(point[0])*100
+        z_wall[i] = float(point[1])*100
+    
+    plt.close()
+    fig,ax = plt.subplots()
+    plt.plot(r_wall, z_wall, 'darkmagenta', linewidth=2)
+    ax.fill(pathx1,pathy1,'lightpink')
+    ax.fill(pathx2,pathy2,'lightpink')
+    ax.fill(pathx3,pathy3,'lightpink')
+    plt.scatter(r_ionize, z_ionize, marker='o',s=5,c='k',zorder=5)
+    plt.xlabel('R [cm]')
+    plt.ylabel('Z [cm]')
+    plt.title('Lines of Sight')
+    plt.axis('Scaled')
+    plt.xlim(143,151)
+    plt.ylim(111,123)
+    
+    # check if the position at first ionization falls into Views 1, 2, or 3
+    view1 = 0
+    view2 = 0
+    view3 = 0
+    
+    print('Plotting timestamp:', time.time()-timer0, 'seconds')
+    
+    for p in range(0,len(r_ionize)):
+        point = np.array([r_ionize[p], z_ionize[p]]).transpose()
+        
+        # check if the position at first ionization falls in View 1
+        if polygon1.contains_point(point): 
+            view1+=1
+            
+        # check if the position at first ionization falls in View 2
+        elif polygon2.contains_point(point):
+            view2+=1
+            
+        # check if the position at first ionization falls in View 3
+        elif polygon3.contains_point(point):
+            view3+=1
+            
+        # add the particles that did not ionize in Views 1-3 to the bucket
+        else:
+            bucket+=1
+    
+    print('LoS sorting timestamp:', time.time()-timer0, 'seconds')
+    
+    ####################################################################################
+    # Normalize by total nP from history.nc
+    ####################################################################################
+    
+    # normalize and print the fraction of simulated particles that first ionized in this LoS
+    bucket = bucket/nP
+    view1 = view1/nP
+    view2 = view2/nP
+    view3 = view3/nP
+    
+    print('\n')
+    print('Sanity Check (should be 1.0):', bucket+view1+view2+view3)
+    print('The Bucket:', bucket, '\n')
+    print('View 1:', view1)
+    print('View 2:', view2)
+    print('View 3:', view3)
     
     return
 
@@ -2408,12 +2889,12 @@ if __name__ == "__main__":
     #plot_history2D(setup_directory+"/../output/perlmutter/production/history_H2.nc",\
     #plot_history2D(setup_directory+"/../output/leakage/history_t8T25.nc",\
     #plot_history2D('../examples/sasvw-pa-unfav/output/leakage/history_old.nc',\
-    plot_history2D("/pscratch/sd/h/hayes/sasvw-pa-fav/sasvw-pa-fav-history/output/history.nc",\
-                   bFile=setup_directory+'/../input/bField.nc')
+    #plot_history2D("/pscratch/sd/h/hayes/sasvw-pa-fav/sasvw-pa-fav-history/output/history.nc",\
+                   #bFile=setup_directory+'/../input/bField.nc')
     #spectroscopy(2, specFile=run_directory+'/output/spec.nc')#specFile='/Users/Alyssa/Desktop/spec.nc')
     #spec_line_integration(view=1)#spec_file='/Users/Alyssa/Desktop/spec.nc', pps_per_nP=2013859273149157.8)
-    #spec_volumetric_integration(view=3)#spec_file='/Users/Alyssa/Desktop/spec.nc', pps_per_nP=2013859273149157.8)
-    #spec_line_integration(view=3)#spec_file='/Users/Alyssa/Desktop/spec.nc', pps_per_nP=2013859273149157.8)
+    #spec_volumetric_integration(view=3,Nrr=100,Ntheta=10,Nphi=10, plot_blocker=False)
+    OES_synth_diagnostic(setup_directory+'/../output/perlmutter/production/history_IF.nc')
     #ionization_analysis([0,0], '../examples/sasvw-pa-fav/output/perlmutter/production/','history_IF.nc', 'positions_IF.nc')
     #prompt_redep_hist([2,8,5], '../examples/sasvw-pa-fav/output/perlmutter/production/forces24.09.19/positions/','BEF.nc')
     #particle_diagnostics_hist('/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav/output/perlmutter/production/particle_histograms_gpu.nc', plot_blocker=True)

@@ -1024,8 +1024,8 @@ if __name__ == "__main__":
                 ftDFile = 'assets/ftridynBackgroundD.nc', \
                 ftCFile = 'assets/ftridynBackgroundC.nc', \
                 configuration = 'random', \
-                use_surface_model = 1, use_hpic = 1, \
-                plot_variables = 0, blockplots = 0)
+                use_surface_model = 1, use_hpic = 0, \
+                plot_variables = 1, blockplots = 0)
 
 
 
