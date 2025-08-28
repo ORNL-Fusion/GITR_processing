@@ -14,11 +14,11 @@ import solps
 # setting directories and special constants
 ################################################
 
-run_directory = '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav'
+#run_directory = '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav'
 #run_directory = '/Users/Alyssa/Dev/flag-testing'
-#run_directory = '/pscratch/sd/h/hayes/sasvw-pa-fav/sasvw-pa-fav-history'
-setup_directory = '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav/setup'
-#setup_directory = '/pscratch/sd/h/hayes/GITR_processing/examples/sasvw-pa-fav/setup'
+run_directory = '/pscratch/sd/h/hayes/sasvw-pa-fav/sasvw-pa-fav-ioniz'
+#setup_directory = '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav/setup'
+setup_directory = '/pscratch/sd/h/hayes/GITR_processing/examples/sasvw-pa-fav/setup'
 rmrs_fine_file = setup_directory+'/assets/rmrs_fine.txt'
 
 #prog angle
@@ -2894,7 +2894,8 @@ if __name__ == "__main__":
     #spectroscopy(2, specFile=run_directory+'/output/spec.nc')#specFile='/Users/Alyssa/Desktop/spec.nc')
     #spec_line_integration(view=1)#spec_file='/Users/Alyssa/Desktop/spec.nc', pps_per_nP=2013859273149157.8)
     #spec_volumetric_integration(view=3,Nrr=100,Ntheta=10,Nphi=10, plot_blocker=False)
-    OES_synth_diagnostic(setup_directory+'/../output/perlmutter/production/history_IF.nc')
+    #OES_synth_diagnostic(setup_directory+'/../output/perlmutter/production/history_IF1.nc')
+    OES_synth_diagnostic()
     #ionization_analysis([0,0], '../examples/sasvw-pa-fav/output/perlmutter/production/','history_IF.nc', 'positions_IF.nc')
     #prompt_redep_hist([2,8,5], '../examples/sasvw-pa-fav/output/perlmutter/production/forces24.09.19/positions/','BEF.nc')
     #particle_diagnostics_hist('/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav/output/perlmutter/production/particle_histograms_gpu.nc', plot_blocker=True)
