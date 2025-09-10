@@ -63,14 +63,17 @@ angles = np.arange(0,90,1)
 # plot average energy across the W tile
 ##############################################################################
 
-def calculate_flux_over_energy_AND_avg_energy(verbose=1):
+def calculate_flux_over_EA_AND_avg_EA(verbose=1):
     energies = np.zeros((len(rmrsFine), len(species_list), 240))
     
     total_relative_flux = np.zeros((len(rmrsFine), len(species_list)))
     relative_flux_over_energy = np.zeros((len(rmrsFine), len(species_list), 240))
+    relative_flux_over_angle = np.zeros((len(rmrsFine), len(species_list), 90))
     normalized_flux_over_energy = np.zeros((len(rmrsFine), len(species_list), 240))
+    normalized_flux_over_angle = np.zeros((len(rmrsFine), len(species_list), 90))
     
     average_energy = np.zeros((len(species_list), len(rmrsFine)))
+    average_angle = np.zeros((len(species_list), len(rmrsFine)))
     
     for i in range(len(rmrsFine)):
         if verbose: print('\nLine Segment:', i, 'of', len(rmrsFine)-1)
@@ -108,15 +111,18 @@ def calculate_flux_over_energy_AND_avg_energy(verbose=1):
                 
                 # calculate relative flux for each energy bin, normalized by the total relative flux
                 relative_flux_over_energy[i,s] = np.sum(dist, axis=1)
+                relative_flux_over_angle[i,s] = np.sum(dist, axis=0)
                 total_relative_flux[i,s] = np.sum(dist)
                 normalized_flux_over_energy[i,s] = relative_flux_over_energy[i,s]/total_relative_flux[i,s]
+                normalized_flux_over_angle[i,s] = relative_flux_over_angle[i,s]/total_relative_flux[i,s]
                 
                 # use normalized fluxes to find the weighted average energy
                 average_energy[s,i] = np.sum(normalized_flux_over_energy[i,s] * energies[i,s])
+                average_angle[s,i] = np.sum(normalized_flux_over_angle[i,s] * angles)
                 
-    return energies, normalized_flux_over_energy, average_energy
+    return energies, [normalized_flux_over_energy,normalized_flux_over_angle], [average_energy,average_angle]
 
-def plot_avg_energy():
+def plot_EA_averages():
     # get estimated energy using Stangeby method to plot against
     profilesFile = setup_directory+'/../input/plasmaProfiles.nc'
     profiles = netCDF4.Dataset(profilesFile)
@@ -128,12 +134,13 @@ def plot_avg_energy():
     teFine = fte(rmrsFine)
     tiFine = fti(rmrsFine)
     estimated_energy = np.zeros((len(species_list), len(rmrsFine)))
-    estimated_energy[0] = 3*(1)*teFine + 2*tiFine
+    estimated_energy[0] = 3*(1)*teFine + 2*tiFine    
+    
     for s in range(1,len(species_list)):
         estimated_energy[s] = 3*(s+1)*teFine + 2*tiFine
     
     # get hPIC2-calculated weighted average incident energies
-    energies, normalized_flux_over_energy, average_energy = calculate_flux_over_energy_AND_avg_energy(verbose=0)
+    energies, [normalized_flux_over_energy,normalized_flux_over_angle], [average_energy,average_angle] = calculate_flux_over_EA_AND_avg_EA(verbose=0)
     
     plt.close()
     plt.hlines(45, np.min(rmrsFine), np.max(rmrsFine), color='gray')
@@ -144,7 +151,7 @@ def plot_avg_energy():
     
     plt.xlabel('D-Dsep [m]')
     plt.ylabel('Energy [eV]')
-    plt.title('Average Incident Energy\n Calculated by hPIC2')
+    plt.title('Average Incident Energy\n Simple Sheath vs hPIC2')
     if case==4: 
         plt.legend(loc=4)
     else: 
@@ -153,9 +160,26 @@ def plot_avg_energy():
     #plt.ticklabel_format(axis='y', style='sci', scilimits=(1,3))
     plt.savefig(setup_directory+'/plots/surface-profiles/hPIC2_avg_incident_energy.png')
     
-if __name__ == "__main__":
-    #plot_avg_energy()
+    plt.close()
+    plt.hlines(70, np.min(rmrsFine), np.max(rmrsFine), color='gray')
+    colors = ['black', 'firebrick', 'darkorange', 'gold', 'limegreen', 'dodgerblue', 'mediumpurple']
+    for s in range(len(species_list)):
+        plt.plot(rmrsFine, average_angle[s], color=colors[s], label=species_list[s])
     
+    plt.xlabel('D-Dsep [m]')
+    plt.ylabel('Angle [°]')
+    plt.title('Average Incident Angle\n Calculated by hPIC2')
+    if case==4: 
+        plt.legend(loc=4)
+    else: 
+        plt.legend()
+    #plt.yscale('log')
+    #plt.ticklabel_format(axis='y', style='sci', scilimits=(1,3))
+    plt.savefig(setup_directory+'/plots/surface-profiles/hPIC2_avg_incident_angle.png')
+    
+if __name__ == "__main__":
+    plot_EA_averages()
+    '''
     energies, normalized_flux_over_energy, average_energy = calculate_flux_over_energy_AND_avg_energy(verbose=0)
     ymin = np.min(normalized_flux_over_energy)
     ymax = np.max(normalized_flux_over_energy)
@@ -178,4 +202,4 @@ if __name__ == "__main__":
     ani = FuncAnimation(fig, update, frames=len(rmrsFine), blit=False)
     ani.save(filename=setup_directory+'/plots/particle-source/hPIC2_energy_distribution_animated.gif',\
              writer="pillow")
-    
+    '''

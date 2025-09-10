@@ -139,6 +139,15 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     #get W/s sputtered by D, C flux to wall
     ##############################################
     
+    #get incoming ion energy and angle estimations where the integer input is z
+    energyD, angleD = get_incoming_IEADs(1, profiles, surfW, rmrsCoarse, rmrsFine)
+    energyC1, angleC1 = get_incoming_IEADs(1, profiles, surfW, rmrsCoarse, rmrsFine)
+    energyC2, angleC2 = get_incoming_IEADs(2, profiles, surfW, rmrsCoarse, rmrsFine)
+    energyC3, angleC3 = get_incoming_IEADs(3, profiles, surfW, rmrsCoarse, rmrsFine)
+    energyC4, angleC4 = get_incoming_IEADs(4, profiles, surfW, rmrsCoarse, rmrsFine)
+    energyC5, angleC5 = get_incoming_IEADs(5, profiles, surfW, rmrsCoarse, rmrsFine)
+    energyC6, angleC6 = get_incoming_IEADs(6, profiles, surfW, rmrsCoarse, rmrsFine)
+    
     if use_hpic:
         dfD = pd.read_csv(setup_directory+'/assets/eff_spyld_hPIC2/eff_spyld_hPIC_case1_D1.csv')
         dfC1 = pd.read_csv(setup_directory+'/assets/eff_spyld_hPIC2/eff_spyld_hPIC_case1_C1.csv')
@@ -155,16 +164,17 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
         spyldC4 = np.transpose(dfC4.to_numpy())[0]
         spyldC5 = np.transpose(dfC5.to_numpy())[0]
         spyldC6 = np.transpose(dfC6.to_numpy())[0]
+        
+        #this block for plotting only
+        spyldD_simple = get_ft_spyld(1, energyD, angleD, ftDFile) #file input includes He, which we aren't using
+        spyldC1_simple = get_ft_spyld(0, energyC1, angleC1, ftCFile)
+        spyldC2_simple = get_ft_spyld(0, energyC2, angleC2, ftCFile)
+        spyldC3_simple = get_ft_spyld(0, energyC3, angleC3, ftCFile)
+        spyldC4_simple = get_ft_spyld(0, energyC4, angleC4, ftCFile)
+        spyldC5_simple = get_ft_spyld(0, energyC5, angleC5, ftCFile)
+        spyldC6_simple = get_ft_spyld(0, energyC6, angleC6, ftCFile)
     
     else:
-        #get incoming ion energy and angle estimations where the integer input is z
-        energyD, angleD = get_incoming_IEADs(1, profiles, surfW, rmrsCoarse, rmrsFine)
-        energyC1, angleC1 = get_incoming_IEADs(1, profiles, surfW, rmrsCoarse, rmrsFine)
-        energyC2, angleC2 = get_incoming_IEADs(2, profiles, surfW, rmrsCoarse, rmrsFine)
-        energyC3, angleC3 = get_incoming_IEADs(3, profiles, surfW, rmrsCoarse, rmrsFine)
-        energyC4, angleC4 = get_incoming_IEADs(4, profiles, surfW, rmrsCoarse, rmrsFine)
-        energyC5, angleC5 = get_incoming_IEADs(5, profiles, surfW, rmrsCoarse, rmrsFine)
-        energyC6, angleC6 = get_incoming_IEADs(6, profiles, surfW, rmrsCoarse, rmrsFine)
         
         if plot_variables == 1:
             plt.close()
@@ -258,6 +268,16 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     sputt_flux = sputt_fluxD + sputt_fluxC1 + sputt_fluxC2 + sputt_fluxC3 + sputt_fluxC4 + sputt_fluxC5 + sputt_fluxC6
     #print('SPUTT FLUX',len(sputt_flux),'\n',sputt_flux)
     
+    if use_hpic:
+        #this block for plotting only
+        sputt_fluxD_simple = spyldD_simple*fluxD
+        sputt_fluxC1_simple = spyldC1_simple*fluxC1
+        sputt_fluxC2_simple = spyldC2_simple*fluxC2
+        sputt_fluxC3_simple = spyldC3_simple*fluxC3
+        sputt_fluxC4_simple = spyldC4_simple*fluxC4
+        sputt_fluxC5_simple = spyldC5_simple*fluxC5
+        sputt_fluxC6_simple = spyldC6_simple*fluxC6
+    
     if not use_surface_model:
         #if the intention is to run with no surface model (ex: for leakage analysis), 
         #then use gross erosion fluxes from a previous GITR simulation
@@ -312,11 +332,11 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
         plt.savefig('plots/particle-source/incident_flux.png')
 
         plt.close()
-        if tile_shift_indices != []:
+        '''if tile_shift_indices != []:
             for i,v in enumerate(tile_shift_indices):
                 if i==0: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', label='Wall\nVertices')
                 else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
-        '''if Bangle_shift_indices != []:
+        if Bangle_shift_indices != []:
             for i,v in enumerate(Bangle_shift_indices):
                 if i==0: plt.axvline(x=rmrsCoarse[v], color='k', linestyle='dotted', label='$\Delta\\alpha_B$')
                 else: plt.axvline(x=rmrsCoarse[v], color='k', linestyle='dotted')'''
@@ -330,20 +350,28 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
         plt.plot(rmrsFine, spyldC6, 'mediumpurple', label='C$^{6+}$')
         plt.plot(rmrsFine, spyldW1, 'rosybrown', label='W$^{1+}$')
         plt.plot(rmrsFine, spyldW2, 'burlywood', label='W$^{2+}$')
+        if use_hpic:
+            plt.plot(rmrsFine, spyldD_simple, '--', color='black')
+            plt.plot(rmrsFine, spyldC1_simple, '--', color='firebrick')
+            plt.plot(rmrsFine, spyldC2_simple, '--', color='darkorange')
+            plt.plot(rmrsFine, spyldC3_simple, '--', color='gold')
+            plt.plot(rmrsFine, spyldC4_simple, '--', color='limegreen')
+            plt.plot(rmrsFine, spyldC5_simple, '--', color='dodgerblue')
+            plt.plot(rmrsFine, spyldC6_simple, '--', color='mediumpurple')
         plt.xlim(-0.05)
         plt.legend(fontsize=13)
         plt.xlabel('D-Dsep [m]', fontsize=14)
         plt.ylabel('Sputtering Yield', fontsize=16)
-        plt.title('W sputtering yield by incident ions',fontsize=18)
+        plt.title('W Sputtering Yield by Incident Ions',fontsize=18)
         plt.show(block=blockplots)
         plt.savefig('plots/particle-source/spyld.png')
         
         plt.close()
-        if tile_shift_indices != []:
+        '''if tile_shift_indices != []:
             for i,v in enumerate(tile_shift_indices):
                 if i==0: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', label='Wall\nVertices')
                 else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
-        '''if Bangle_shift_indices != []:
+        if Bangle_shift_indices != []:
             for i,v in enumerate(Bangle_shift_indices):
                 if i==0: plt.axvline(x=rmrsCoarse[v], color='k', linestyle='dotted', label='$\Delta\\alpha_B$')
                 else: plt.axvline(x=rmrsCoarse[v], color='k', linestyle='dotted')'''
@@ -355,11 +383,19 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
         plt.plot(rmrsFine, sputt_fluxC4, 'limegreen', label='C$^{4+}$')
         plt.plot(rmrsFine, sputt_fluxC5, 'dodgerblue', label='C$^{5+}$')
         plt.plot(rmrsFine, sputt_fluxC6, 'mediumpurple', label='C$^{6+}$')
+        if use_hpic:
+            plt.plot(rmrsFine, sputt_fluxD_simple, '--', color='black')
+            plt.plot(rmrsFine, sputt_fluxC1_simple, '--', color='firebrick')
+            plt.plot(rmrsFine, sputt_fluxC2_simple, '--', color='darkorange')
+            plt.plot(rmrsFine, sputt_fluxC3_simple, '--', color='gold')
+            plt.plot(rmrsFine, sputt_fluxC4_simple, '--', color='limegreen')
+            plt.plot(rmrsFine, sputt_fluxC5_simple, '--', color='dodgerblue')
+            plt.plot(rmrsFine, sputt_fluxC6_simple, '--', color='mediumpurple')
         plt.xlim(-0.05)
         plt.xlabel('D-Dsep [m]', fontsize=14)
         plt.ylabel('$\Gamma_W$ [m$^{-2}$s$^{-1}$]', fontsize=16)
         plt.legend(loc='upper left', fontsize=13)
-        plt.title('Flux of W sputtered\nby incident ions', fontsize=18)
+        plt.title('Flux of W Sputtered\nby Incident Ions', fontsize=18)
         plt.show(block=blockplots)
         plt.savefig('plots/particle-source/sputt_flux_charge_dependent.png')
 

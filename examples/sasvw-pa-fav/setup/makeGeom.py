@@ -353,7 +353,7 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     rmrsMid = (rmrsFine[:-1]+rmrsFine[1:])/2
     r_final, z_final = replace_line_segment(rSurfFine, zSurfFine, r_final, z_final)
     W_indices = np.array(range(W_indicesCoarse[0], W_indicesCoarse[-1]+numAddedPoints+1)) #+1 may need to be added because range function is exclusive
-    print('length Fine W_indices:',len(W_indices))
+    print('length Fine W_indices:',len(W_indices), len(rmrsFine))
     
     
     #test to check that the refined rmrsMid fall between the matching coarse rmrs midpoint values
@@ -403,21 +403,32 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     strikepoint_index = np.where(rmrsFine==0)[0]
     print('Strikepoint Coords:', rSurfFine[strikepoint_index], zSurfFine[strikepoint_index])
     
+    #plot view 2
+    vertices2 = np.array([[147.40897354700155, 120.64807643289646],[147.0734088952648, 120.34606822513311],\
+                         [149.99477765775828, 118.16980397041856],[149.9109570467313, 118.93350219712552],\
+                         [147.40897354700155, 120.64807643289646]])/100
+    polygon2 = path.Path(vertices2, closed=True)
+    pathx2 = vertices2[:,0]
+    pathy2 = vertices2[:,1]
+    
     if plot_variables:
         plt.close()
+        fig,ax = plt.subplots()
         plt.plot(r_right_target, z_right_target, '-k', label='Carbon', linewidth=0.5)
         plt.plot(r_final[W_indices], z_final[W_indices], 'violet', label='Tungsten', linewidth=0.5)
         plt.scatter(rSurfCoarse, zSurfCoarse, marker='.', s=20, color='green')
         plt.scatter(r_final[W_indices], z_final[W_indices], marker='.', s=10, color='violet')
         plt.scatter(rSurfFine[strikepoint_index], zSurfFine[strikepoint_index], label='Strikepoint', marker='x', color='k', s=150, zorder=5)
-        plt.legend(loc=2)
+        ax.fill(pathx2,pathy2,'lightpink')
+        plt.scatter(r_final[W_indices[47]], z_final[W_indices[47]], label='View 2 sample', marker='x', color='red', s=150)
+        plt.legend(loc=3)
         plt.axis('scaled')
         plt.xlim(1.43,1.52)
         plt.xlabel('r [m]')
         plt.ylabel('z [m]')
         plt.title('Case 1: Progressive Angle OSP \n and upward Bx▽B drift ')
         #plt.savefig('plots/geom/makeGeom.png')
-        #plt.show(block=True)
+        plt.show(block=True)
     
     #print('length of 3rd leg:',np.sqrt((rSurfCoarse[-1]-rSurfCoarse[-2])**2+(zSurfCoarse[-1]-zSurfCoarse[-2])**2))
     
@@ -510,7 +521,7 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
         return
 
 if __name__ == "__main__":
-    main(use_core_leakage_boundary = 0, plot_variables = 0)
+    main(use_core_leakage_boundary = 0, plot_variables = 1)
 
 
 

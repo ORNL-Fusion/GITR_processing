@@ -14,11 +14,11 @@ import solps
 # setting directories and special constants
 ################################################
 
-#run_directory = '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav'
+run_directory = '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav'
 #run_directory = '/Users/Alyssa/Dev/flag-testing'
-run_directory = '/pscratch/sd/h/hayes/sasvw-pa-fav/sasvw-pa-fav-ioniz'
-#setup_directory = '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav/setup'
-setup_directory = '/pscratch/sd/h/hayes/GITR_processing/examples/sasvw-pa-fav/setup'
+#run_directory = '/pscratch/sd/h/hayes/sasvw-pa-fav/sasvw-pa-fav-ioniz'
+setup_directory = '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav/setup'
+#setup_directory = '/pscratch/sd/h/hayes/GITR_processing/examples/sasvw-pa-fav/setup'
 rmrs_fine_file = setup_directory+'/assets/rmrs_fine.txt'
 
 #prog angle
@@ -265,11 +265,14 @@ def plot_surf_nc(nP10, dt10, nT10, \
                  gitr_rz=setup_directory+'/assets/gitr_rz.txt', \
                  W_fine_file=setup_directory+'/assets/W_fine.txt', \
                  rmrs_fine_file=setup_directory+'/assets/rmrs_fine.txt', \
+                 surface_file_alt='',\
                  norm=None, use_hpic=0, plot_cumsum=0, plot_blocker=False):
     
     profiles, W_indices, r_inner_target, z_inner_target, rmrs = init()
     rmrsCoords = profiles.variables['rmrs_inner_target'][W_indices]
     surface = netCDF4.Dataset(surface_file, "r", format="NETCDF4")
+    if surface_file_alt != '':
+        surface_alt=netCDF4.Dataset(surface_file_alt, "r", format="NETCDF4")
     
     particle_source_file = run_directory+'/input/particleSource.nc'
     particle_source = netCDF4.Dataset(particle_source_file, "r", format="NETCDF4")
@@ -352,6 +355,28 @@ def plot_surf_nc(nP10, dt10, nT10, \
     grossEro = grossEro[:-1]*pps_per_nP/area
     grossDep = grossDep[:-1]*pps_per_nP/area
     netDep = netDep[:-1]*pps_per_nP/area
+    
+    if surface_file_alt != '':
+        pps_per_nP_alt, partSource_flux_alt, fluxD_alt, fluxC_alt = makeParticleSource.distributed_source(nP=(nP10[0] * (10**int(nP10[1]))), \
+                surfW = W_surf_indices, \
+                tile_shift_indices = tile_shift_indices, \
+                Bangle_shift_indices = Bangle_shift_indices, \
+                setup_directory = setup_directory, \
+                geom = setup_directory+'/../input/gitrGeometry.cfg', \
+                profiles_file = setup_directory+'/../input/plasmaProfiles.nc', \
+                gitr_rz = setup_directory+'/assets/gitr_rz.txt', \
+                rmrs_fine_file = setup_directory+'/assets/rmrs_fine.txt', \
+                W_fine_file = setup_directory+'/assets/W_fine.txt', \
+                ftDFile = setup_directory+'/assets/ftridynBackgroundD.nc', \
+                ftCFile = setup_directory+'/assets/ftridynBackgroundC.nc', \
+                ftWFile = setup_directory+'/../input/ftridynSelf.nc', \
+                configuration = 'random', \
+                use_surface_model = 1, use_hpic = 0, \
+                plot_variables = 0)
+            
+        grossEro_alt = surface_alt.variables['grossErosion'][:][:-1]*pps_per_nP_alt/area
+        grossDep_alt = surface_alt.variables['grossDeposition'][:][:-1]*pps_per_nP_alt/area
+        netDep_alt = grossDep_alt-grossEro_alt
     
     print('\n')
     print('rmrs length',len(rmrsFine))
@@ -518,18 +543,23 @@ def plot_surf_nc(nP10, dt10, nT10, \
     
     plt.plot(rmrsFine,np.zeros(len(rmrsFine)),'gray')
     
-    if tile_shift_indices != []:
+    '''if tile_shift_indices != []:
         for i,v in enumerate(tile_shift_indices):
             if i==0: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', label='Walll\nVertices')
             else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
     if Bangle_shift_indices != []:
         for i,v in enumerate(Bangle_shift_indices):
             if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\\alpha_B$')
-            else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
+            else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')'''
     
     plt.plot(rmrsFine,grossEro_norm,'r', label='Gross Erosion')
     plt.plot(rmrsFine,grossDep_norm,'g', label='Gross Deposition')
     plt.plot(rmrsFine,netDep_norm,'k', label='Net Deposition')
+    
+    if surface_file_alt != '':
+        plt.plot(rmrsFine,grossEro_alt,'r--')
+        plt.plot(rmrsFine,grossDep_alt,'g--')
+        plt.plot(rmrsFine,netDep_alt,'k--')
     
     plt.xlabel('D-Dsep [m]')
     if norm!=None: plt.ylabel('\u0393$_{W,outgoing}$ / \u0393$_{%s,incoming}$'%norm)
@@ -2813,10 +2843,10 @@ def OES_synth_diagnostic(history_file=run_directory+'/output/history.nc'):
     ax.fill(pathx1,pathy1,'lightpink')
     ax.fill(pathx2,pathy2,'lightpink')
     ax.fill(pathx3,pathy3,'lightpink')
-    plt.scatter(r_ionize, z_ionize, marker='o',s=5,c='k',zorder=5)
+    plt.scatter(r_ionize, z_ionize, marker='o',s=10,c='k',zorder=5)
     plt.xlabel('R [cm]')
     plt.ylabel('Z [cm]')
-    plt.title('Lines of Sight')
+    plt.title('Position of W First Ionization \nIn 3 Lines of Sight')
     plt.axis('Scaled')
     plt.xlim(143,151)
     plt.ylim(111,123)
@@ -2860,17 +2890,20 @@ def OES_synth_diagnostic(history_file=run_directory+'/output/history.nc'):
     view3 = view3/nP
     
     print('\n')
+    print('Total Computational Particles:', nP)
+    print('\n')
     print('Sanity Check (should be 1.0):', bucket+view1+view2+view3)
     print('The Bucket:', bucket, '\n')
-    print('View 1:', view1)
-    print('View 2:', view2)
-    print('View 3:', view3)
+    print('View 1:', '{:.6E}'.format(view1))
+    print('View 2:', '{:.6E}'.format(view2))
+    print('View 3:', '{:.6E}'.format(view3))
     
     return
 
 if __name__ == "__main__":
     #plot_history2D(run_directory+'/output/history.nc')
-    #plot_surf_nc([1,6], 9, [1,5], run_directory+'/output/surface5.nc', use_hpic=1, plot_blocker=True)
+    #plot_surf_nc([1,6], 9, [1,5], run_directory+'/output/surface5.nc', \
+                 #surface_file_alt=run_directory+'/output/perlmutter/production/surface_S.nc', use_hpic=1, plot_blocker=True)
     #plot_surf_nc([1,6], 9, [1,6], '../examples/sasvw-pa-fav/output/perlmutter/production/surface_S.nc', \
                  #'../examples/sasvw-pa-fav/output/perlmutter/production/positions_S.nc',plot_blocker=True)
     #plot_surf_nc([1,6], 9, [1,6], '../../sasvw-pa-fav/sasvw-pa-fav-surfaces/nPnT-new/surface-p6t6.nc', \
