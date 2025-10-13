@@ -106,35 +106,41 @@ def readEquilibrium(
 
     if plot_variables == 1:
         # set the limits of the plot to the limits of the data
-        plt.axis([r.min(), r.max(), z.min(), z.max()])
-        plt.pcolor(r, z, psi)
+        #plt.axis([r.min(), r.max(), z.min(), z.max()])
+        p = plt.pcolor(r, z, psi)
         plt.plot(r_wall, z_wall, "k-")
         plt.plot(r_target, z_target, "r-")
         plt.axis("Scaled")
         plt.xlabel("R [m]")
         plt.ylabel("Z [m]")
         plt.title("Magnetic Flux")
+        plt.xlim(1.484-0.024, 1.484+0.024)
+        plt.ylim(-1.25, -1.05)
+        p.set_clim(vmin=0.01,vmax=0.02)
         plt.colorbar(label="Flux [Wb/rad")
         print("Saving psi function as psi.pdf ")
         plt.savefig("plots/bfield/psi.pdf")
         plt.close()
 
         # set the limits of the plot to the limits of the data
-        plt.axis([r.min(), r.max(), z.min(), z.max()])
-        plt.contour(r, z, psi, 1000)
+        #plt.axis([r.min(), r.max(), z.min(), z.max()])
+        p = plt.contour(r, z, psi, 1000, linewidth=0.5)
         plt.plot(r_wall, z_wall, "k-")
         plt.plot(r_target, z_target, "r-")
         plt.axis("Scaled")
-        plt.xlim(1.4, 1.6)
-        plt.ylim(1.0, 1.25)
         plt.xlabel("R [m]")
         plt.ylabel("Z [m]")
         plt.title("Magnetic Flux Contours")
-        # plt.colorbar(label='Flux [Wb/rad]')
+        plt.xlim(1.484-0.024, 1.484+0.024)
+        plt.ylim(-1.25, -1.05)
+        p.set_clim(vmin=-0.04,vmax=0.04)
+        #plt.xlim(1.4, 1.6)
+        #plt.ylim(1.0, 1.25)
+        plt.colorbar(label='Flux [Wb/rad]')
         print("Saving psi contour as psiContour.pdf ")
-
+        '''
         ##check gradTi in parallel direction
-
+        
         gridr = profiles.variables["gridr"][:]
         gridz = profiles.variables["gridz"][:]
         gradTi = profiles.variables["gradTi"][:]
@@ -145,7 +151,7 @@ def readEquilibrium(
         colorbarLimits = [-15, 15]
         plt.colorbar(label="\n gradTi [eV/m]")
         plot.set_clim(vmin=colorbarLimits[0], vmax=colorbarLimits[1])
-
+        '''
         plt.show(block=False)
 
         plt.savefig("plots/bfield/psiContour.png")
@@ -168,42 +174,48 @@ def readEquilibrium(
 
     if plot_variables == 1:
         plt.rcParams.update({"image.cmap": "rainbow"})
-
+        
         p = plt.pcolor(r, z, br)
-        plt.plot(r_wall, z_wall, "k-")
+        plt.plot(r_wall[223:225], z_wall[223:225], "k-", linewidth=5)
         plt.plot(r_target, z_target, "r-")
         plt.axis("Scaled")
         plt.xlabel("R [m]")
         plt.ylabel("Z [m]")
         plt.title("Br")
         plt.colorbar(label="B field [T]")
-        # p.set_clim(vmin=-0.05,vmax=0.05)
+        plt.xlim(1.484-0.024, 1.484+0.024)
+        plt.ylim(-1.3, -1.05)
+        p.set_clim(vmin=-0.03,vmax=0.0)
         print("Saving br profile as br.pdf ")
         plt.savefig("plots/bfield/br.pdf")
         plt.close()
 
         p = plt.pcolor(r, z, bz)
-        plt.plot(r_wall, z_wall, "k-")
+        plt.plot(r_wall, z_wall, "k-", linewidth=5)
         plt.plot(r_target, z_target, "r-")
         plt.axis("Scaled")
         plt.xlabel("R [m]")
         plt.ylabel("Z [m]")
         plt.title("Bz")
+        plt.xlim(1.484-0.024, 1.484+0.024)
+        plt.ylim(-1.3, -1.05)
         plt.colorbar(label="B field [T]")
-        # p.set_clim(vmin=-0.05,vmax=0.05)
+        p.set_clim(vmin=-0.05,vmax=0.01)
         print("Saving bz profile as bz.pdf")
         plt.savefig("plots/bfield/bz.pdf")
 
         plt.close()
         p = plt.pcolor(r, z, bt)
-        plt.plot(r_wall, z_wall, "k-")
+        plt.plot(r_wall, z_wall, "k-", linewidth=5)
         plt.plot(r_target, z_target, "r-")
         plt.axis("Scaled")
         plt.xlabel("R [m]")
         plt.ylabel("Z [m]")
         plt.title("Bt")
+        plt.xlim(1.484-0.024, 1.484+0.024)
+        plt.ylim(-1.3, -1.05)
         plt.colorbar(label="B field [T]")
-        # p.set_clim(vmax=4)
+        p.set_clim(vmin=-1.9,vmax=-3.05)
         print("Saving bt profile as bt.pdf")
         plt.savefig("plots/bfield/bt.pdf")
         plt.close()
@@ -226,6 +238,8 @@ def readEquilibrium(
     rootgrp.close()
 
     print("Created bField.nc")
+    print(r_wall[223:225])
+    print(z_wall[223:225])
 
     return r, z, br, bz, bt, psi
 
@@ -783,10 +797,11 @@ if __name__ == "__main__":
     # plot_2D_cross_sections(np.arange(11,22), 'Bz', 'B-Field Strength [T]', [-0.1,0.1], rzlim=True, colormap='coolwarm')
     # plot_2D_cross_sections(np.arange(11,22), 'Ez', 'E-Field Strength [V/m]', [])
     # ionization_analysis_theory(1e-8, np.arange(11,22))
-    plot_surf_plasma_params(np.arange(11, 22), [1, 9], [3, 8, 9])
-    """
-    readEquilibrium(equilibrium_filename = 'assets/dg.equ', \
+    #plot_surf_plasma_params(np.arange(11, 22), [1, 9], [3, 8, 9])
+    
+    #readEquilibrium(equilibrium_filename = 'assets/dg.equ', \
+    readEquilibrium(equilibrium_filename = '/Users/Alyssa/Dev/dimes/equilibria/182508_0460.eq', \
                         W_indices = np.arange(11,22), \
                         solps_geom = 'assets/b2fgmtry', \
-                        flip_Bt = True, \
-                        plot_variables = 1)"""
+                        flip_Bt = False, \
+                        plot_variables = 1)

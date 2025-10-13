@@ -14,27 +14,48 @@ import solps
 # setting directories and special constants
 ################################################
 
-run_directory = '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav'
+case = 4
+paramset = 'E'
+calc_self_sputt = 1
+
+repo_path = '/Users/Alyssa/Dev/GITR_processing'
+#repo_path = '/pscratch/sd/h/hayes/GITR_processing'
+
+if case == 1:
+    case_path = '/examples/sasvw-pa-fav'
+    W_surf_indices = np.arange(11,22)
+    tile_shift_indices = [1,9]
+    Bangle_shift_indices = [3,8,9]
+    r_sp, z_sp = 1.49829829, 1.19672716
+elif case == 2:
+    case_path = '/examples/sasvw-pa-unfav'
+    W_surf_indices = np.arange(11,22)
+    tile_shift_indices = [1,9]
+    Bangle_shift_indices = [3,8,9]
+    r_sp, z_sp = 1.49829824, 1.19672712
+elif case == 3:
+    case_path = '/examples/sasvw-vertex-fav'
+    W_surf_indices = np.arange(16,25)
+    tile_shift_indices = [2,6]
+    Bangle_shift_indices = [3,6]
+    r_sp, z_sp = 1.50230407, 1.23187366
+elif case == 4:
+    case_path = '/examples/sasvw-vertex-unfav'
+    W_surf_indices = np.arange(16,25)
+    tile_shift_indices = [2,6]
+    Bangle_shift_indices = [3,6]
+    r_sp, z_sp = 1.49905286, 1.22894757
+    
+setup_directory = repo_path + case_path + '/setup'
+
+rmrs_fine_file = setup_directory + '/assets/rmrs_fine.txt'
+gitr_rz = setup_directory+'/assets/gitr_rz.txt'
+W_fine_file = setup_directory+'/assets/W_fine.txt'
+
+run_directory = repo_path + case_path
 #run_directory = '/Users/Alyssa/Dev/flag-testing'
 #run_directory = '/pscratch/sd/h/hayes/sasvw-pa-fav/sasvw-pa-fav-ioniz'
-setup_directory = '/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav/setup'
-#setup_directory = '/pscratch/sd/h/hayes/GITR_processing/examples/sasvw-pa-fav/setup'
-rmrs_fine_file = setup_directory+'/assets/rmrs_fine.txt'
 
-#prog angle
-W_surf_indices = np.arange(11,22)
-tile_shift_indices = [1,9]
-Bangle_shift_indices = [3,8,9]
-r_sp, z_sp = 1.49829829, 1.19672716 #prog angle & favorable
-#r_sp, z_sp = 1.49829824, 1.19672712 #prog angle & unfavorable
-'''
-#vertex
-W_surf_indices = np.arange(16,25)
-tile_shift_indices = [2,6]
-Bangle_shift_indices = [3,6]
-#r_sp, z_sp = 1.50230407, 1.23187366 #vertex & favorable
-r_sp, z_sp = 1.49905286, 1.22894757 #vertex & unfavorable
-'''
 if sys.path[0] != os.path.abspath(setup_directory):
     sys.path.insert(0, os.path.abspath(setup_directory))
 
@@ -173,7 +194,7 @@ def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
 
     plt.rcParams.update({'lines.linewidth':0.3})
     plt.rcParams.update({'lines.markersize':markersize})
-    plt.rcParams.update({'font.size':14})
+    plt.rcParams.update({'font.size':10})
 
     nP = len(history.dimensions['nP'])
     print('nP:',nP)
@@ -186,8 +207,8 @@ def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
 
     plt.close()
     if plot_particle_source: plt.scatter(x0,z0,marker='o',s=10)
-    if os.path.exists(profilesFile): plt.plot(r_wall, z_wall,'-k',linewidth=5)
-    if os.path.exists(profilesFile): plt.plot(r_target_fine, z_target_fine,'-m',linewidth=5)
+    if os.path.exists(profilesFile): plt.plot(r_wall, z_wall,'-k',linewidth=3)
+    if os.path.exists(profilesFile): plt.plot(r_target_fine, z_target_fine,'-m',linewidth=3)
     plt.axis('scaled')
     plt.xlabel('R [m]')
     plt.ylabel('Z [m]')
@@ -203,18 +224,19 @@ def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
         for p in range(0,nP):
             #if z[p][0]<=Z[W_indices][3] and z[p][0]>Z[W_indices][4]:
                 print(p,'out of', nP)
-                plt.plot(r[p][:],z[p][:])
+                plt.plot(r[p][:],z[p][:]) 
                 #plt.scatter(r[p][:],z[p][:],marker='o',s=5,c='b')
     
     counter=0
     if continuousChargeState==1:
-        for p in [671, 860, 1043, 1275, 1366, 1479]:  # particles that leak out of the divertor space in history_H.nc from pa-fav (Case #1)
-        #for p in np.arange(0,nP,1): # plot all particles by default
+        #for p in [671, 860, 1043, 1275, 1366, 1479]:  # particles that leak out of the divertor space in history_H.nc from pa-fav (Case #1)
+        for p in np.arange(0,nP,1): # plot all particles by default
+            print("particle #", p)
             t=0
             counter+=1
             while t<nT-1:
                 if r[p][t] != r[p][t+1]: 
-                    print("particle #", p, "moved at timestep", t, "with charge", charge[p][t])
+                    #print("particle #", p, "moved at timestep", t, "with charge", charge[p][t])
                     plt.plot(r[p][t:t+2],z[p][t:t+2], colors[np.round(charge[p][t])])
                 t+=1
     print('total particles:',counter)
@@ -228,46 +250,45 @@ def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
     #plt.scatter(1.49829829, 1.19672716, label='Strikepoint', marker='X', color='k', s=100, zorder=5)
     
     legend_dict = {'+0':'black', '+1':'firebrick', '+2':'darkorange', '+3':'gold', '+4':'limegreen', '+5':'dodgerblue', \
-              '+6':'mediumpurple', '+7':'darkviolet', '+8':'darkmagenta', '+9':'deeppink', '+10':'gray', '+11':'gray', \
-                  '+12':'gray', '+13':'gray', '+14':'gray', '+15':'gray', '+16':'gray', '+17':'gray', '+18':'gray', \
-                      '+19':'gray', '+20':'gray', '+21':'gray', '+22':'gray', '+23':'gray', '+24':'gray', '+25':'gray', \
-                          '+26':'gray', '+27':'gray'}
+              '+6':'mediumpurple', '+7':'darkviolet', '+8':'darkmagenta', '+9':'deeppink', '≥+10':'gray'}
     
     patchList = []
     for key in legend_dict:
         data_key = mpatches.Patch(color=legend_dict[key], label=key)
         patchList.append(data_key)
 
-    #if basic==0: plt.legend(handles=patchList, fontsize=8, loc=2) #upper-left=2, lower-left=3
+    if basic==0: plt.legend(handles=patchList, fontsize=8, loc=2) #upper-left=2, lower-left=3
     
     #whole device
     #plt.xlim(1.0, 3.0)
     #plt.ylim(-1.5, 1.5)
-    #pa-fav
-    plt.xlim(1.35, 1.55)
-    plt.ylim(1.05, 1.23)
-    #vertex-fav
-    #plt.xlim(1.0, 1.53)
-    #plt.ylim(0.9, 1.24)
-    #vertex-unfav
-    #plt.xlim(1.0, 1.53)
-    #plt.ylim(1.0, 1.23)
+    if case == 1:
+        plt.xlim(1.38, 1.545)
+        plt.ylim(1.01, 1.235)
+    elif case == 2:
+        plt.xlim(1.38, 1.545)
+        plt.ylim(1.01, 1.235)
+    elif case == 3:
+        plt.xlim(1.38, 1.545)
+        plt.ylim(1.01, 1.235)
+    elif case == 4:
+        plt.xlim(1.38, 1.545)
+        plt.ylim(1.01, 1.235)
     
-    plt.title('W Trajectories', fontsize=18)
+    plt.title('Case '+str(case)+' W Trajectories\nParameter Set '+paramset)#+'\nnP = '+str(nP))
     #plt.show(block=True)
     plt.savefig(run_directory+'/output/plots/history.svg')
     plt.close()
+    print('run number:',case,paramset,nP)
     return
 
 def plot_surf_nc(nP10, dt10, nT10, \
                  surface_file=run_directory+'/output/surface.nc', \
                  positions_file=run_directory+'/output/positions.nc', \
-                 gitr_rz=setup_directory+'/assets/gitr_rz.txt', \
-                 W_fine_file=setup_directory+'/assets/W_fine.txt', \
-                 rmrs_fine_file=setup_directory+'/assets/rmrs_fine.txt', \
-                 surface_file_alt='',\
-                 norm=None, use_hpic=0, plot_cumsum=0, plot_blocker=False):
+                 surface_file_alt='', particle_source_file_alt='',\
+                 calc_self_sputt=calc_self_sputt, norm=None, use_hpic=1, plot_cumsum=0, plot_blocker=False, verbose=0):
     
+    if not verbose: print('\n')
     profiles, W_indices, r_inner_target, z_inner_target, rmrs = init()
     rmrsCoords = profiles.variables['rmrs_inner_target'][W_indices]
     surface = netCDF4.Dataset(surface_file, "r", format="NETCDF4")
@@ -282,22 +303,23 @@ def plot_surf_nc(nP10, dt10, nT10, \
     view2_color = '#2197a9'
     view3_color = '#741b47'
     
-    pps_per_nP, partSource_flux, fluxD, fluxC = makeParticleSource.distributed_source(nP=(nP10[0] * (10**int(nP10[1]))), \
-            surfW = W_surf_indices, \
-            tile_shift_indices = tile_shift_indices, \
-            Bangle_shift_indices = Bangle_shift_indices, \
-            setup_directory = setup_directory, \
-            geom = setup_directory+'/../input/gitrGeometry.cfg', \
-            profiles_file = setup_directory+'/../input/plasmaProfiles.nc', \
-            gitr_rz = setup_directory+'/assets/gitr_rz.txt', \
-            rmrs_fine_file = setup_directory+'/assets/rmrs_fine.txt', \
-            W_fine_file = setup_directory+'/assets/W_fine.txt', \
-            ftDFile = setup_directory+'/assets/ftridynBackgroundD.nc', \
-            ftCFile = setup_directory+'/assets/ftridynBackgroundC.nc', \
-            ftWFile = setup_directory+'/../input/ftridynSelf.nc', \
-            configuration = 'random', \
-            use_surface_model = 1, use_hpic = use_hpic, \
-            plot_variables = 0)
+    if calc_self_sputt:
+        pps_per_nP, partSource_flux, fluxD, fluxC = makeParticleSource.distributed_source(nP=(nP10[0] * (10**int(nP10[1]))), \
+                surfW = W_surf_indices, \
+                tile_shift_indices = tile_shift_indices, \
+                Bangle_shift_indices = Bangle_shift_indices, \
+                setup_directory = setup_directory, \
+                geom = setup_directory+'/../input/gitrGeometry.cfg', \
+                profiles_file = setup_directory+'/../input/plasmaProfiles.nc', \
+                gitr_rz = setup_directory+'/assets/gitr_rz.txt', \
+                rmrs_fine_file = setup_directory+'/assets/rmrs_fine.txt', \
+                W_fine_file = setup_directory+'/assets/W_fine.txt', \
+                ftDFile = setup_directory+'/assets/ftridynBackgroundD.nc', \
+                ftCFile = setup_directory+'/assets/ftridynBackgroundC.nc', \
+                ftWFile = setup_directory+'/../input/ftridynSelf.nc', \
+                configuration = 'random', \
+                use_surface_model = 1, use_hpic = use_hpic, \
+                plot_variables = 0, verbose=verbose)
         
     #calculate area from wall
     #import wall geometry to plot over
@@ -339,16 +361,17 @@ def plot_surf_nc(nP10, dt10, nT10, \
         prompt_redep_rate = np.sum(is_prompt_redep) / len(flightAngle)
 
     grossEro = surface.variables['grossErosion'][:]
-    print(grossEro)
+    #print(grossEro)
     grossDep = surface.variables['grossDeposition'][:]
-    print(grossDep)
+    #print(grossDep)
     netDep = grossDep-grossEro
     
-    print('\n')
-    print('total gross eroded comp particles',sum(grossEro))
-    print('total redeposited comp particles',sum(grossDep))
-    print('total net deposited comp particles',sum(netDep))
-    print('ghost cells',grossEro[-1],grossDep[-1],netDep[-1])
+    if verbose:
+        print('\n')
+        print('total gross eroded comp particles',sum(grossEro))
+        print('total redeposited comp particles',sum(grossDep))
+        print('total net deposited comp particles',sum(netDep))
+        print('ghost cells',grossEro[-1],grossDep[-1],netDep[-1])
     
     #grossEro = np.average([grossEro[:-1], grossEro[1:]],axis=0)*pps_per_nP/area
     #grossDep = np.average([grossDep[:-1], grossDep[1:]],axis=0)*pps_per_nP/area
@@ -357,37 +380,24 @@ def plot_surf_nc(nP10, dt10, nT10, \
     netDep = netDep[:-1]*pps_per_nP/area
     
     if surface_file_alt != '':
-        pps_per_nP_alt, partSource_flux_alt, fluxD_alt, fluxC_alt = makeParticleSource.distributed_source(nP=(nP10[0] * (10**int(nP10[1]))), \
-                surfW = W_surf_indices, \
-                tile_shift_indices = tile_shift_indices, \
-                Bangle_shift_indices = Bangle_shift_indices, \
-                setup_directory = setup_directory, \
-                geom = setup_directory+'/../input/gitrGeometry.cfg', \
-                profiles_file = setup_directory+'/../input/plasmaProfiles.nc', \
-                gitr_rz = setup_directory+'/assets/gitr_rz.txt', \
-                rmrs_fine_file = setup_directory+'/assets/rmrs_fine.txt', \
-                W_fine_file = setup_directory+'/assets/W_fine.txt', \
-                ftDFile = setup_directory+'/assets/ftridynBackgroundD.nc', \
-                ftCFile = setup_directory+'/assets/ftridynBackgroundC.nc', \
-                ftWFile = setup_directory+'/../input/ftridynSelf.nc', \
-                configuration = 'random', \
-                use_surface_model = 1, use_hpic = 0, \
-                plot_variables = 0)
+        particle_source_alt = netCDF4.Dataset(particle_source_file_alt, "r", format="NETCDF4")
+        pps_per_nP_alt = particle_source_alt.variables['pps_per_nP'][:]
             
         grossEro_alt = surface_alt.variables['grossErosion'][:][:-1]*pps_per_nP_alt/area
         grossDep_alt = surface_alt.variables['grossDeposition'][:][:-1]*pps_per_nP_alt/area
         netDep_alt = grossDep_alt-grossEro_alt
     
-    print('\n')
-    print('rmrs length',len(rmrsFine))
-    print('surf length',len(grossEro))
-    print('\n')
-    print('total gross eroded flux',sum(grossEro*area)/sum(area))
-    print('total redeposited flux',sum(grossDep*area)/sum(area))
-    print('total net deposited flux',sum(netDep*area)/sum(area))
+    if verbose:
+        print('\n')
+        print('rmrs length',len(rmrsFine))
+        print('surf length',len(grossEro))
+        print('\n')
+        print('total gross eroded flux',sum(grossEro*area)/sum(area))
+        print('total redeposited flux',sum(grossDep*area)/sum(area))
+        print('total net deposited flux',sum(netDep*area)/sum(area))
     print('redeposition rate',100 * (sum(grossDep*area)/sum(area)) / (sum(grossEro*area)/sum(area)), '%')
     if positions_file != '': print('prompt redeposition rate', 100 * prompt_redep_rate, '%')
-    print('self-sputtering fraction',100 * (sum(grossEro)-sum(partSource_flux))/sum(grossEro), '%')
+    if calc_self_sputt: print('self-sputtering fraction',100 * (sum(grossEro)-sum(partSource_flux))/sum(grossEro), '%')
     '''
     if norm=='C':
         grossEro_norm = grossEro/fluxC
@@ -510,11 +520,12 @@ def plot_surf_nc(nP10, dt10, nT10, \
     V2_grossEro = view_fraction2 * V2_grossEro
     V3_grossEro = view_fraction3 * V3_grossEro
     '''
-    print('\n')
-    print('gross erosion in View 1:', '{:.6E}'.format(V1_grossEro)) #[W m-2 s-1]
-    print('gross erosion in View 2:', '{:.6E}'.format(V2_grossEro)) #[W m-2 s-1]
-    print('gross erosion in View 3:', '{:.6E}'.format(V3_grossEro)) #[W m-2 s-1]
-    
+    if verbose:
+        print('\n')
+        print('gross erosion in View 1:', '{:.6E}'.format(V1_grossEro)) #[W m-2 s-1]
+        print('gross erosion in View 2:', '{:.6E}'.format(V2_grossEro)) #[W m-2 s-1]
+        print('gross erosion in View 3:', '{:.6E}'.format(V3_grossEro)) #[W m-2 s-1]
+        
     plt.rcParams.update({'font.size':24})
     plt.rcParams.update({'lines.linewidth':5}) 
     
@@ -529,7 +540,7 @@ def plot_surf_nc(nP10, dt10, nT10, \
             if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\alpha_B$')
             else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
     
-    plt.plot(rmrsFine, 100*(grossEro-partSource_flux)/grossEro)
+    if calc_self_sputt: plt.plot(rmrsFine, 100*(grossEro-partSource_flux)/grossEro)
     plt.xlabel('D-Dsep [m]')
     plt.ylabel('Percentage')
     plt.title('Percentage of Gross Erosion from Self-Sputtering', fontsize=30)
@@ -2901,14 +2912,17 @@ def OES_synth_diagnostic(history_file=run_directory+'/output/history.nc'):
     return
 
 if __name__ == "__main__":
-    #plot_history2D(run_directory+'/output/history.nc')
+    plot_history2D(run_directory+'/output/history.nc')
+    #plot_surf_nc([5,2], 8, [1,5], run_directory+'/output/surface.nc', run_directory+'/output/positions.nc')
+    
     #plot_surf_nc([1,6], 9, [1,5], run_directory+'/output/surface5.nc', \
                  #surface_file_alt=run_directory+'/output/perlmutter/production/surface_S.nc', use_hpic=1, plot_blocker=True)
     #plot_surf_nc([1,6], 9, [1,6], '../examples/sasvw-pa-fav/output/perlmutter/production/surface_S.nc', \
                  #'../examples/sasvw-pa-fav/output/perlmutter/production/positions_S.nc',plot_blocker=True)
     #plot_surf_nc([1,6], 9, [1,6], '../../sasvw-pa-fav/sasvw-pa-fav-surfaces/nPnT-new/surface-p6t6.nc', \
                  #'../../sasvw-pa-fav/sasvw-pa-fav-surfaces/nPnT-new/positions-p6t6.nc', plot_blocker=False)
-    #plot_surf_nc([5,2], 8, [1,5], setup_directory+"/../output/perlmutter/production/forces25.01.06/surfaces/BET.nc", \
+    #plot_surf_nc([5,2], 8, [1,5], run_directory+'/output/surface.nc', run_directory+'/output/positions.nc')#, \
+                 #setup_directory+'/../output/perlmutter/production/forces25.01.06/surfaces/BET.nc", \
                  #setup_directory+'/../output/perlmutter/production/forces25.01.06/positions/BET.nc', norm='')
     #analyze_leakage('perlmutter/history_D3t6.nc')
     #analyze_leakage(run_directory+'/output/history.nc')
@@ -2928,7 +2942,7 @@ if __name__ == "__main__":
     #spec_line_integration(view=1)#spec_file='/Users/Alyssa/Desktop/spec.nc', pps_per_nP=2013859273149157.8)
     #spec_volumetric_integration(view=3,Nrr=100,Ntheta=10,Nphi=10, plot_blocker=False)
     #OES_synth_diagnostic(setup_directory+'/../output/perlmutter/production/history_IF1.nc')
-    OES_synth_diagnostic()
+    #OES_synth_diagnostic()
     #ionization_analysis([0,0], '../examples/sasvw-pa-fav/output/perlmutter/production/','history_IF.nc', 'positions_IF.nc')
     #prompt_redep_hist([2,8,5], '../examples/sasvw-pa-fav/output/perlmutter/production/forces24.09.19/positions/','BEF.nc')
     #particle_diagnostics_hist('/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav/output/perlmutter/production/particle_histograms_gpu.nc', plot_blocker=True)

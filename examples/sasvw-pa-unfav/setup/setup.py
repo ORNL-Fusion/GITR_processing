@@ -10,8 +10,9 @@ import shutil
 import numpy as np
 import solpsProcessing, makeGeom, makeParticleSource
 
-nP = int(1e3)
+nP = int(5e4)
 run_directory = '..'
+#run_directory = '/pscratch/sd/h/hayes/sasvw-pa-unfav/surface'
 
 W_indices = np.arange(11,22)
 tile_shift_indices = [1,9] #change to [1,9] after debugging
@@ -26,7 +27,7 @@ makeGeom.main(gitr_geometry_filename='gitrGeometry.cfg', \
                     profiles_file = run_directory+'/input/plasmaProfiles.nc', \
                     W_indices_profiles = W_indices, \
                     numAddedPoints = 100, \
-                    use_core_leakage_boundary = 1, \
+                    use_core_leakage_boundary = 0, \
                     plot_variables = 0)
 
 os.remove('gitrGeometry.cfg0')
@@ -58,6 +59,6 @@ makeParticleSource.distributed_source(nP, surfW = W_indices, \
                     configuration = 'random', \
                     use_fractal_tridyn_outgoing_IEADS = 0, \
                     use_hpic = 1, use_surface_model = 1, \
-                    plot_variables = 1)
+                    plot_variables = 0)
 
 shutil.move('particleSource.nc', run_directory+'/input/particleSource.nc')

@@ -1,4 +1,19 @@
-fileID = fopen('../setup/assets/gitr_rz.txt','r');
+CASE = 4;
+
+if CASE==1
+    runPath = '/../examples/sasvw-pa-fav';
+else if  CASE==2
+    runPath = '/../examples/sasvw-pa-unfav';
+else if CASE==3
+    runPath = '/../examples/sasvw-vertex-fav';
+else if CASE==4
+    runPath = '/../examples/sasvw-vertex-unfav';
+    end
+    end 
+    end
+end
+
+fileID = fopen(strcat(pwd,runPath,'/setup/assets/gitr_rz.txt'),'r');
 formatSpec='%f %f';
 sizeA = [2 Inf];
 geom = fscanf(fileID,formatSpec,sizeA); 
@@ -18,7 +33,7 @@ Z = geom(2,:);
 %% startPosition
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-file = strcat(pwd,'/../input/particleSource.nc');
+file = strcat(pwd,runPath,'/input/particleSource.nc');
 x0 = ncread(file,'x');
 y0 = ncread(file,'y');
 z0 = ncread(file,'z');
@@ -87,9 +102,10 @@ set(groot, 'defaultAxesFontSize', 11.5, 'defaultTextFontSize', 11.5);
 
 plot_tracks = 1;
 if plot_tracks
+    file = strcat(pwd,runPath,'/output/history.nc');
     %file = strcat('../../../../GITR/scratch/output/history.nc');
     %file = strcat('perlmutter/production/forces25.01.06/histories/BET.nc');
-    file = strcat('../../../../flag-testing/output/history.nc');
+    %file = strcat('../../../../flag-testing/output/history.nc');
     x = ncread(file,'x');
     y = ncread(file,'y');
     z = ncread(file,'z');

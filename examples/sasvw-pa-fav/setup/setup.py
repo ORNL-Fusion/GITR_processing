@@ -5,11 +5,12 @@ if sys.path[0] != os.path.abspath('.'):
     #this line MUST be last in a list of sys.path.insert commands 
     #or the wrong setup scripts could be used
 
+print('\nWorking path directory:\n',sys.path[0])
 import shutil
 import numpy as np
 import solpsProcessing, makeGeom, makeParticleSource
 
-nP = int(1e3)
+nP = int(5e4)
 run_directory = '..'
 #run_directory = '/Users/Alyssa/Dev/GITR/scratch'
 #run_directory = '/pscratch/sd/h/hayes/sasvw-pa-fav/sasvw-pa-fav-leakage'
@@ -55,7 +56,8 @@ makeParticleSource.distributed_source(nP, surfW = W_indices, \
                     ftDFile = 'assets/ftridynBackgroundD.nc', \
                     ftCFile = 'assets/ftridynBackgroundC.nc', \
                     configuration = 'random', \
+                    use_fractal_tridyn_outgoing_IEADS = 0, \
                     use_surface_model = 1, use_hpic = 1, \
-                    plot_variables = 1, blockplots = 0)
+                    plot_variables = 0, blockplots = 0)
 
 shutil.move('particleSource.nc', run_directory+'/input/particleSource.nc')

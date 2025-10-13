@@ -14,8 +14,8 @@ import Particles
 
 def init():
     #set plotting style defaults
-    plt.rcParams.update({'font.size':11})
-    plt.rcParams.update({'lines.linewidth':1.2})
+    plt.rcParams.update({'font.size':12})
+    plt.rcParams.update({'lines.linewidth':2.5})
     plt.rcParams.update({'lines.markersize':1})
 
 def point_source(nP = int(2e2)):
@@ -63,7 +63,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
             configuration = 'random', \
             use_fractal_tridyn_outgoing_IEADS = 0, \
             use_hpic = 0, use_surface_model = 1, \
-            plot_variables = 0):
+            plot_variables = 0, verbose=1):
     
     #import wall geometry to plot over
     with open(gitr_rz, 'r') as file:
@@ -138,7 +138,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     ##############################################
     
     if use_hpic:
-        print('Using hPIC2 IEADs to calculate effective sputtering yield')
+        if verbose: print('Using hPIC2 IEADs to calculate effective sputtering yield')
         dfD = pd.read_csv(setup_directory+'/assets/eff_spyld_hPIC2/eff_spyld_hPIC_case4_D1.csv')
         dfC1 = pd.read_csv(setup_directory+'/assets/eff_spyld_hPIC2/eff_spyld_hPIC_case4_C1.csv')
         dfC2 = pd.read_csv(setup_directory+'/assets/eff_spyld_hPIC2/eff_spyld_hPIC_case4_C2.csv')
@@ -247,7 +247,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     fluxC = fluxC1 + fluxC2 + fluxC3 + fluxC4 + fluxC5 + fluxC6
     totalflux = fluxD0 + fluxD + fluxC0 + fluxC
     Cfraction = np.sum(fluxC0 + fluxC) / np.sum(totalflux)
-    print('C Fraction of Total Incoming Flux:', Cfraction)
+    if verbose: print('C Fraction of Total Incoming Flux:', Cfraction)
 
     #multiply incoming ion flux by Y_s to get sputtered W flux by each species
     sputt_fluxD = spyldD*fluxD
@@ -258,9 +258,10 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     sputt_fluxC5 = spyldC5*fluxC5
     sputt_fluxC6 = spyldC6*fluxC6
     sputt_flux = sputt_fluxD + sputt_fluxC1 + sputt_fluxC2 + sputt_fluxC3 + sputt_fluxC4 + sputt_fluxC5 + sputt_fluxC6
-    print('SPUTT FLUX',len(sputt_flux),'\n',sputt_flux)
-    print('\n')
-    print('W eroded flux per nP:', np.sum(sputt_flux)/nP, 'm-2 s-1')
+    if verbose: 
+        print('SPUTT FLUX',len(sputt_flux),'\n',sputt_flux)
+        print('\n')
+        print('W eroded flux per nP:', np.sum(sputt_flux)/nP, 'm-2 s-1')
     
     if not use_surface_model:
         #if the intention is to run with no surface model (ex: for leakage analysis), 
@@ -268,18 +269,17 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
         sputt_flux_ConW_only = sputt_flux
         
         import process_output
-        print('Calculating gross erosion')
+        if verbose: print('Calculating gross erosion')
         sputt_flux = process_output.plot_surf_nc([5,3], 8, [1,5], \
                     '../output/surface1.nc', \
                     '../output/positions1.nc', plot_blocker=False)
 
     #multiply by area to get the outgoing particles per second
     pps = np.multiply(sputt_flux,area)
-    print('Total actual W eroded per second:', np.sum(pps), 's-1 \n')
+    if verbose: print('Total actual W eroded per second:', np.sum(pps), 's-1 \n')
     pps_weights = nP*pps/np.sum(pps)
 
     if plot_variables == 1: 
-        plt.rcParams.update({'font.size':13})
         plt.close()
         if tile_shift_indices != []:
             for i,v in enumerate(tile_shift_indices):
@@ -311,13 +311,19 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
         plt.xlabel('D-Dsep [m]', fontsize=14)
         plt.ylabel('Flux [m$^{-2}$s$^{-1}$]', fontsize=16)
         plt.legend(loc='best', fontsize=12)
-        plt.title('C flux to W surface', fontsize=24)
+        plt.title('C flux to W-tile', fontsize=18)
         plt.show(block=False)
         plt.savefig('plots/particle-source/incident_flux.png')
 
         plt.close()
-        #plt.rcParams.update({'font.size':16})
-        plt.rcParams.update({'lines.linewidth':1})
+        if tile_shift_indices != []:
+            for i,v in enumerate(tile_shift_indices):
+                if i==0: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', label='Wall\nVertices')
+                else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
+        if Bangle_shift_indices != []:
+            for i,v in enumerate(Bangle_shift_indices):
+                if i==0: plt.axvline(x=rmrsCoarse[v], color='k', linestyle='dotted', label='$\Delta\Psi_B$')
+                else: plt.axvline(x=rmrsCoarse[v], color='k', linestyle='dotted')
         
         plt.plot(rmrsFine, spyldD, 'black', label='D$^{1+}$')
         plt.plot(rmrsFine, spyldC1, 'firebrick', label='C$^{1+}$')
@@ -329,12 +335,12 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
         #plt.plot(rmrsFine, spyldW1, 'rosybrown', label='W$^{1+}$')
         #plt.plot(rmrsFine, spyldW2, 'burlywood', label='W$^{2+}$')
         #plt.xlim(-0.025)
-        plt.yscale('log')
+        #plt.yscale('log')
         #plt.ticklabel_format(axis='y', style='scientific')#, scilimits=(-3,-3))
         plt.legend(fontsize=12)
         plt.xlabel('D-Dsep [m]', fontsize=14)
-        plt.ylabel('Sputtering Yield', fontsize=14)
-        plt.title('W sputtering yield \nby incident ions',fontsize=14)
+        plt.ylabel('Sputtering Yield', fontsize=16)
+        plt.title('W sputtering yield \nby incident ions',fontsize=18)
         plt.show(block=False)
         plt.savefig('plots/particle-source/spyld.png')
         
@@ -356,11 +362,11 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
         plt.plot(rmrsFine, sputt_fluxC5, 'dodgerblue', label='C$^{5+}$')
         plt.plot(rmrsFine, sputt_fluxC6, 'mediumpurple', label='C$^{6+}$')
         #plt.xlim(-0.05)
-        plt.yscale('log')
+        #plt.yscale('log')
         plt.xlabel('D-Dsep [m]', fontsize=14)
-        plt.ylabel('Flux [m$^{-2}$s$^{-1}$]', fontsize=14)
+        plt.ylabel('Flux [m$^{-2}$s$^{-1}$]', fontsize=16)
         plt.legend(loc='upper right', fontsize=12)
-        plt.title('Flux of sputtered W', fontsize=24)
+        plt.title('Flux of W sputtered by D and C', fontsize=18)
         plt.show(block=False)
         plt.savefig('plots/particle-source/sputt_flux_charge_dependent.png')
 
@@ -411,10 +417,11 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     nP_diff = nP-np.sum(int_weights)
     pps_per_nP = np.sum(pps)/nP
 
-    print('total nP', nP)
-    print('pps over nP', pps_per_nP)
-    print('nP(r_mid):', int_weights)
-    print('nP_diff should be 0: ', nP_diff)
+    if verbose: 
+        print('total nP', nP)
+        print('pps over nP', pps_per_nP)
+        print('nP(r_mid):', int_weights)
+        print('nP_diff should be 0: ', nP_diff)
 
     #define adjustment into the sheath because particles can't start exactly on the wall
     adj = 2e-7
@@ -427,7 +434,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     elif configuration == 'midpoint': 
         x,y,z = midpoints(nP,int_weights, adj,slope,Beta, r1,z1,r2,z2)
     else:
-        print('(x,y,z) configuration not set')
+        print('WARNING: (x,y,z) configuration not set')
 
     #########################################
     #get vx,vy,vz from IEADs
@@ -628,7 +635,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     plt.show(block=blocker)'''
 
     #double check that all particles actually received an energy and 2 angles
-    print('species weights_diff should be 0:', np.sum(weight_diff))
+    if verbose: print('species weights_diff should be 0:', np.sum(weight_diff))
     
     if plot_variables == 1:
         #plot Thomson E dist
@@ -724,7 +731,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     vzz[:] = vz
     rootgrp.close()
     
-    print('Created particleSource.nc')
+    if verbose: print('Created particleSource.nc')
     
     return pps_per_nP, sputt_flux, fluxD, fluxC
 
@@ -1006,7 +1013,7 @@ def get_analytic_spyld(surfE, surfA, Z1=6, M1=12, Z2=74, M2=183.84, \
 
 
 if __name__ == "__main__":
-    #init()
+    init()
     
     distributed_source(nP=int(2e3), surfW=np.arange(16,25), \
                 tile_shift_indices = [2,6], \
@@ -1019,7 +1026,7 @@ if __name__ == "__main__":
                 ftDFile = 'assets/ftridynBackgroundD.nc', \
                 ftCFile = 'assets/ftridynBackgroundC.nc', \
                 configuration = 'random', \
-                use_surface_model = 0, \
+                use_hpic = 1, use_surface_model = 1, \
                 plot_variables = 1)
 
 
