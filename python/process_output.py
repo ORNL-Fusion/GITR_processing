@@ -14,7 +14,7 @@ import solps
 # setting directories and special constants
 ################################################
 
-case = 4
+case = 2
 paramset = 'E'
 calc_self_sputt = 1
 
@@ -1267,13 +1267,19 @@ def analyze_forces(varString, component, rzlim=True, colorbarLimits=[], dt=1e-8)
     Fz[np.where(Fz==0)] = 'nan'
     
     gridrz = [gridr, gridz, r_wall, z_wall]
-    if component == 'r': plot_forces(Fr, vartype+'r'+titleString+'$_r$', gridrz, vartype, rzlim, colorbarLimits)
-    if component == 't': plot_forces(Ft, vartype+'t'+titleString+'$_t$', gridrz, vartype, rzlim, colorbarLimits)
-    if component == 'z': plot_forces(Fz, vartype+'z'+titleString+'$_z$', gridrz, vartype, rzlim, colorbarLimits)
+    if component == 'r': 
+        plot_forces(Fr, vartype+'r'+titleString+'$_r$', varString, \
+                    component, gridrz, vartype, rzlim, colorbarLimits)
+    if component == 't': 
+        plot_forces(Ft, vartype+'t'+titleString+'$_t$', varString, \
+                    component, gridrz, vartype, rzlim, colorbarLimits)
+    if component == 'z': 
+        plot_forces(Fz, vartype+'z'+titleString+'$_z$', varString, \
+                    component, gridrz, vartype, rzlim, colorbarLimits)
     
     return 
 
-def plot_forces(var, titleString, gridrz, vartype='F', rzlim=True, colorbarLimits=[]):
+def plot_forces(var, titleString, varString, component, gridrz, vartype='F', rzlim=True, colorbarLimits=[]):
     [gridr, gridz, r_wall, z_wall] = gridrz
     plt.rcParams.update({'pcolor.shading':'auto'})
     plt.rcParams.update({'image.cmap':'coolwarm'})
@@ -1309,6 +1315,7 @@ def plot_forces(var, titleString, gridrz, vartype='F', rzlim=True, colorbarLimit
     plt.axis('Scaled')
     plt.xlim(rlim)
     plt.ylim(zlim)
+    plt.savefig(setup_directory+'/plots/forces-drifts/'+varString+'_'+component)
     
     return
 
@@ -1345,7 +1352,8 @@ def ionization_analysis(plotting, output_dir, historyFile, positionsFile, \
                         use_coarse_surfs=0, \
                         gitr_rz=setup_directory+'/assets/gitr_rz.txt', \
                         W_fine_file=setup_directory+'/assets/W_fine.txt', \
-                        rmrs_fine_file=setup_directory+'/assets/rmrs_fine.txt'):    
+                        rmrs_fine_file=setup_directory+'/assets/rmrs_fine.txt'): 
+    
     profiles, W_indices, r_inner_target, z_inner_target, rmrs = init(W_surf_indices)
     history = netCDF4.Dataset(output_dir+historyFile)
     positions = netCDF4.Dataset(output_dir+positionsFile)
@@ -2912,7 +2920,7 @@ def OES_synth_diagnostic(history_file=run_directory+'/output/history.nc'):
     return
 
 if __name__ == "__main__":
-    plot_history2D(run_directory+'/output/history.nc')
+    #plot_history2D(run_directory+'/output/history.nc')
     #plot_surf_nc([5,2], 8, [1,5], run_directory+'/output/surface.nc', run_directory+'/output/positions.nc')
     
     #plot_surf_nc([1,6], 9, [1,5], run_directory+'/output/surface5.nc', \
@@ -2927,7 +2935,7 @@ if __name__ == "__main__":
     #analyze_leakage('perlmutter/history_D3t6.nc')
     #analyze_leakage(run_directory+'/output/history.nc')
     #analyze_leakage_surf('../examples/sasvw-pa-unfav/output/leakage/surface_on.nc',7.140925877891980E+10)
-    #analyze_forces('ExB drift', 'z', rzlim=True, colorbarLimits=[-500,500], dt=1e-9)
+    #analyze_forces('ExB drift', 'r', rzlim=True, colorbarLimits=[-200,200], dt=1e-9)
     
     #init()
     #plot_gitr_gridspace()
@@ -2943,6 +2951,7 @@ if __name__ == "__main__":
     #spec_volumetric_integration(view=3,Nrr=100,Ntheta=10,Nphi=10, plot_blocker=False)
     #OES_synth_diagnostic(setup_directory+'/../output/perlmutter/production/history_IF1.nc')
     #OES_synth_diagnostic()
+    ionization_analysis([0,0], '../../sasvw-pa-fav/ioniz/output/','history.nc', 'positions.nc')
     #ionization_analysis([0,0], '../examples/sasvw-pa-fav/output/perlmutter/production/','history_IF.nc', 'positions_IF.nc')
     #prompt_redep_hist([2,8,5], '../examples/sasvw-pa-fav/output/perlmutter/production/forces24.09.19/positions/','BEF.nc')
     #particle_diagnostics_hist('/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav/output/perlmutter/production/particle_histograms_gpu.nc', plot_blocker=True)
