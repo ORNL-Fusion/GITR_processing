@@ -38,3 +38,5 @@ setup/__pycache__/
 *.out
 *:Zone.Identifier
 examples/sasvw21/LcS.nc
+*plots*
+*paper3*
