@@ -10,7 +10,7 @@ import shutil
 import numpy as np
 import solpsProcessing, makeGeom, makeParticleSource
 
-nP = int(5e3)
+nP = int(1e4)
 run_directory = '..'
 #run_directory = '/Users/Alyssa/Dev/GITR/scratch'
 #run_directory = '/pscratch/sd/h/hayes/sasvw-pa-fav/sasvw-pa-fav-leakage'
@@ -26,8 +26,8 @@ makeGeom.main(gitr_geometry_filename='gitrGeometry.cfg', \
                     profiles_file = run_directory+'/input/plasmaProfiles.nc', \
                     W_indices_profiles = W_indices, \
                     numAddedPoints = 100, \
-                    use_core_leakage_boundary = 0, \
-                    plot_variables = 0)
+                    use_core_leakage_boundary = 1, \
+                    plot_variables = 1)
 
 os.remove('gitrGeometry.cfg0')
 shutil.move('gitrGeometry.cfg', run_directory+'/input/gitrGeometry.cfg')
