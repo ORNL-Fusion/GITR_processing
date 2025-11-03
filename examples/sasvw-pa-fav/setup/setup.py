@@ -10,7 +10,7 @@ import shutil
 import numpy as np
 import solpsProcessing, makeGeom, makeParticleSource
 
-nP = int(5e4)
+nP = int(5e3)
 run_directory = '..'
 #run_directory = '/Users/Alyssa/Dev/GITR/scratch'
 #run_directory = '/pscratch/sd/h/hayes/sasvw-pa-fav/sasvw-pa-fav-leakage'
@@ -58,6 +58,7 @@ makeParticleSource.distributed_source(nP, surfW = W_indices, \
                     configuration = 'random', \
                     use_fractal_tridyn_outgoing_IEADS = 0, \
                     use_surface_model = 1, use_hpic = 1, \
-                    plot_variables = 0, blockplots = 0)
+                    plot_variables = 1, blockplots = 0, verbose=1, \
+                    leakStart=0, leakEnd=10)
 
 shutil.move('particleSource.nc', run_directory+'/input/particleSource.nc')

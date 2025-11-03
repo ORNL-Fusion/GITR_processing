@@ -63,7 +63,8 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
             configuration = 'random', \
             use_fractal_tridyn_outgoing_IEADS = 0, \
             use_hpic = 0, use_surface_model = 1, \
-            plot_variables = 0, blockplots = 0, verbose=1):
+            plot_variables = 0, blockplots = 0, verbose=1, \
+            leakStart=0,leakEnd=111):
         
     #import wall geometry to plot over
     with open(gitr_rz, 'r') as file:
@@ -85,7 +86,10 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     with open(W_fine_file, 'r') as file:
         W_fine = file.readlines()
     W_fine = np.array(W_fine,dtype='int')
-
+    
+    rmrsFine = rmrsFine[leakStart:leakEnd]
+    W_fine = W_fine[leakStart:leakEnd+1]
+    
     R = np.zeros(len(wall))
     Z = np.zeros(len(wall))
     for i,line in enumerate(wall):
@@ -111,8 +115,8 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
         plt.scatter(R, Z, marker='_', color='violet', s=8, zorder=3)
         plt.axis('scaled')
         plt.legend()
-        plt.xlabel('r [m]')
-        plt.ylabel('z [m]')
+        plt.xlabel('R [m]')
+        plt.ylabel('Z [m]')
         plt.title('Upper Outer SAS-VW Divertor in DIII-D \n makeParticleSource')
         plt.savefig('plots/geom/makePSGeom.png')
 
@@ -133,6 +137,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
 
     dist = np.sqrt(np.power(r1-r2,2) + np.power(z1-z2,2))
     area = np.pi*(r1+r2)*dist
+    print('Length of Area Array:',len(area))
     
 
     ##############################################
@@ -157,13 +162,13 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
         dfC5 = pd.read_csv(setup_directory+'/assets/eff_spyld_hPIC2/eff_spyld_hPIC_case1_C5.csv')
         dfC6 = pd.read_csv(setup_directory+'/assets/eff_spyld_hPIC2/eff_spyld_hPIC_case1_C6.csv')
         
-        spyldD = np.transpose(dfD.to_numpy())[0]
-        spyldC1 = np.transpose(dfC1.to_numpy())[0]
-        spyldC2 = np.transpose(dfC2.to_numpy())[0]
-        spyldC3 = np.transpose(dfC3.to_numpy())[0]
-        spyldC4 = np.transpose(dfC4.to_numpy())[0]
-        spyldC5 = np.transpose(dfC5.to_numpy())[0]
-        spyldC6 = np.transpose(dfC6.to_numpy())[0]
+        spyldD = np.transpose(dfD.to_numpy())[0][leakStart:leakEnd]
+        spyldC1 = np.transpose(dfC1.to_numpy())[0][leakStart:leakEnd]
+        spyldC2 = np.transpose(dfC2.to_numpy())[0][leakStart:leakEnd]
+        spyldC3 = np.transpose(dfC3.to_numpy())[0][leakStart:leakEnd]
+        spyldC4 = np.transpose(dfC4.to_numpy())[0][leakStart:leakEnd]
+        spyldC5 = np.transpose(dfC5.to_numpy())[0][leakStart:leakEnd]
+        spyldC6 = np.transpose(dfC6.to_numpy())[0][leakStart:leakEnd]
         
         #this block for plotting only
         spyldD_simple = get_ft_spyld(1, energyD, angleD, ftDFile) #file input includes He, which we aren't using
@@ -252,6 +257,16 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     fluxC4 = ffluxC4(rmrsFine)
     fluxC5 = ffluxC5(rmrsFine)
     fluxC6 = ffluxC6(rmrsFine)
+    
+    fluxD0[np.where(fluxD0<0)] = 0
+    fluxD[np.where(fluxD<0)] = 0
+    fluxC0[np.where(fluxC0<0)] = 0
+    fluxC1[np.where(fluxC1<0)] = 0
+    fluxC2[np.where(fluxC2<0)] = 0
+    fluxC3[np.where(fluxC3<0)] = 0
+    fluxC4[np.where(fluxC4<0)] = 0
+    fluxC5[np.where(fluxC5<0)] = 0
+    fluxC6[np.where(fluxC6<0)] = 0
     fluxC = fluxC1 + fluxC2 + fluxC3 + fluxC4 + fluxC5 + fluxC6
     totalflux = fluxD0 + fluxD + fluxC0 + fluxC
     Cfraction = np.sum(fluxC0 + fluxC) / np.sum(totalflux)
@@ -293,15 +308,15 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     if verbose: print('\n')
     pps = np.multiply(sputt_flux,area)
     if verbose: print('Total actual W eroded per second:', np.sum(pps), 's-1 \n')
-    if verbose: print('W eroded flux per nP:', np.sum(pps)/np.sum(area)/nP, 'm-2 s-1')
+    if verbose: print('W eroded flux per nP:', '{:.6E}'.format(np.sum(pps)/np.sum(area)/nP), 'm-2 s-1')
     pps_weights = nP*pps/np.sum(pps)
 
     if plot_variables == 1: 
         plt.close()
         if tile_shift_indices != []:
             for i,v in enumerate(tile_shift_indices):
-                if i==0: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', label='Walll\nVertices')
-                else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
+                if i==0: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', linewidth=4, label='Wall\nVertices')
+                else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', linewidth=4)
         if Bangle_shift_indices != []:
             for i,v in enumerate(Bangle_shift_indices):
                 if i==0: plt.axvline(x=rmrsCoarse[v], color='k', linestyle='dotted', label='$\Delta\\alpha_B$')
@@ -333,8 +348,8 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
         plt.close()
         if tile_shift_indices != []:
             for i,v in enumerate(tile_shift_indices):
-                if i==0: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', label='Wall\nVertices')
-                else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
+                if i==0: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', linewidth=4, label='Wall\nVertices')
+                else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', linewidth=4)
         if Bangle_shift_indices != []:
             for i,v in enumerate(Bangle_shift_indices):
                 if i==0: plt.axvline(x=rmrsCoarse[v], color='k', linestyle='dotted', label='$\Delta\\alpha_B$')
@@ -368,12 +383,15 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
         plt.close()
         if tile_shift_indices != []:
             for i,v in enumerate(tile_shift_indices):
-                if i==0: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', label='Wall\nVertices')
-                else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
+                if i==0: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', linewidth=4, label='Wall\nVertices')
+                else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', linewidth=4)
         if Bangle_shift_indices != []:
             for i,v in enumerate(Bangle_shift_indices):
                 if i==0: plt.axvline(x=rmrsCoarse[v], color='k', linestyle='dotted', label='$\Delta\\alpha_B$')
                 else: plt.axvline(x=rmrsCoarse[v], color='k', linestyle='dotted')
+        
+        for i in np.arange(0,len(rmrsFine),10)[1:]:
+            plt.axvline(x=rmrsFine[i],color='gray')
         
         plt.plot(rmrsFine, sputt_fluxD, 'black', label='D$^{1+}$')
         plt.plot(rmrsFine, sputt_fluxC1, 'firebrick', label='C$^{1+}$')
@@ -391,6 +409,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
             plt.plot(rmrsFine, sputt_fluxC5_simple, '--', color='dodgerblue')
             plt.plot(rmrsFine, sputt_fluxC6_simple, '--', color='mediumpurple')'''
         plt.xlim(-0.05)
+        plt.yscale('log')
         plt.xlabel('D-Dsep [m]', fontsize=14)
         plt.ylabel('$\Gamma_W$ [m$^{-2}$s$^{-1}$]', fontsize=16)
         plt.legend(loc='upper left', fontsize=12)
@@ -453,7 +472,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     
     if verbose: 
         print('total nP', nP)
-        print('pps over nP', pps_per_nP)
+        print('pps over nP', '{:.6E}'.format(pps_per_nP))
         print('nP(r_mid):', int_weights)
         print('nP_diff should be 0: ', nP_diff)
 
@@ -1061,7 +1080,8 @@ if __name__ == "__main__":
                 ftCFile = 'assets/ftridynBackgroundC.nc', \
                 configuration = 'random', \
                 use_surface_model = 1, use_hpic = 1, \
-                plot_variables = 1, blockplots = 0)
+                plot_variables = 1, blockplots = 0, verbose=1, \
+                leakStart=0, leakEnd=10)
 
 
 

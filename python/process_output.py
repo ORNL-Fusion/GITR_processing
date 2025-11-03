@@ -14,8 +14,8 @@ import solps
 # setting directories and special constants
 ################################################
 
-case = 2
-paramset = 'E'
+case = 1
+paramset = 'A'
 calc_self_sputt = 1
 
 repo_path = '/Users/Alyssa/Dev/GITR_processing'
@@ -58,6 +58,11 @@ run_directory = repo_path + case_path
 
 if sys.path[0] != os.path.abspath(setup_directory):
     sys.path.insert(0, os.path.abspath(setup_directory))
+
+if calc_self_sputt:
+    ssDir = '/with_ss'
+else:
+    ssDir = '/no_ss'
 
 import makeGeom, makeParticleSource
 
@@ -206,9 +211,6 @@ def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
     charge = history.variables['charge'][:]
 
     plt.close()
-    if plot_particle_source: plt.scatter(x0,z0,marker='o',s=10)
-    if os.path.exists(profilesFile): plt.plot(r_wall, z_wall,'-k',linewidth=3)
-    if os.path.exists(profilesFile): plt.plot(r_target_fine, z_target_fine,'-m',linewidth=3)
     plt.axis('scaled')
     plt.xlabel('R [m]')
     plt.ylabel('Z [m]')
@@ -244,10 +246,14 @@ def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
     if endChargeState==1:
         for p in range(0,nP):
             plt.plot(r[p][:],z[p][:], colors[charge[p][-1]])
-        plt.title('Particle Tracks by End Charge State')
+        #plt.title('Particle Tracks by End Charge State')
     
     if os.path.exists(bFile): plt.contour(r_bField,z_bField,psi,1,linestyles='--',colors='k',linewidths=1)
     #plt.scatter(1.49829829, 1.19672716, label='Strikepoint', marker='X', color='k', s=100, zorder=5)
+    
+    if os.path.exists(profilesFile): plt.plot(r_wall, z_wall,'-k',linewidth=3)
+    if os.path.exists(profilesFile): plt.plot(r_target_fine, z_target_fine,'-m',linewidth=3)
+    if plot_particle_source: plt.scatter(x0,z0,marker='o',s=10)
     
     legend_dict = {'+0':'black', '+1':'firebrick', '+2':'darkorange', '+3':'gold', '+4':'limegreen', '+5':'dodgerblue', \
               '+6':'mediumpurple', '+7':'darkviolet', '+8':'darkmagenta', '+9':'deeppink', '≥+10':'gray'}
@@ -263,11 +269,11 @@ def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
     #plt.xlim(1.0, 3.0)
     #plt.ylim(-1.5, 1.5)
     if case == 1:
-        plt.xlim(1.38, 1.545)
-        plt.ylim(1.01, 1.235)
+        plt.xlim(1.35, 1.52)
+        plt.ylim(1.04, 1.235)
     elif case == 2:
-        plt.xlim(1.38, 1.545)
-        plt.ylim(1.01, 1.235)
+        plt.xlim(1.35, 1.52)
+        plt.ylim(1.04, 1.235)
     elif case == 3:
         plt.xlim(1.38, 1.545)
         plt.ylim(1.01, 1.235)
@@ -275,7 +281,8 @@ def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
         plt.xlim(1.38, 1.545)
         plt.ylim(1.01, 1.235)
     
-    plt.title('Case '+str(case)+' W Trajectories\nParameter Set '+paramset)#+'\nnP = '+str(nP))
+    #plt.title('Case '+str(case)+' W Trajectories')#'\nParameter Set '+paramset)#+'\nnP = '+str(nP))
+    plt.title('W Trajectories')
     #plt.show(block=True)
     plt.savefig(run_directory+'/output/plots/history.svg')
     plt.close()
@@ -288,7 +295,6 @@ def plot_surf_nc(nP10, dt10, nT10, \
                  surface_file_alt='', particle_source_file_alt='',\
                  calc_self_sputt=calc_self_sputt, norm=None, use_hpic=1, plot_cumsum=0, plot_blocker=False, verbose=0):
     
-    if not verbose: print('\n')
     profiles, W_indices, r_inner_target, z_inner_target, rmrs = init()
     rmrsCoords = profiles.variables['rmrs_inner_target'][W_indices]
     surface = netCDF4.Dataset(surface_file, "r", format="NETCDF4")
@@ -303,6 +309,7 @@ def plot_surf_nc(nP10, dt10, nT10, \
     view2_color = '#2197a9'
     view3_color = '#741b47'
     
+    #pretty sure this is unnecessary
     if calc_self_sputt:
         pps_per_nP, partSource_flux, fluxD, fluxC = makeParticleSource.distributed_source(nP=(nP10[0] * (10**int(nP10[1]))), \
                 surfW = W_surf_indices, \
@@ -395,9 +402,19 @@ def plot_surf_nc(nP10, dt10, nT10, \
         print('total gross eroded flux',sum(grossEro*area)/sum(area))
         print('total redeposited flux',sum(grossDep*area)/sum(area))
         print('total net deposited flux',sum(netDep*area)/sum(area))
-    print('redeposition rate',100 * (sum(grossDep*area)/sum(area)) / (sum(grossEro*area)/sum(area)), '%')
-    if positions_file != '': print('prompt redeposition rate', 100 * prompt_redep_rate, '%')
-    if calc_self_sputt: print('self-sputtering fraction',100 * (sum(grossEro)-sum(partSource_flux))/sum(grossEro), '%')
+    print('\nredeposition rate\n',100 * (sum(grossDep*area)/sum(area)) / (sum(grossEro*area)/sum(area)), '%')
+    if positions_file != '': print('\nprompt redeposition rate\n', 100 * prompt_redep_rate, '%')
+    
+    if calc_self_sputt:
+        spylCounts = surface.variables['spylCounts'][:][:-1]
+        aveSpyl = surface.variables['aveSpyl'][:][:-1]
+        Ys = aveSpyl / spylCounts
+        YsAvg = np.sum(Ys*area)/sum(area)
+        
+        print('\naverage spyl\n', YsAvg*100,'%')
+        
+    #pretty sure this shit is wrong lol whoops
+    if calc_self_sputt: print('\nself-sputtering fraction by flux calc\n',100 * (sum(grossEro)-sum(partSource_flux))/sum(grossEro), '%')
     '''
     if norm=='C':
         grossEro_norm = grossEro/fluxC
@@ -530,21 +547,24 @@ def plot_surf_nc(nP10, dt10, nT10, \
     plt.rcParams.update({'lines.linewidth':5}) 
     
     #plot self-sputtering
-    plt.close()
-    if tile_shift_indices != []:
-        for i,v in enumerate(tile_shift_indices):
-            if i==0: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', label='Walll\nVertices')
-            else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
-    if Bangle_shift_indices != []:
-        for i,v in enumerate(Bangle_shift_indices):
-            if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\alpha_B$')
-            else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
-    
-    if calc_self_sputt: plt.plot(rmrsFine, 100*(grossEro-partSource_flux)/grossEro)
-    plt.xlabel('D-Dsep [m]')
-    plt.ylabel('Percentage')
-    plt.title('Percentage of Gross Erosion from Self-Sputtering', fontsize=30)
-    plt.show(block=plot_blocker)
+    if calc_self_sputt:
+        plt.close()
+        if tile_shift_indices != []:
+            for i,v in enumerate(tile_shift_indices):
+                if i==0: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', label='Wall\nVertices')
+                else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
+        if Bangle_shift_indices != []:
+            for i,v in enumerate(Bangle_shift_indices):
+                if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\\alpha_B$')
+                else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
+        
+        plt.plot(rmrsFine, 100*(grossEro-partSource_flux)/grossEro, label='Fraction of gross\nerosion flux from\nself-sputtering')
+        plt.plot(rmrsFine, 100*Ys, label='Sputtering yield as a percentage')
+        plt.xlabel('D-Dsep [m]')
+        plt.ylabel('Percentage \alpha_B')
+        plt.title('Percentage of Gross Erosion from Self-Sputtering', fontsize=30)
+        plt.legend()
+        plt.show(block=plot_blocker)
     
     #plot main surface plot with 3 views
     plt.close()
@@ -554,14 +574,14 @@ def plot_surf_nc(nP10, dt10, nT10, \
     
     plt.plot(rmrsFine,np.zeros(len(rmrsFine)),'gray')
     
-    '''if tile_shift_indices != []:
+    if tile_shift_indices != []:
         for i,v in enumerate(tile_shift_indices):
-            if i==0: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', label='Walll\nVertices')
+            if i==0: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', label='Wall\nVertices')
             else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
     if Bangle_shift_indices != []:
         for i,v in enumerate(Bangle_shift_indices):
             if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\\alpha_B$')
-            else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')'''
+            else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
     
     plt.plot(rmrsFine,grossEro_norm,'r', label='Gross Erosion')
     plt.plot(rmrsFine,grossDep_norm,'g', label='Gross Deposition')
@@ -596,6 +616,63 @@ def plot_surf_nc(nP10, dt10, nT10, \
     
     return grossEro
         
+def impact_energies(surface_file=run_directory+'/output/surface.nc', \
+                    positions_file=run_directory+'/output/positions.nc', \
+                    plot_blocker=False, verbose=0):
+    
+    surface = netCDF4.Dataset(surface_file, "r", format="NETCDF4")
+    grossEro = surface.variables['grossErosion'][:]
+    nPss = np.sum(grossEro)
+    edist = surface.variables['surfEDist'][:]
+    energies = np.arange(1,1001,1)
+    
+    print('------------------------------------')
+    print('Flux-weighted percent of W impacting with E>45 eV')
+    edist = np.sum(edist, axis=2)
+    edist = edist * grossEro[:, np.newaxis]/nPss
+    
+    edist_total = np.sum(edist, axis=0)
+    edist_pfr = np.sum(edist[:34], axis=0)
+    edist_cfr = np.sum(edist[35:], axis=0)
+    
+    print('Total:', 100*np.sum(edist_total[45:])/np.sum(edist_total))
+    print('PFR:', 100*np.sum(edist_pfr[45:])/np.sum(edist_pfr))
+    print('CFR:', 100*np.sum(edist_cfr[45:])/np.sum(edist_cfr))
+    print('PFR/CFR:', (np.sum(edist_pfr[45:])/np.sum(edist_pfr)) / (np.sum(edist_cfr[45:])/np.sum(edist_cfr)))
+    print('------------------------------------')
+    
+    print('Find average energies')
+    edist_energies_pfr = edist_pfr * energies / np.sum(edist_pfr)
+    edist_energies_cfr = edist_cfr * energies / np.sum(edist_cfr)
+    print('PFR:', np.sum(edist_energies_pfr))
+    print('CFR:', np.sum(edist_energies_cfr))
+    print('------------------------------------')
+    
+    plt.close()
+    plt.plot(energies,edist_total)
+    plt.axvline(x=45,color='k',linewidth=0.3)
+    plt.axhline(y=10,color='k',linewidth=0.3)
+    plt.yscale('log')
+    #plt.show(block=plot_blocker)
+    #plt.close()
+    
+    positions = netCDF4.Dataset(positions_file, "r", format="NETCDF4")
+    hitWall = positions.variables['hitWall'][:]/2
+    nP = len(hitWall)
+    vx = positions.variables['vx'][:]
+    vy = positions.variables['vy'][:]
+    vz = positions.variables['vz'][:]
+    v = np.sqrt(vx**2 + vy**2 + vz**2) #m/s
+   
+    v = hitWall * v #filter out particles that don't hit the wall
+    
+    m = 183.84 / 6.0221366516752E+26 #kg
+    E_impact = 0.5 * m * (v**2) #Joules
+    E_impact = E_impact /  1.60218e-19 #eV
+    print('Percentage of W impacting with E>45 eV:', 100*np.sum(E_impact > 45)/nP) #counts of W impacting with E>SBE
+    
+    return E_impact
+
 def spectroscopy(pps_per_nP, View=1, \
                  specFile='spec.nc',plotting=1):
     
@@ -797,7 +874,9 @@ def spectroscopy(pps_per_nP, View=1, \
         plt.title('Toroidal Slice of W0 Density')# \n View '+str(View)+' W0: %10e m$^{-2}$s$^{-1}$' %np.sum(fscope))
         plt.savefig('plots/spec_filterscope.png')
     
-def analyze_leakage(historyFile, bFile = run_directory+'/input/bField.nc'):
+def analyze_leakage(historyFile, \
+                    bFile = run_directory+'/input/bField.nc', \
+                    partSourceFile = run_directory+'/input/particleSource.nc'):
     bField = netCDF4.Dataset(bFile)
     r_bField = bField.variables['r'][:]
     z_bField = bField.variables['z'][:]
@@ -844,7 +923,10 @@ def analyze_leakage(historyFile, bFile = run_directory+'/input/bField.nc'):
     for i in range(0,nP):
         if polygon.contains_point((r[i][-1],z[i][-1])) and z[i][-1]<=xpoint_z: leakage+=1
     
-    print('leakage fraction:', leakage/nP)
+    print('leakage probability:', leakage/nP)
+    
+    partSource = netCDF4.Dataset(partSourceFile)
+    pps_per_nP = partSource.variables['pps_per_nP'][:]
     
     return    
 
@@ -2920,18 +3002,22 @@ def OES_synth_diagnostic(history_file=run_directory+'/output/history.nc'):
     return
 
 if __name__ == "__main__":
+    print('\nCase'+str(case)+paramset)
     #plot_history2D(run_directory+'/output/history.nc')
-    #plot_surf_nc([5,2], 8, [1,5], run_directory+'/output/surface.nc', run_directory+'/output/positions.nc')
+    #plot_surf_nc([5,3], 8, [1,5], run_directory+'/output/forces'+ssDir+'/surface'+str(case)+str.lower(paramset)+'.nc', \
+                 #run_directory+'/output/forces'+ssDir+'/positions'+str(case)+str.lower(paramset)+'.nc')
     
     #plot_surf_nc([1,6], 9, [1,5], run_directory+'/output/surface5.nc', \
                  #surface_file_alt=run_directory+'/output/perlmutter/production/surface_S.nc', use_hpic=1, plot_blocker=True)
-    #plot_surf_nc([1,6], 9, [1,6], '../examples/sasvw-pa-fav/output/perlmutter/production/surface_S.nc', \
-                 #'../examples/sasvw-pa-fav/output/perlmutter/production/positions_S.nc',plot_blocker=True)
-    #plot_surf_nc([1,6], 9, [1,6], '../../sasvw-pa-fav/sasvw-pa-fav-surfaces/nPnT-new/surface-p6t6.nc', \
-                 #'../../sasvw-pa-fav/sasvw-pa-fav-surfaces/nPnT-new/positions-p6t6.nc', plot_blocker=False)
+    #plot_surf_nc([1,6], 9, [1,6], '../examples/sasvw-vertex-fav/output/paper3/surface_SS.nc', \
+                 #'../examples/sasvw-vertex-fav/output/paper3/positions_SS.nc',plot_blocker=False,verbose=1)
+    #plot_surf_nc([1,6], 9, [1,6], run_directory+'/output/perlmutter/production/surface_S.nc', \
+                 #run_directory+'/output/perlmutter/production/positions_S.nc', plot_blocker=True)
     #plot_surf_nc([5,2], 8, [1,5], run_directory+'/output/surface.nc', run_directory+'/output/positions.nc')#, \
                  #setup_directory+'/../output/perlmutter/production/forces25.01.06/surfaces/BET.nc", \
                  #setup_directory+'/../output/perlmutter/production/forces25.01.06/positions/BET.nc', norm='')
+    #impact_energies(surface_file=run_directory+'/output/perlmutter/production/surface_S.nc',\
+                 #positions_file=run_directory+'/output/perlmutter/production/positions_S.nc')
     #analyze_leakage('perlmutter/history_D3t6.nc')
     #analyze_leakage(run_directory+'/output/history.nc')
     #analyze_leakage_surf('../examples/sasvw-pa-unfav/output/leakage/surface_on.nc',7.140925877891980E+10)
@@ -2941,17 +3027,17 @@ if __name__ == "__main__":
     #plot_gitr_gridspace()
     #plot_particle_source()
     #plot_history2D(setup_directory+"/../output/perlmutter/production/forces24.09.19/histories/gradT.nc",\
-    #plot_history2D(setup_directory+"/../output/perlmutter/production/history_H2.nc",\
+    plot_history2D(run_directory+"/output/perlmutter/production/history_H.nc",\
     #plot_history2D(setup_directory+"/../output/leakage/history_t8T25.nc",\
     #plot_history2D('../examples/sasvw-pa-unfav/output/leakage/history_old.nc',\
     #plot_history2D("/pscratch/sd/h/hayes/sasvw-pa-fav/sasvw-pa-fav-history/output/history.nc",\
-                   #bFile=setup_directory+'/../input/bField.nc')
+                   bFile=run_directory+'/input/bField.nc')
     #spectroscopy(2, specFile=run_directory+'/output/spec.nc')#specFile='/Users/Alyssa/Desktop/spec.nc')
     #spec_line_integration(view=1)#spec_file='/Users/Alyssa/Desktop/spec.nc', pps_per_nP=2013859273149157.8)
     #spec_volumetric_integration(view=3,Nrr=100,Ntheta=10,Nphi=10, plot_blocker=False)
     #OES_synth_diagnostic(setup_directory+'/../output/perlmutter/production/history_IF1.nc')
     #OES_synth_diagnostic()
-    ionization_analysis([0,0], '../../sasvw-pa-fav/ioniz/output/','history.nc', 'positions.nc')
+    #ionization_analysis([0,0], '../../sasvw-pa-fav/ioniz/output/','history.nc', 'positions.nc')
     #ionization_analysis([0,0], '../examples/sasvw-pa-fav/output/perlmutter/production/','history_IF.nc', 'positions_IF.nc')
     #prompt_redep_hist([2,8,5], '../examples/sasvw-pa-fav/output/perlmutter/production/forces24.09.19/positions/','BEF.nc')
     #particle_diagnostics_hist('/Users/Alyssa/Dev/GITR_processing/examples/sasvw-pa-fav/output/perlmutter/production/particle_histograms_gpu.nc', plot_blocker=True)

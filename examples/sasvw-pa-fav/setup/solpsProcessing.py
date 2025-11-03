@@ -662,8 +662,7 @@ def plot_2D_cross_sections(
     colorbarLimits,
     rzlim=True,
     saveBool=False,
-    colormap="coolwarm",
-):
+    colormap="coolwarm",):
     # useful for comparing against SOLPS-profiles to see what GITR sees
     # GITR gets 2D profiles
 
@@ -790,18 +789,19 @@ def compare_surface_profiles(W_surf, varString):
 
 if __name__ == "__main__":
     # compare_surface_profiles(np.arange(11,22),'v')
-    # plot_2D_cross_sections(np.arange(11,22), 'gradTit', '[eV/m]', [-1,1], rzlim=True)
+    plot_2D_cross_sections(np.arange(11,22), 'gradTe', '[eV/m]', [-10,10], rzlim=True)
     # plot_2D_cross_sections(np.arange(11,22), 'vt', 'Velocity [m/s]', [-20000,20000], colormap='coolwarm',rzlim=True)
     # plot_2D_cross_sections(np.arange(11,22), 'ne', 'Density [m$^{-3}$]', [], colormap='rainbow')
     # plot_2D_cross_sections(np.arange(11,22), 'te', 'Temperature [eV]', [])
     # plot_2D_cross_sections(np.arange(11,22), 'Bz', 'B-Field Strength [T]', [-0.1,0.1], rzlim=True, colormap='coolwarm')
-    # plot_2D_cross_sections(np.arange(11,22), 'Ez', 'E-Field Strength [V/m]', [])
+    #plot_2D_cross_sections(np.arange(11,22), 'Ez', 'E-Field Strength [V/m]', [-1500,1500], rzlim=True, saveBool=True)
     # ionization_analysis_theory(1e-8, np.arange(11,22))
     #plot_surf_plasma_params(np.arange(11, 22), [1, 9], [3, 8, 9])
     
     #readEquilibrium(equilibrium_filename = 'assets/dg.equ', \
+    '''
     readEquilibrium(equilibrium_filename = '/Users/Alyssa/Dev/dimes/equilibria/182508_0460.eq', \
                         W_indices = np.arange(11,22), \
                         solps_geom = 'assets/b2fgmtry', \
                         flip_Bt = False, \
-                        plot_variables = 1)
+                        plot_variables = 1)'''

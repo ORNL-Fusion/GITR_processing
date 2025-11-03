@@ -10,7 +10,7 @@ import shutil
 import numpy as np
 import solpsProcessing, makeGeom, makeParticleSource
 
-nP = int(5e4)
+nP = int(5e3)
 run_directory = '..'
 #run_directory = '/pscratch/sd/h/hayes/sasvw-pa-unfav/surface'
 
