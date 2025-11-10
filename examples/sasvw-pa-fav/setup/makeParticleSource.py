@@ -8,8 +8,6 @@ import matplotlib.pyplot as plt
 import netCDF4
 import pandas as pd
 
-import gitr
-import solps
 import Particles
 
 def init():
@@ -64,7 +62,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
             use_fractal_tridyn_outgoing_IEADS = 0, \
             use_hpic = 0, use_surface_model = 1, \
             plot_variables = 0, blockplots = 0, verbose=1, \
-            leakStart=0,leakEnd=111):
+            leakStart=0, leakEnd=0):
         
     #import wall geometry to plot over
     with open(gitr_rz, 'r') as file:
@@ -87,8 +85,10 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
         W_fine = file.readlines()
     W_fine = np.array(W_fine,dtype='int')
     
-    rmrsFine = rmrsFine[leakStart:leakEnd]
-    W_fine = W_fine[leakStart:leakEnd+1]
+    if leakStart >= 0:
+        if leakEnd > 0:
+            rmrsFine = rmrsFine[leakStart:leakEnd]
+            W_fine = W_fine[leakStart:leakEnd+1]
     
     R = np.zeros(len(wall))
     Z = np.zeros(len(wall))
@@ -162,13 +162,22 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
         dfC5 = pd.read_csv(setup_directory+'/assets/eff_spyld_hPIC2/eff_spyld_hPIC_case1_C5.csv')
         dfC6 = pd.read_csv(setup_directory+'/assets/eff_spyld_hPIC2/eff_spyld_hPIC_case1_C6.csv')
         
-        spyldD = np.transpose(dfD.to_numpy())[0][leakStart:leakEnd]
-        spyldC1 = np.transpose(dfC1.to_numpy())[0][leakStart:leakEnd]
-        spyldC2 = np.transpose(dfC2.to_numpy())[0][leakStart:leakEnd]
-        spyldC3 = np.transpose(dfC3.to_numpy())[0][leakStart:leakEnd]
-        spyldC4 = np.transpose(dfC4.to_numpy())[0][leakStart:leakEnd]
-        spyldC5 = np.transpose(dfC5.to_numpy())[0][leakStart:leakEnd]
-        spyldC6 = np.transpose(dfC6.to_numpy())[0][leakStart:leakEnd]
+        spyldD = np.transpose(dfD.to_numpy())[0]
+        spyldC1 = np.transpose(dfC1.to_numpy())[0]
+        spyldC2 = np.transpose(dfC2.to_numpy())[0]
+        spyldC3 = np.transpose(dfC3.to_numpy())[0]
+        spyldC4 = np.transpose(dfC4.to_numpy())[0]
+        spyldC5 = np.transpose(dfC5.to_numpy())[0]
+        spyldC6 = np.transpose(dfC6.to_numpy())[0]
+        
+        if leakEnd > 0:
+            spyldD = spyldD[leakStart:leakEnd]
+            spyldC1 = spyldC1[leakStart:leakEnd]
+            spyldC2 = spyldC2[leakStart:leakEnd]
+            spyldC3 = spyldC3[leakStart:leakEnd]
+            spyldC4 = spyldC4[leakStart:leakEnd]
+            spyldC5 = spyldC5[leakStart:leakEnd]
+            spyldC6 = spyldC6[leakStart:leakEnd]
         
         #this block for plotting only
         spyldD_simple = get_ft_spyld(1, energyD, angleD, ftDFile) #file input includes He, which we aren't using
@@ -267,6 +276,7 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     fluxC4[np.where(fluxC4<0)] = 0
     fluxC5[np.where(fluxC5<0)] = 0
     fluxC6[np.where(fluxC6<0)] = 0
+    
     fluxC = fluxC1 + fluxC2 + fluxC3 + fluxC4 + fluxC5 + fluxC6
     totalflux = fluxD0 + fluxD + fluxC0 + fluxC
     Cfraction = np.sum(fluxC0 + fluxC) / np.sum(totalflux)
@@ -1068,7 +1078,7 @@ def get_analytic_spyld(surfE, surfA, Z1=6, M1=12, Z2=74, M2=183.84, \
 if __name__ == "__main__":
     init()
     
-    distributed_source(nP=int(1e5), surfW=np.arange(11,22), \
+    distributed_source(nP=int(1e2), surfW=np.arange(11,22), \
                 tile_shift_indices = [1,9], \
                 Bangle_shift_indices = [3,8,9], \
                 geom = '../input/gitrGeometry.cfg', \
@@ -1081,7 +1091,7 @@ if __name__ == "__main__":
                 configuration = 'random', \
                 use_surface_model = 1, use_hpic = 1, \
                 plot_variables = 1, blockplots = 0, verbose=1, \
-                leakStart=0, leakEnd=10)
+                leakStart=0, leakEnd=0)
 
 
 

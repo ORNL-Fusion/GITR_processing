@@ -8,8 +8,6 @@ import matplotlib.pyplot as plt
 import netCDF4
 import pandas as pd
 
-import gitr
-import solps
 import Particles
 
 def init():
@@ -62,8 +60,9 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
             ftWFile = '../input/ftridynSelf.nc', \
             configuration = 'random', \
             use_fractal_tridyn_outgoing_IEADS = 0, \
-            use_hpic = 0, use_surface_model = 1, \
-            plot_variables = 0, verbose=1):
+            use_hpic = 1, use_surface_model = 1, \
+            plot_variables = 1, blockplots = 0, verbose=1, \
+            leakStart=0, leakEnd=0):
     
     #import wall geometry to plot over
     with open(gitr_rz, 'r') as file:
@@ -85,6 +84,11 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     with open(W_fine_file, 'r') as file:
         W_fine = file.readlines()
     W_fine = np.array(W_fine,dtype='int')
+    
+    if leakStart >= 0:
+        if leakEnd > 0:
+            rmrsFine = rmrsFine[leakStart:leakEnd]
+            W_fine = W_fine[leakStart:leakEnd+1]
 
     R = np.zeros(len(wall))
     Z = np.zeros(len(wall))
@@ -154,6 +158,15 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
         spyldC4 = np.transpose(dfC4.to_numpy())[0]
         spyldC5 = np.transpose(dfC5.to_numpy())[0]
         spyldC6 = np.transpose(dfC6.to_numpy())[0]
+        
+        if leakEnd > 0:
+            spyldD = spyldD[leakStart:leakEnd]
+            spyldC1 = spyldC1[leakStart:leakEnd]
+            spyldC2 = spyldC2[leakStart:leakEnd]
+            spyldC3 = spyldC3[leakStart:leakEnd]
+            spyldC4 = spyldC4[leakStart:leakEnd]
+            spyldC5 = spyldC5[leakStart:leakEnd]
+            spyldC6 = spyldC6[leakStart:leakEnd]
     
     else:
         #get incoming ion energy and angle estimations where the integer input is z
@@ -244,6 +257,17 @@ def distributed_source(nP, surfW, tile_shift_indices=[], Bangle_shift_indices=[]
     fluxC4 = ffluxC4(rmrsFine)
     fluxC5 = ffluxC5(rmrsFine)
     fluxC6 = ffluxC6(rmrsFine)
+    
+    fluxD0[np.where(fluxD0<0)] = 0
+    fluxD[np.where(fluxD<0)] = 0
+    fluxC0[np.where(fluxC0<0)] = 0
+    fluxC1[np.where(fluxC1<0)] = 0
+    fluxC2[np.where(fluxC2<0)] = 0
+    fluxC3[np.where(fluxC3<0)] = 0
+    fluxC4[np.where(fluxC4<0)] = 0
+    fluxC5[np.where(fluxC5<0)] = 0
+    fluxC6[np.where(fluxC6<0)] = 0
+    
     fluxC = fluxC1 + fluxC2 + fluxC3 + fluxC4 + fluxC5 + fluxC6
     totalflux = fluxD0 + fluxD + fluxC0 + fluxC
     Cfraction = np.sum(fluxC0 + fluxC) / np.sum(totalflux)
@@ -1026,8 +1050,9 @@ if __name__ == "__main__":
                 ftDFile = 'assets/ftridynBackgroundD.nc', \
                 ftCFile = 'assets/ftridynBackgroundC.nc', \
                 configuration = 'random', \
-                use_hpic = 1, use_surface_model = 1, \
-                plot_variables = 1)
+                use_surface_model = 1, use_hpic = 1, \
+                plot_variables = 1, blockplots = 0, verbose=1, \
+                leakStart=0, leakEnd=10)
 
 
 

@@ -321,7 +321,7 @@ def main(gitr_geometry_filename='gitrGeometry.cfg', \
     
     W_indicesCoarse = np.array(range(74,83)) 
     print('length Coarse W_indices + numAddedPoints =',\
-          len(W_indicesCoarse), '+', numAddedPoints, '=',len(W_indicesCoarse)+numAddedPoints)
+          len(W_indicesCoarse), '+', numAddedPoints, '=', len(W_indicesCoarse)+numAddedPoints)
     
     # find what W_indices (gitrGeometry) and W_indices_profiles (plasmaProfiles) 
     # should be along the plasmaProfiles.nc targets

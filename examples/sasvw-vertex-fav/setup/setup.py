@@ -10,9 +10,9 @@ import shutil
 import numpy as np
 import solpsProcessing, makeGeom, makeParticleSource
 
-nP = int(5e3)
-run_directory = '..'
-#run_directory = '/pscratch/sd/h/hayes/sasvw-vertex-fav/surface'
+nP = int(1e6)
+#run_directory = '..'
+run_directory = '/pscratch/sd/h/hayes/sasvw-vertex-fav/leakage/P6'
 
 W_indices = np.arange(16,25)
 tile_shift_indices = [2,6]
@@ -28,7 +28,7 @@ makeGeom.main(gitr_geometry_filename='gitrGeometry.cfg', \
                     W_indices_profiles = W_indices, \
                     tile_shift_indices = tile_shift_indices, \
                     numAddedPoints = 100, \
-                    use_core_leakage_boundary = 0, \
+                    use_core_leakage_boundary = 1, \
                     plot_variables = 0, \
                     show_plots = 0)
 
@@ -60,7 +60,8 @@ makeParticleSource.distributed_source(nP, surfW = W_indices, \
                     ftCFile = 'assets/ftridynBackgroundC.nc', \
                     configuration = 'random', \
                     use_fractal_tridyn_outgoing_IEADS = 0, \
-                    use_hpic = 1, use_surface_model = 1, \
-                    plot_variables = 0)
+                    use_surface_model = 1, use_hpic = 1, \
+                    plot_variables = 0, blockplots = 0, verbose=0, \
+                    leakStart=90, leakEnd=100)
 
 shutil.move('particleSource.nc', run_directory+'/input/particleSource.nc')

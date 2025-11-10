@@ -14,7 +14,7 @@ import solps
 # setting directories and special constants
 ################################################
 
-case = 1
+case = 3
 paramset = 'A'
 calc_self_sputt = 1
 
@@ -85,8 +85,8 @@ def init(W_indices = W_surf_indices, plot_rz=False):
         plt.plot(r_inner_target, z_inner_target)
     
     #set plotting style defaults
-    plt.rcParams.update({'font.size':12})
-    plt.rcParams.update({'lines.linewidth':1.5})
+    plt.rcParams.update({'font.size':14})
+    plt.rcParams.update({'lines.linewidth':3})
     plt.rcParams.update({'lines.markersize':1})
 
     return profiles, W_indices, r_inner_target, z_inner_target, rmrs_coarse
@@ -173,7 +173,7 @@ def plot_particle_source():
 
 def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
                    basic=0, continuousChargeState=1, endChargeState=0, \
-                   plot_particle_source=0, markersize=0):
+                   sort=1, plot_particle_source=0, markersize=0):
     
     if plot_particle_source:
         particleSource = netCDF4.Dataset(run_directory+"/input/particleSource.nc", "r", format="NETCDF4")
@@ -197,7 +197,7 @@ def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
     else:
         print('WARNING: No bField.nc provided')
 
-    plt.rcParams.update({'lines.linewidth':0.3})
+    plt.rcParams.update({'lines.linewidth':0.6})
     plt.rcParams.update({'lines.markersize':markersize})
     plt.rcParams.update({'font.size':10})
 
@@ -221,6 +221,10 @@ def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
                   12:'gray', 13:'gray', 14:'gray', 15:'gray', 16:'gray', 17:'gray', 18:'gray', 19:'gray', \
                       20:'gray', 21:'gray', 22:'gray', 23:'gray', 24:'gray', 25:'gray', 26:'gray', 27:'gray'}
     
+    if os.path.exists(profilesFile): plt.plot(r_wall, z_wall,'-k',linewidth=3)
+    if os.path.exists(profilesFile): plt.plot(r_target_fine, z_target_fine,'-m',linewidth=3)
+    if plot_particle_source: plt.scatter(x0,z0,marker='o',s=10)
+        
     # all particle source vars ordered as (nP, nT)
     if basic==1:
         for p in range(0,nP):
@@ -231,16 +235,31 @@ def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
     
     counter=0
     if continuousChargeState==1:
-        #for p in [671, 860, 1043, 1275, 1366, 1479]:  # particles that leak out of the divertor space in history_H.nc from pa-fav (Case #1)
-        for p in np.arange(0,nP,1): # plot all particles by default
-            print("particle #", p)
-            t=0
-            counter+=1
-            while t<nT-1:
-                if r[p][t] != r[p][t+1]: 
+        if sort==1:
+            for p in np.arange(0,nP,1): # plot all particles by default
+                print("particle #", p)
+                t=0
+                counter+=1 
+                
+                particle_r = np.trim_zeros(r[p])
+                particle_z = np.trim_zeros(z[p])
+                
+                while t<nT-1:
                     #print("particle #", p, "moved at timestep", t, "with charge", charge[p][t])
-                    plt.plot(r[p][t:t+2],z[p][t:t+2], colors[np.round(charge[p][t])])
-                t+=1
+                    plt.plot(particle_r[t:t+2],particle_z[t:t+2], colors[np.round(charge[p][t])])
+                    t+=1
+        
+        else:
+            #for p in [671, 860, 1043, 1275, 1366, 1479]:  # particles that leak out of the divertor space in history_H.nc from pa-fav (Case #1)
+            for p in np.arange(0,nP,1): # plot all particles by default
+                print("particle #", p)
+                t=0
+                counter+=1            
+                while t<nT-1:
+                    if r[p][t] != r[p][t+1]: 
+                        #print("particle #", p, "moved at timestep", t, "with charge", charge[p][t])
+                        plt.plot(r[p][t:t+2],z[p][t:t+2], colors[np.round(charge[p][t])])
+                    t+=1
     print('total particles:',counter)
 
     if endChargeState==1:
@@ -251,10 +270,6 @@ def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
     if os.path.exists(bFile): plt.contour(r_bField,z_bField,psi,1,linestyles='--',colors='k',linewidths=1)
     #plt.scatter(1.49829829, 1.19672716, label='Strikepoint', marker='X', color='k', s=100, zorder=5)
     
-    if os.path.exists(profilesFile): plt.plot(r_wall, z_wall,'-k',linewidth=3)
-    if os.path.exists(profilesFile): plt.plot(r_target_fine, z_target_fine,'-m',linewidth=3)
-    if plot_particle_source: plt.scatter(x0,z0,marker='o',s=10)
-    
     legend_dict = {'+0':'black', '+1':'firebrick', '+2':'darkorange', '+3':'gold', '+4':'limegreen', '+5':'dodgerblue', \
               '+6':'mediumpurple', '+7':'darkviolet', '+8':'darkmagenta', '+9':'deeppink', '≥+10':'gray'}
     
@@ -263,11 +278,12 @@ def plot_history2D(history_file, bFile=run_directory+'/input/bField.nc', \
         data_key = mpatches.Patch(color=legend_dict[key], label=key)
         patchList.append(data_key)
 
-    if basic==0: plt.legend(handles=patchList, fontsize=8, loc=2) #upper-left=2, lower-left=3
+    #if basic==0: plt.legend(handles=patchList, fontsize=8, loc=2) #upper-left=2, lower-left=3
     
     #whole device
-    #plt.xlim(1.0, 3.0)
+    #plt.xlim(1.0, 2.4)
     #plt.ylim(-1.5, 1.5)
+    
     if case == 1:
         plt.xlim(1.35, 1.52)
         plt.ylim(1.04, 1.235)
@@ -574,14 +590,14 @@ def plot_surf_nc(nP10, dt10, nT10, \
     
     plt.plot(rmrsFine,np.zeros(len(rmrsFine)),'gray')
     
-    if tile_shift_indices != []:
+    '''if tile_shift_indices != []:
         for i,v in enumerate(tile_shift_indices):
             if i==0: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed', label='Wall\nVertices')
             else: plt.axvline(x=rmrsCoords[v], color='k', linestyle='dashed')
     if Bangle_shift_indices != []:
         for i,v in enumerate(Bangle_shift_indices):
             if i==0: plt.axvline(x=rmrs[v], color='k', linestyle='dotted', label='$\Delta\\alpha_B$')
-            else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')
+            else: plt.axvline(x=rmrs[v], color='k', linestyle='dotted')'''
     
     plt.plot(rmrsFine,grossEro_norm,'r', label='Gross Erosion')
     plt.plot(rmrsFine,grossDep_norm,'g', label='Gross Deposition')
@@ -594,10 +610,11 @@ def plot_surf_nc(nP10, dt10, nT10, \
     
     plt.xlabel('D-Dsep [m]')
     if norm!=None: plt.ylabel('\u0393$_{W,outgoing}$ / \u0393$_{%s,incoming}$'%norm)
-    if norm==None: plt.ylabel('\u0393$_{W}$ [m$^{-2}$s$^{-1}$]')
+    if norm==None: plt.ylabel('Flux [W m$^{-2}$s$^{-1}$]') #('\u0393$_{W} [$m$^{-2}$s$^{-1}$]')
     plt.ticklabel_format(axis='y',style='sci',scilimits=(-2,2))
-    plt.legend(loc='upper left')
-    plt.title('GITR-Predicted Erosion and Deposition', fontsize=30)
+    plt.legend(loc='lower left')
+    plt.title('GITR-predicted erosion and deposition (PA–DOWN)\nProg. angle OSP and downward Bx$\\nabla$B drift')
+    #plt.title('GITR-Predicted Erosion and Deposition', fontsize=30)
     #plt.title('GITR Predicted Erosion and Redeposition Profiles,\nnP='+str(nP10[0])+'e'+str(nP10[1])+', dt=1e-'+str(dt10)+', nT='+str(nT10[0])+'e'+str(nT10[1]), fontsize=30)
     plt.show(block=plot_blocker)
     #plt.savefig('plots/surface.png')
@@ -874,7 +891,7 @@ def spectroscopy(pps_per_nP, View=1, \
         plt.title('Toroidal Slice of W0 Density')# \n View '+str(View)+' W0: %10e m$^{-2}$s$^{-1}$' %np.sum(fscope))
         plt.savefig('plots/spec_filterscope.png')
     
-def analyze_leakage(historyFile, \
+def analyze_leakage_hist(historyFile = run_directory+'/output/history.nc', \
                     bFile = run_directory+'/input/bField.nc', \
                     partSourceFile = run_directory+'/input/particleSource.nc'):
     bField = netCDF4.Dataset(bFile)
@@ -920,8 +937,8 @@ def analyze_leakage(historyFile, \
     
     leakage = 0
     polygon = path.Path(v,closed=True)
-    for i in range(0,nP):
-        if polygon.contains_point((r[i][-1],z[i][-1])) and z[i][-1]<=xpoint_z: leakage+=1
+    for p in range(0,nP):
+        if polygon.contains_point((r[p][-1],z[p][-1])) and z[p][-1]<=xpoint_z: leakage+=1
     
     print('leakage probability:', leakage/nP)
     
@@ -930,7 +947,8 @@ def analyze_leakage(historyFile, \
     
     return    
 
-def analyze_leakage_surf(surface_file="surface.nc", pps_per_nP=0, \
+def analyze_leakage_surf(surface_file=run_directory+'/output/surface.nc', \
+                         partSourceFile=run_directory+'/input/particleSource.nc', \
                          gitr_rz=setup_directory+'/assets/gitr_rz.txt', \
                          W_fine_file=setup_directory+'/assets/W_fine.txt', \
                          rmrs_fine_file=setup_directory+'/assets/rmrs_fine.txt'):
@@ -955,31 +973,47 @@ def analyze_leakage_surf(surface_file="surface.nc", pps_per_nP=0, \
     surface = netCDF4.Dataset(surface_file, "r", format="NETCDF4")
     grossEro = (surface.variables['grossErosion'][:])
     grossDep = (surface.variables['grossDeposition'][:])
-    surf_core_start = len(grossDep)-len(lines_core)
-    print('\nTotal number leaked:',np.sum(grossDep[surf_core_start:]))
-    if pps_per_nP!=0: print('Total leakage:',np.sum(grossDep[surf_core_start:])*pps_per_nP)
+    surf_core_start = len(grossDep)+1 - len(lines_core)
+    sumParticlesStrike = surface.variables['sumParticlesStrike'][:]
+    
+    partSource = netCDF4.Dataset(partSourceFile)
+    pps_per_nP = partSource.variables['pps_per_nP'][:][0]
+    
+    print('*************************************')
+    leaked_dep = np.sum(grossDep[surf_core_start:])
+    nPStrike_total = np.sum(sumParticlesStrike[surf_core_start:])
+    print('Total unweighted nP leaked:', '{:.15E}'.format(nPStrike_total))
+    print('Total unweighted W leaked per second:', '{:.15E}'.format(nPStrike_total*pps_per_nP))
+    print(len(grossDep),len(lines_core),len(grossDep)-len(lines_core))
+    print(sumParticlesStrike[surf_core_start:])
+    print('*************************************')
+    print('Total weighted nP leaked:', '{:.15E}'.format(leaked_dep))
+    print('Total weighted W leaked per second:', '{:.15E}'.format(leaked_dep*pps_per_nP))
+    print('*************************************')
     print('Maximum leaked at one location:',np.max(grossDep[surf_core_start:]),'\n')
-    print('Check that there is no erosion along the core boundary:',np.sum(grossEro[surf_core_start:]))
+    print('Check that there is no erosion along the core boundary (0.0 desired):',\
+          np.sum(grossEro[surf_core_start:]))
     grossDep_core = grossDep[surf_core_start:]
     indices_leaked = np.where(grossDep_core>0)[0]
-    print(indices_leaked)
+    print('Indices with leakage:', indices_leaked)
 
     print('\n')
     print('Number of surfaces per process_output.py:',np.sum(surfaces))
     print(len(grossDep[surf_core_start:]),len(lines_core))        
     
     plt.close()
-    plt.plot(np.flip(grossDep_core)) #puts the PFR on the left and the SOL on the right
+    plt.plot(np.flip(grossDep_core)) #puts the PFR on the left and the CFR on the right
     plt.axvline(x=len(grossDep_core)-79.5,color='k') #this is the x-point
-    plt.show(block=True)
+    plt.show(block=False)
     plt.close()
     plt.hist(grossDep_core,bins=100,log=True)#,range=[100,])
-    plt.show(block=True)
+    plt.show(block=False)
     
     plt.close()
-    plt.rcParams.update({'lines.linewidth':2})
+    plt.rcParams.update({'lines.linewidth':4})
+    plt.rcParams.update({'font.size':16})
     plt.plot(r_wall,z_wall,'gray',label='Wall')
-    plt.plot(r_core,z_core,'k',label='LCFS',linewidth=0.5)
+    plt.plot(r_core,z_core,'k',label='LCFS')#,linewidth=0.5)
     #plt.scatter(r_core[0],z_core[0],15,'k')
     #plt.scatter(r_core[79],z_core[79],15,'k')
     for i in indices_leaked:
@@ -996,7 +1030,7 @@ def analyze_leakage_surf(surface_file="surface.nc", pps_per_nP=0, \
     plt.axis('Scaled')
     plt.xlabel('R [m]')
     plt.ylabel('Z [m]')
-    plt.title('Entrypoints for W Leakage \nfrom the SAS-VW into the Core')
+    plt.title('Main Entrypoints for W Leakage \nfrom the SAS-VW into the Core')
     
     legend_dict = {'Wall':'gray', 'No W Leakage':'black', '<6e11 W/s Leaked':'magenta', '6e11-3e12 W/s Leaked':'dodgerblue', \
                    '3e12-6e13 W/s Leaked':'limegreen', '6e13-1e15 W/s Leaked':'gold', '>1e15 W/s Leaked':'red'}
@@ -1006,10 +1040,11 @@ def analyze_leakage_surf(surface_file="surface.nc", pps_per_nP=0, \
         data_key = mpatches.Patch(color=legend_dict[key], label=key)
         patchList.append(data_key)
         
-    plt.legend(handles=patchList, fontsize=7, loc='lower right')
+    #plt.legend(handles=patchList, fontsize=7, loc='lower right')
     
     #erosion and deposition flux stuff
     
+    '''
     #calculate area from wall
     #import wall geometry to plot over
     with open(gitr_rz, 'r') as file:
@@ -1042,7 +1077,9 @@ def analyze_leakage_surf(surface_file="surface.nc", pps_per_nP=0, \
     
     dist = np.sqrt(np.power(r1-r2,2) + np.power(z1-z2,2))
     area = np.pi*(r1+r2)*dist # conical frustum surface area
+    '''
     
+    return
     
     return
 
@@ -3009,29 +3046,30 @@ if __name__ == "__main__":
     
     #plot_surf_nc([1,6], 9, [1,5], run_directory+'/output/surface5.nc', \
                  #surface_file_alt=run_directory+'/output/perlmutter/production/surface_S.nc', use_hpic=1, plot_blocker=True)
-    #plot_surf_nc([1,6], 9, [1,6], '../examples/sasvw-vertex-fav/output/paper3/surface_SS.nc', \
-                 #'../examples/sasvw-vertex-fav/output/paper3/positions_SS.nc',plot_blocker=False,verbose=1)
+    #plot_surf_nc([1,6], 9, [1,6], '../examples/sasvw-pa-unfav/output/paper3/surface_SS.nc', \
+                 #'../examples/sasvw-pa-unfav/output/paper3/positions_SS.nc',plot_blocker=False,verbose=0)
     #plot_surf_nc([1,6], 9, [1,6], run_directory+'/output/perlmutter/production/surface_S.nc', \
                  #run_directory+'/output/perlmutter/production/positions_S.nc', plot_blocker=True)
-    #plot_surf_nc([5,2], 8, [1,5], run_directory+'/output/surface.nc', run_directory+'/output/positions.nc')#, \
+    #plot_surf_nc([5,3], 8, [1,5], run_directory+'/output/surface.nc', run_directory+'/output/positions.nc')#, \
                  #setup_directory+'/../output/perlmutter/production/forces25.01.06/surfaces/BET.nc", \
                  #setup_directory+'/../output/perlmutter/production/forces25.01.06/positions/BET.nc', norm='')
     #impact_energies(surface_file=run_directory+'/output/perlmutter/production/surface_S.nc',\
                  #positions_file=run_directory+'/output/perlmutter/production/positions_S.nc')
-    #analyze_leakage('perlmutter/history_D3t6.nc')
-    #analyze_leakage(run_directory+'/output/history.nc')
-    #analyze_leakage_surf('../examples/sasvw-pa-unfav/output/leakage/surface_on.nc',7.140925877891980E+10)
+    #analyze_leakage_hist('perlmutter/history_D3t6.nc')
+    #analyze_leakage_hist(run_directory+'/output/history.nc')
+    analyze_leakage_surf('../examples/sasvw-vertex-fav/output/leakageP4/surface_100_120.nc')
+    #analyze_leakage_surf()
     #analyze_forces('ExB drift', 'r', rzlim=True, colorbarLimits=[-200,200], dt=1e-9)
     
     #init()
     #plot_gitr_gridspace()
     #plot_particle_source()
     #plot_history2D(setup_directory+"/../output/perlmutter/production/forces24.09.19/histories/gradT.nc",\
-    plot_history2D(run_directory+"/output/perlmutter/production/history_H.nc",\
+    #plot_history2D(run_directory+"/output/perlmutter/production/history_H.nc",\
     #plot_history2D(setup_directory+"/../output/leakage/history_t8T25.nc",\
     #plot_history2D('../examples/sasvw-pa-unfav/output/leakage/history_old.nc',\
     #plot_history2D("/pscratch/sd/h/hayes/sasvw-pa-fav/sasvw-pa-fav-history/output/history.nc",\
-                   bFile=run_directory+'/input/bField.nc')
+                   #bFile=run_directory+'/input/bField.nc')
     #spectroscopy(2, specFile=run_directory+'/output/spec.nc')#specFile='/Users/Alyssa/Desktop/spec.nc')
     #spec_line_integration(view=1)#spec_file='/Users/Alyssa/Desktop/spec.nc', pps_per_nP=2013859273149157.8)
     #spec_volumetric_integration(view=3,Nrr=100,Ntheta=10,Nphi=10, plot_blocker=False)

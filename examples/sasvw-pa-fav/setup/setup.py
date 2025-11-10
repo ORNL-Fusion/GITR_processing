@@ -10,10 +10,10 @@ import shutil
 import numpy as np
 import solpsProcessing, makeGeom, makeParticleSource
 
-nP = int(1e4)
-run_directory = '..'
+nP = int(1e6)
+#run_directory = '..'
 #run_directory = '/Users/Alyssa/Dev/GITR/scratch'
-#run_directory = '/pscratch/sd/h/hayes/sasvw-pa-fav/sasvw-pa-fav-leakage'
+run_directory = '/pscratch/sd/h/hayes/sasvw-pa-fav/sasvw-pa-fav-leakage/P6'
 
 W_indices = np.arange(11,22)
 
@@ -27,7 +27,7 @@ makeGeom.main(gitr_geometry_filename='gitrGeometry.cfg', \
                     W_indices_profiles = W_indices, \
                     numAddedPoints = 100, \
                     use_core_leakage_boundary = 1, \
-                    plot_variables = 1)
+                    plot_variables = 0)
 
 os.remove('gitrGeometry.cfg0')
 shutil.move('gitrGeometry.cfg', run_directory+'/input/gitrGeometry.cfg')
@@ -58,7 +58,7 @@ makeParticleSource.distributed_source(nP, surfW = W_indices, \
                     configuration = 'random', \
                     use_fractal_tridyn_outgoing_IEADS = 0, \
                     use_surface_model = 1, use_hpic = 1, \
-                    plot_variables = 1, blockplots = 0, verbose=1, \
-                    leakStart=0, leakEnd=10)
+                    plot_variables = 0, blockplots = 0, verbose=0, \
+                    leakStart=30, leakEnd=40)
 
 shutil.move('particleSource.nc', run_directory+'/input/particleSource.nc')
